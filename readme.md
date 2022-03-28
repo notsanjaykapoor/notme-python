@@ -25,7 +25,7 @@ python3 cli.py user-search
 Create user:
 
 ```
-python3 cli.py  user-create user-1
+python3 cli.py user-create user-1
 ```
 
 

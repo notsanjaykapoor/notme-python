@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from sqlmodel import select, Session
 from typing import Optional
+import logging
 
 from models.user import User
 
@@ -14,9 +15,12 @@ class Create:
   def __init__(self, db: Session, user_id: str):
     self.db = db
     self.user_id = user_id
+    self.logger = logging.getLogger("console")
 
   def call(self):
     struct = Struct(0, None, [])
+
+    self.logger.info(f"{__name__} user_id {self.user_id}")
 
     db_object = User(user_id=self.user_id)
 

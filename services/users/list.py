@@ -1,6 +1,9 @@
 from dataclasses import dataclass
 from sqlmodel import select, Session
 
+import logging
+import re
+
 from sqlmodel.sql.expression import Select, SelectOfScalar
 SelectOfScalar.inherit_cache = True  # type: ignore
 Select.inherit_cache = True  # type: ignore
@@ -27,26 +30,35 @@ class List:
     self.offset = offset
     self.limit = limit
 
+    self.dataset = select(User) # default database query
+    self.logger = logging.getLogger("console")
+
   def call(self):
     struct = Struct(0, [], [])
 
-    # parse query
-    print(f"users list {self.query}")
+    self.logger.info(f"{__name__} query {self.query}")
+
+    # tokenize query
 
     struct_tokens = Parse(self.query).call()
 
-    print(f"users list tokens {struct_tokens.tokens}")
-
-    # initialize default query
-
-    query_db = select(User)
+    self.logger.info(f"{__name__} tokens {struct_tokens.tokens}")
 
     for token in struct_tokens.tokens:
       value = token["value"]
 
       if token["field"] == "user_id":
-        query_db = query_db.where(User.user_id == value)
+        match = re.match(r"^~", value)
 
-    struct.users = self.db.exec(query_db.offset(self.offset).limit(self.limit)).all()
+        if match:
+          value_normal = re.sub(r"~", "", value)
+          # like query
+          self.dataset = self.dataset.where(User.user_id.like('%' + value_normal + '%'))
+        else:
+          # match query
+          self.dataset = self.dataset.where(User.user_id == value)
+
+
+    struct.users = self.db.exec(self.dataset.offset(self.offset).limit(self.limit)).all()
 
     return struct
