@@ -9,12 +9,15 @@ from sqlmodel import Session, SQLModel
 from database import engine
 
 import logging
-
 from log import logging_init
+
 from kafka.handlers.generic import Generic
 from kafka.reader import Reader
 from kafka.writer import Writer
 from models import user
+from services.crypto.pkey.create import Create as PkeyCreate
+from services.crypto.pkey.sign import Sign as PkeySign
+from services.crypto.pkey.verify import Verify as PkeyVerify
 from services.users.create import Create as UserCreate
 from services.users.get import Get as UserGet
 from services.users.list import List as UsersList
@@ -26,9 +29,33 @@ logger = logging.getLogger("console")
 app = typer.Typer()
 
 @app.command()
-def topic_read(topic: str, group: str="python"):
-  handler = Generic()
+def crypto_sign(data: str = "secret"):
+  struct_pkey = PkeyCreate().call()
 
+  private_key = struct_pkey.key
+
+  struct_sign = PkeySign(
+    private_key,
+    data
+  ).call()
+
+  logger.info(f"cli sign {struct_sign}")
+
+  public_key = private_key.public_key()
+  signature = struct_sign.encoded
+
+  struct_verify = PkeyVerify(
+    public_key,
+    data,
+    signature,
+  ).call()
+
+  logger.info(f"cli verify {struct_verify}")
+
+@app.command()
+def topic_read(topic: str, group: str="python"):
+  # create reader with generic handler
+  handler = Generic()
   writer = Reader(topic, group, handler)
   writer.call()
 
