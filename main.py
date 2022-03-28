@@ -1,8 +1,11 @@
-from typing import List, Optional
+from dotenv import load_dotenv
 
+load_dotenv() # take environment variables from .env.
+
+from database import engine
 from fastapi import Depends, FastAPI, HTTPException
 from sqlmodel import Session, SQLModel
-from database import engine
+from typing import List, Optional
 
 from models import user
 from services.users.get import Get as UserGet

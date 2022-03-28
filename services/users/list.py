@@ -21,7 +21,6 @@ class StructToken:
   errors: list[str]
 
 class List:
-
   def __init__(self, db: Session, query: str = "", offset: int = 0, limit: int=20):
     self.db = db
     self.query = query

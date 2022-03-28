@@ -7,7 +7,6 @@ Select.inherit_cache = True  # type: ignore
 from models.user import User
 
 class Get:
-
   def __init__(self, db: Session, user_id: str):
     self.db = db
     self.user_id = user_id

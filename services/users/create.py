@@ -1,17 +1,28 @@
+from dataclasses import dataclass
 from sqlmodel import select, Session
+from typing import Optional
 
 from models.user import User
 
-class Create:
+@dataclass
+class Struct:
+  code: int
+  user_id: int
+  errors: list[str]
 
+class Create:
   def __init__(self, db: Session, user_id: str):
     self.db = db
     self.user_id = user_id
 
   def call(self):
+    struct = Struct(0, None, [])
+
     db_object = User(user_id=self.user_id)
 
     self.db.add(db_object)
     self.db.commit()
 
-    return db_object.id
+    struct.user_id = db_object.id
+
+    return struct

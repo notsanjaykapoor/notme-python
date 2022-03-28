@@ -7,11 +7,10 @@ class Struct:
   errors: list[str]
 
 class Parse:
-
   def __init__(self, query: str):
     self.query = query
 
-  def call(self, ):
+  def call(self):
     struct = Struct(0, [], [])
 
     tokens = self.query.split(" ")
