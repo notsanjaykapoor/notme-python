@@ -23,4 +23,7 @@ class UserGet:
 
     struct.user = self.db.exec(select(User).where(User.user_id == self.user_id)).first()
 
+    if struct.user is None:
+      struct.code = 404
+
     return struct

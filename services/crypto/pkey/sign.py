@@ -18,7 +18,7 @@ class PkeySign:
     self.data = data
 
     self.data_encoding = "utf-8"
-    self.logger = logging.getLogger("console")
+    self.logger = logging.getLogger("service")
 
   def call(self):
     struct = Struct(0, "", [])

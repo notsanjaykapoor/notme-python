@@ -1,6 +1,5 @@
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from dataclasses import dataclass
-from typing import Any, Optional
 
 import base64
 import logging
@@ -18,7 +17,7 @@ class SymmetricEncrypt:
     self.data = data
 
     self.data_encoding = "utf-8"
-    self.logger = logging.getLogger("console")
+    self.logger = logging.getLogger("service")
 
   def call(self):
     struct = Struct(0, "", [])

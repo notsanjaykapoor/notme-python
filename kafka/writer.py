@@ -16,7 +16,7 @@ class KafkaWriter:
     self.message = message
 
     self.producer = Producer(config_writer)
-    self.logger = logging.getLogger("console")
+    self.logger = logging.getLogger("service")
 
   def call(self):
     struct = Struct(0, [])

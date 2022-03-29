@@ -29,12 +29,27 @@ logging_config = {
     }
   },
   "loggers": {
+    "api": {
+      "handlers": ["console"],
+      "level": LOG_LEVEL,
+      # "propagate": False
+    },
     "cli": {
-      "handlers": ["cli"],
+      "handlers": ["console"],
       "level": LOG_LEVEL,
       # "propagate": False
     },
     "console": {
+      "handlers": ["console"],
+      "level": LOG_LEVEL,
+      # "propagate": False
+    },
+    "gql": {
+      "handlers": ["console"],
+      "level": LOG_LEVEL,
+      # "propagate": False
+    },
+    "service": {
       "handlers": ["console"],
       "level": LOG_LEVEL,
       # "propagate": False

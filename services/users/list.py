@@ -31,7 +31,7 @@ class UsersList:
     self.limit = limit
 
     self.dataset = select(User) # default database query
-    self.logger = logging.getLogger("console")
+    self.logger = logging.getLogger("service")
 
   def call(self):
     struct = Struct(0, [], [])
@@ -51,8 +51,8 @@ class UsersList:
         match = re.match(r"^~", value)
 
         if match:
-          value_normal = re.sub(r"~", "", value)
           # like query
+          value_normal = re.sub(r"~", "", value)
           self.dataset = self.dataset.where(User.user_id.like('%' + value_normal + '%'))
         else:
           # match query

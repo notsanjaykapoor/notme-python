@@ -12,7 +12,7 @@ class WsReader:
   def __init__(self, ws: WebSocket):
     self.ws = ws
 
-    self.logger = logging.getLogger("console")
+    self.logger = logging.getLogger("service")
 
   async def call(self):
     struct = Struct(0, [])

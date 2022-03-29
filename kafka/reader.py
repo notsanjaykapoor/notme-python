@@ -20,7 +20,7 @@ class KafkaReader:
 
     self.consumer = Consumer(config_reader)
     self.topics = []
-    self.logger = logging.getLogger("console")
+    self.logger = logging.getLogger("service")
 
     self.topics.append(self.topic)
 

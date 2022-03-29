@@ -1,19 +1,19 @@
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from dataclasses import dataclass
-from typing import Any, Optional
 
 import logging
 import os
+import typiing
 
 @dataclass
 class Struct:
   code: int
-  cipher: Any
+  cipher: typing.Any
   errors: list[str]
 
 class SymmetricCreate:
   def __init__(self):
-    self.logger = logging.getLogger("console")
+    self.logger = logging.getLogger("service")
 
   def call(self):
     struct = Struct(0, None, [])

@@ -15,8 +15,6 @@ class MqlParse:
 
     tokens = self.query.split(" ")
 
-    # print(f"tokens {tokens}")
-
     for token in tokens:
       if len(token) == 0:
         # no more tokens to parse

@@ -2,14 +2,17 @@ from dotenv import load_dotenv
 
 load_dotenv() # take environment variables from .env.
 
+import logging
+import strawberry
+
 from database import engine
 from dataclasses import dataclass, field
 from fastapi import Depends, FastAPI, HTTPException, WebSocket
 from sqlmodel import Session, SQLModel
-from typing import List, Optional
+from strawberry.fastapi import GraphQLRouter
+from strawberry.schema.config import StrawberryConfig
 
-import logging
-
+from gql.query import GqlQuery
 from log import logging_init
 from models.user import User
 from services.users.get import UserGet
@@ -17,10 +20,20 @@ from services.users.create import UserCreate
 from services.users.list import UsersList
 from services.ws.reader import WsReader
 
-logger = logging_init("console")
+logger = logging_init("api")
 
+# initalize graphql
+
+schema = strawberry.Schema(
+  query=GqlQuery,
+  config=StrawberryConfig(auto_camel_case=False),
+)
+
+graphql_router = GraphQLRouter(schema)
 
 app = FastAPI()
+
+app.include_router(graphql_router, prefix="/graphql")
 
 # db dependency
 def get_db():
