@@ -12,7 +12,7 @@ class Struct:
   encoded: str
   errors: list[str]
 
-class Sign:
+class PkeySign:
   def __init__(self, private_key: Any, data: str):
     self.private_key = private_key
     self.data = data
@@ -35,8 +35,6 @@ class Sign:
     )
 
     # create private key
-    struct.encoded = base64.b64encode(
-      signature
-    )
+    struct.encoded = base64.b64encode(signature)
 
     return struct

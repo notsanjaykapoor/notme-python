@@ -6,7 +6,7 @@ class Struct:
   tokens: list[{}]
   errors: list[str]
 
-class Parse:
+class MqlParse:
   def __init__(self, query: str):
     self.query = query
 

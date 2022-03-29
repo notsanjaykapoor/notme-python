@@ -2,7 +2,7 @@ from dataclasses import dataclass
 import json
 import logging
 
-from confluent_kafka import Consumer
+from confluent_kafka import Consumer, KafkaException
 from kafka.config import config_reader
 
 @dataclass
@@ -10,7 +10,7 @@ class Struct:
   code: int
   errors: list[str]
 
-class Reader:
+class KafkaReader:
   def __init__(self, topic: str, group: str, handler):
     self.topic = topic
     self.group = group
@@ -59,8 +59,8 @@ class Reader:
               self.logger.info(f"{__name__} no handler ack")
               self.consumer.commit(asynchronous=False)
 
-    # except KafkaException as e:
-    #   self.logger.error(f"kafka exception {e}")
+    except KafkaException as e:
+      self.logger.error(f"{__name__} kafka exception {e}")
     except Exception as e:
       self.logger.error(f"{__name__} general exception {e}")
     finally:

@@ -1,0 +1,124 @@
+#!/usr/local/bin/python3
+
+from dotenv import load_dotenv
+
+load_dotenv() # take environment variables from .env.
+
+from database import engine
+from sqlmodel import Session, SQLModel
+from typing import Optional
+
+import logging
+import typer
+import websocket
+
+from kafka.handlers.generic import HandlerGeneric
+from kafka.reader import KafkaReader
+from kafka.writer import KafkaWriter
+from log import logging_init
+from models import user
+from services.crypto.pkey.create import PkeyCreate
+from services.crypto.pkey.sign import PkeySign
+from services.crypto.pkey.verify import PkeyVerify
+from services.crypto.symmetric.decrypt import SymmetricDecrypt
+from services.crypto.symmetric.encrypt import SymmetricEncrypt
+from services.crypto.symmetric.create import SymmetricCreate
+from services.users.create import UserCreate
+from services.users.get import UserGet
+from services.users.list import UsersList
+
+logger = logging_init("cli")
+
+app = typer.Typer()
+
+@app.command()
+def crypto_sign(data: str = "secret"):
+  struct_pkey = PkeyCreate().call()
+
+  private_key = struct_pkey.key
+  public_key = private_key.public_key()
+
+  struct_sign = PkeySign(
+    private_key,
+    data
+  ).call()
+
+  logger.info(f"cli sign {struct_sign}")
+
+  signature = struct_sign.encoded
+
+  struct_verify = PkeyVerify(
+    public_key,
+    data,
+    signature,
+  ).call()
+
+  logger.info(f"cli verify {struct_verify}")
+
+@app.command()
+def crypto_symmetric(data: str = "a secret message"):
+  # note: data must be multiple of 16 bytes
+
+  struct_symmetric = SymmetricCreate().call()
+
+  cipher = struct_symmetric.cipher
+
+  struct_encrypt = SymmetricEncrypt(
+    cipher,
+    data
+  ).call()
+
+  struct_encrypt = SymmetricDecrypt(
+    cipher,
+    struct_encrypt.encoded,
+  ).call()
+
+@app.command()
+def topic_read(topic: str, group: str="python"):
+  # create reader with generic handler
+  handler = HandlerGeneric()
+  writer = KafkaReader(topic, group, handler)
+  writer.call()
+
+@app.command()
+def topic_write(topic: str):
+  writer = KafkaWriter(topic, {"message": "ping"})
+  writer.call()
+
+@app.command()
+def user_create(name: str):
+  logger.info(f"cli user {name} create try")
+
+  with Session(engine) as session:
+    user = UserGet(session, name).call()
+
+    if user:
+      log.info(f"cli result user {name} exists")
+      return 0
+
+    user_id = UserCreate(session, name).call()
+
+    log.info(f"cli result user {name} created")
+
+    return user_id
+
+@app.command()
+def user_search(query: str = ""):
+  with Session(engine) as session:
+    service = UsersList(session, query, 0, 10)
+    struct = service.call()
+
+    for user in struct.users:
+      logger.info(f"cli result {user}")
+
+@app.command()
+def ws_send(message: str = "hey"):
+  logger.info(f"cli websocket sending '{message}'")
+
+  ws = websocket.WebSocket()
+  ws.connect("ws://localhost:8000/ws")
+  ws.send(message)
+  ws.close()
+
+if __name__ == "__main__":
+  app()

@@ -3,7 +3,7 @@
 Start server:
 
 ```
-uvicorn main:app --reload
+./py-api
 ```
 
 ### Curl
@@ -19,18 +19,18 @@ curl http://127.0.0.1:8000/users
 List users:
 
 ```
-python3 cli.py user-search
+./py-cli user-search
 ```
 
 Create user:
 
 ```
-python3 cli.py user-create user-1
+./py-cli user-create user-1
 ```
 
 
 Publish message:
 
 ```
-python3 cli.py topic-publish test
+./py-cli topic-publish test
 ```

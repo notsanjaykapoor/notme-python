@@ -11,7 +11,7 @@ class Struct:
   code: int
   errors: list[str]
 
-class Verify:
+class PkeyVerify:
   def __init__(self, public_key: Any, data: str, signature: str):
     self.public_key = public_key
     self.data = data

@@ -15,6 +15,12 @@ logging_config = {
     }
   },
   "handlers": {
+    "cli": {
+      "formatter": "basic",
+      "class": "logging.StreamHandler",
+      "stream": "ext://sys.stderr",
+      "level": LOG_LEVEL,
+    },
     "console": {
       "formatter": "basic",
       "class": "logging.StreamHandler",
@@ -23,6 +29,11 @@ logging_config = {
     }
   },
   "loggers": {
+    "cli": {
+      "handlers": ["cli"],
+      "level": LOG_LEVEL,
+      # "propagate": False
+    },
     "console": {
       "handlers": ["console"],
       "level": LOG_LEVEL,
@@ -31,5 +42,7 @@ logging_config = {
   },
 }
 
-def logging_init():
+def logging_init(name: str):
   dictConfig(logging_config)
+
+  return logging.getLogger(name)

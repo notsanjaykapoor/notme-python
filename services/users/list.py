@@ -9,7 +9,7 @@ SelectOfScalar.inherit_cache = True  # type: ignore
 Select.inherit_cache = True  # type: ignore
 
 from models.user import User
-from services.mql.parse import Parse
+from services.mql.parse import MqlParse
 
 @dataclass
 class Struct:
@@ -23,7 +23,7 @@ class StructToken:
   tokens: list[{}]
   errors: list[str]
 
-class List:
+class UsersList:
   def __init__(self, db: Session, query: str = "", offset: int = 0, limit: int=20):
     self.db = db
     self.query = query
@@ -40,7 +40,7 @@ class List:
 
     # tokenize query
 
-    struct_tokens = Parse(self.query).call()
+    struct_tokens = MqlParse(self.query).call()
 
     self.logger.info(f"{__name__} tokens {struct_tokens.tokens}")
 

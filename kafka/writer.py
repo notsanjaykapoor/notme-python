@@ -10,7 +10,7 @@ class Struct:
   code: int
   errors: list[str]
 
-class Writer:
+class KafkaWriter:
   def __init__(self, topic: str, message: {}):
     self.topic = topic
     self.message = message

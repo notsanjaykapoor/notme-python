@@ -7,7 +7,7 @@ class Struct:
   code: int
   errors: list[str]
 
-class Generic:
+class HandlerGeneric:
   def __init__(self):
     self.logger = logging.getLogger("console")
 
