@@ -22,6 +22,17 @@ from services.ws.reader import WsReader
 
 logger = logging_init("api")
 
+# api db dependency
+def get_db():
+  with Session(engine) as session:
+    yield session
+
+# gql db dependency
+async def get_gql_context(db=Depends(get_db)):
+  return {
+    "db": db
+  }
+
 # initalize graphql
 
 schema = strawberry.Schema(
@@ -29,16 +40,14 @@ schema = strawberry.Schema(
   config=StrawberryConfig(auto_camel_case=False),
 )
 
-graphql_router = GraphQLRouter(schema)
+graphql_router = GraphQLRouter(
+  schema,
+  context_getter=get_gql_context,
+)
 
 app = FastAPI()
 
 app.include_router(graphql_router, prefix="/graphql")
-
-# db dependency
-def get_db():
-  with Session(engine) as session:
-    yield session
 
 @app.on_event("startup")
 def on_startup():
@@ -52,8 +61,18 @@ def on_shutdown():
   logger.info(f"api.shutdown")
 
 @app.get("/")
-def get_root():
-  return {"Hello": "World"}
+def api_ping():
+  return {
+    "code": 0,
+    "message": "pong",
+  }
+
+@app.get("/ping")
+def api_ping():
+  return {
+    "code": 0,
+    "message": "pong",
+  }
 
 @app.post("/users", response_model=int)
 def user_create(user_id: str):
@@ -77,7 +96,7 @@ def users_list(query: str = "", offset: int = 0, limit: int = 100, db: Session =
 
   struct = UsersList(db, query, offset, limit).call()
 
-  logger.info(f"api.users.list response {struct}")
+  # logger.info(f"api.users.list response {struct}")
 
   return struct.users
 

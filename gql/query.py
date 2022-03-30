@@ -3,6 +3,7 @@ import typing
 
 from database import engine
 from sqlmodel import Session, SQLModel
+from strawberry.types import Info
 
 from gql import types
 from log import logging_init
@@ -14,15 +15,13 @@ logger = logging_init("gql")
 @strawberry.type
 class GqlQuery:
   @strawberry.field
-  def user_get(self, user_id: str) -> types.GqlUserGet:
-    logger.info(f"gql.user_get {user_id}")
+  def user_get(self, user_id: str, info: Info) -> types.GqlUserGet:
+    logger.info(f"gql.{info.field_name} {user_id}")
 
-    with Session(engine) as db_session:
-      return UserGet(db_session, user_id).call()
+    return UserGet(info.context["db"], user_id).call()
 
   @strawberry.field
-  def users_list(self, query: str="", offset: int=0, limit: int=10) -> types.GqlUsersList:
-    logger.info(f"gql.users_list query {query}")
+  def users_list(self, info: Info, query: str="", offset: int=0, limit: int=10) -> types.GqlUsersList:
+    logger.info(f"gql.{info.field_name} query {query}")
 
-    with Session(engine) as db_session:
-      return UsersList(db_session, query, offset, limit).call()
+    return UsersList(info.context["db"], query, offset, limit).call()
