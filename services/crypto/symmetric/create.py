@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 import logging
 import os
-import typiing
+import typing
 
 @dataclass
 class Struct:

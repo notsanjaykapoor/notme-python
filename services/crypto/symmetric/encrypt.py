@@ -4,6 +4,7 @@ from dataclasses import dataclass
 import base64
 import logging
 import os
+import typing
 
 @dataclass
 class Struct:
@@ -12,7 +13,7 @@ class Struct:
   errors: list[str]
 
 class SymmetricEncrypt:
-  def __init__(self, cipher: Any, data: str):
+  def __init__(self, cipher: typing.Any, data: str):
     self.cipher = cipher
     self.data = data
 

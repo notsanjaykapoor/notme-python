@@ -13,7 +13,7 @@ class Struct:
   errors: list[str]
 
 class SymmetricDecrypt:
-  def __init__(self, cipher: Any, encoded: str):
+  def __init__(self, cipher: typing.Any, encoded: str):
     self.cipher = cipher
     self.encoded = encoded
 

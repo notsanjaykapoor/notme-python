@@ -33,7 +33,7 @@ async def get_gql_context(db=Depends(get_db)):
     "db": db
   }
 
-# initalize graphql
+# initialize graphql schema and router
 
 schema = strawberry.Schema(
   query=GqlQuery,

@@ -8,11 +8,15 @@ from database import engine
 from sqlmodel import Session, SQLModel
 from typing import Optional
 
+import asyncio
 import logging
+import time
 import typer
 import websocket
 
-from kafka.handlers.generic import HandlerGeneric
+from actors.create import ActorCreate
+from actors.handlers.generic import HandlerGeneric as ActorHandler
+from kafka.handlers.generic import HandlerGeneric as KafkaHandler
 from kafka.reader import KafkaReader
 from kafka.writer import KafkaWriter
 from log import logging_init
@@ -30,6 +34,31 @@ from services.users.list import UsersList
 logger = logging_init("cli")
 
 app = typer.Typer()
+
+@app.command()
+def actor_example(name: str = "actor 0", msg: str = "ping"):
+  asyncio.run(actor_try_async(name=name, msg=msg))
+
+async def actor_try_async(name: str, msg: str):
+  queue = asyncio.Queue(maxsize=0)
+  handler = ActorHandler()
+  actor = ActorCreate(queue=queue, name=name, handler=handler)
+
+  task = actor.call()
+
+  index = 0
+  message = {
+    "message": msg,
+  }
+
+  while True:
+    await asyncio.sleep(3)
+
+    # logger.info(f"sleep, task {task.get_name()}, queue size {queue.qsize()}")
+
+    message["index"] = index
+    queue.put_nowait(message)
+    index += 1
 
 @app.command()
 def crypto_sign(data: str = "secret"):
@@ -76,7 +105,7 @@ def crypto_symmetric(data: str = "a secret message"):
 @app.command()
 def topic_read(topic: str, group: str="python"):
   # call reader with generic handler
-  handler = HandlerGeneric()
+  handler = KafkaHandler()
   reader = KafkaReader(topic, group, handler)
   reader.call()
 

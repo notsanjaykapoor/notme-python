@@ -29,6 +29,11 @@ logging_config = {
     }
   },
   "loggers": {
+    "actor": {
+      "handlers": ["console"],
+      "level": LOG_LEVEL,
+      # "propagate": False
+    },
     "api": {
       "handlers": ["console"],
       "level": LOG_LEVEL,
@@ -50,6 +55,11 @@ logging_config = {
       # "propagate": False
     },
     "service": {
+      "handlers": ["console"],
+      "level": LOG_LEVEL,
+      # "propagate": False
+    },
+    "strawberry.execution": {
       "handlers": ["console"],
       "level": LOG_LEVEL,
       # "propagate": False
