@@ -2,16 +2,19 @@ from dotenv import load_dotenv
 
 load_dotenv() # take environment variables from .env.
 
+import contextvars
 import logging
 import strawberry
+import ulid
 
 from database import engine
 from dataclasses import dataclass, field
-from fastapi import Depends, FastAPI, HTTPException, WebSocket
+from fastapi import Depends, FastAPI, HTTPException, Request, WebSocket
 from sqlmodel import Session, SQLModel
 from strawberry.fastapi import GraphQLRouter
 from strawberry.schema.config import StrawberryConfig
 
+from context import request_id
 from gql.query import GqlQuery
 from log import logging_init
 from models.user import User
@@ -67,6 +70,13 @@ def api_ping():
     "message": "pong",
   }
 
+@app.middleware("http")
+async def add_request_id(request: Request, call_next):
+  # set request id context var
+  request_id.set(ulid.new().str)
+  response = await call_next(request)
+  return response
+
 @app.get("/ping")
 def api_ping():
   return {
@@ -76,7 +86,7 @@ def api_ping():
 
 @app.post("/users", response_model=int)
 def user_create(user_id: str):
-  logger.info(f"api.user.create")
+  logger.info(f"{request_id.get()} api.user.create")
 
   struct = UserCreate(user_id).call()
 
@@ -84,7 +94,7 @@ def user_create(user_id: str):
 
 @app.get("/users/{user_id}", response_model=User)
 def user_get(user_id: str, db: Session = Depends(get_db)):
-  logger.info(f"api.user.get")
+  logger.info(f"{request_id.get()} api.user.get")
 
   struct = UserGet(db, user_id).call()
 
@@ -92,7 +102,7 @@ def user_get(user_id: str, db: Session = Depends(get_db)):
 
 @app.get("/users", response_model=list[User])
 def users_list(query: str = "", offset: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-  logger.info(f"api.users.list")
+  logger.info(f"{request_id.get()} api.users.list")
 
   struct = UsersList(db, query, offset, limit).call()
 
@@ -105,8 +115,8 @@ async def websocket_endpoint(websocket: WebSocket):
   await websocket.accept()
 
   try:
-    logger.info("api.ws connected")
+    logger.info(f"{request_id.get()} api.ws connected")
 
     await WsReader(websocket).call()
   except Exception as e:
-    logger.info(f"api.ws exception {e}")
+    logger.info(f"{request_id.get()} api.ws exception {e}")

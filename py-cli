@@ -12,6 +12,7 @@ import asyncio
 import logging
 import time
 import typer
+import ulid
 import websocket
 
 from actors.create import ActorCreate
@@ -36,7 +37,10 @@ logger = logging_init("cli")
 app = typer.Typer()
 
 @app.command()
-def actor_example(name: str = "actor 0", msg: str = "ping"):
+def actor_example(name: str = "example-0", msg: str = "ping"):
+  if name is None:
+    name = f"ex-{ulid.new().str}"
+
   asyncio.run(actor_example_async(name=name, msg=msg))
 
 async def actor_example_async(name: str, msg: str):
@@ -56,6 +60,7 @@ async def actor_example_async(name: str, msg: str):
     await asyncio.sleep(3)
 
     message["index"] = i
+    message["rid"] = ulid.new().str
 
     actor.queue.put_nowait(message)
 
@@ -102,16 +107,25 @@ def crypto_symmetric(data: str = "a secret message"):
   ).call()
 
 @app.command()
-def topic_read(topic: str, group: str="python"):
+def topic_read(topic: str = typer.Option(...), group: str="python"):
   # call reader with generic handler
   handler = KafkaHandler()
   reader = KafkaReader(topic, group, handler)
   reader.call()
 
 @app.command()
-def topic_write(topic: str):
-  # use async?
-  writer = KafkaWriter(topic, {"message": "ping"})
+def topic_write(topic: str = typer.Option(...), key: str = typer.Option(...)):
+  # todo: use async?
+
+  writer = KafkaWriter(
+    topic=topic,
+    key=key,
+    message={
+      "message": "ping",
+      "rid": ulid.new().str,
+    },
+  )
+
   writer.call()
 
 @app.command()

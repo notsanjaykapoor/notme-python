@@ -11,8 +11,9 @@ class Struct:
   errors: list[str]
 
 class KafkaWriter:
-  def __init__(self, topic: str, message: {}):
+  def __init__(self, topic: str, key: str, message: {}):
     self.topic = topic
+    self.key = key
     self.message = message
 
     self.producer = Producer(config_writer)

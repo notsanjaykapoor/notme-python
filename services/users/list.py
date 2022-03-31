@@ -1,13 +1,14 @@
-from dataclasses import dataclass
-from sqlmodel import select, Session
-
 import logging
 import re
+
+from dataclasses import dataclass
+from sqlmodel import select, Session
 
 from sqlmodel.sql.expression import Select, SelectOfScalar
 SelectOfScalar.inherit_cache = True  # type: ignore
 Select.inherit_cache = True  # type: ignore
 
+from context import request_id
 from models.user import User
 from services.mql.parse import MqlParse
 
@@ -31,18 +32,18 @@ class UsersList:
     self._limit = limit
 
     self._dataset = select(User) # default database query
-    self._logger = logging.getLogger("service")
+    self._logger = logging.getLogger("api")
 
   def call(self):
     struct = Struct(0, [], [])
 
-    self._logger.info(f"{__name__} query {self._query}")
+    self._logger.info(f"{request_id.get()} {__name__} query {self._query}")
 
     # tokenize query
 
     struct_tokens = MqlParse(self._query).call()
 
-    self._logger.info(f"{__name__} tokens {struct_tokens.tokens}")
+    self._logger.info(f"{request_id.get()} {__name__} tokens {struct_tokens.tokens}")
 
     for token in struct_tokens.tokens:
       value = token["value"]

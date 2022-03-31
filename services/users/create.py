@@ -1,7 +1,8 @@
+import logging
+
 from dataclasses import dataclass
 from sqlmodel import select, Session
 from typing import Optional
-import logging
 
 from models.user import User
 
@@ -15,7 +16,7 @@ class UserCreate:
   def __init__(self, db: Session, user_id: str):
     self._db = db
     self._user_id = user_id
-    self._logger = logging.getLogger("service")
+    self._logger = logging.getLogger("api")
 
   def call(self):
     struct = Struct(0, None, [])
