@@ -37,28 +37,27 @@ app = typer.Typer()
 
 @app.command()
 def actor_example(name: str = "actor 0", msg: str = "ping"):
-  asyncio.run(actor_try_async(name=name, msg=msg))
+  asyncio.run(actor_example_async(name=name, msg=msg))
 
-async def actor_try_async(name: str, msg: str):
-  queue = asyncio.Queue(maxsize=0)
-  handler = ActorHandler()
-  actor = ActorCreate(queue=queue, name=name, handler=handler)
+async def actor_example_async(name: str, msg: str):
+  actor = ActorCreate(name=name, handler=ActorHandler())
 
-  task = actor.call()
+  # create task
+  _struct = actor.call()
 
-  index = 0
   message = {
     "message": msg,
   }
 
-  while True:
+  r = range(100)
+
+  for i in r:
+    # suspend current task, allowing other tasks to run
     await asyncio.sleep(3)
 
-    # logger.info(f"sleep, task {task.get_name()}, queue size {queue.qsize()}")
+    message["index"] = i
 
-    message["index"] = index
-    queue.put_nowait(message)
-    index += 1
+    actor.queue.put_nowait(message)
 
 @app.command()
 def crypto_sign(data: str = "secret"):

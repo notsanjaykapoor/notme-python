@@ -25,24 +25,24 @@ class StructToken:
 
 class UsersList:
   def __init__(self, db: Session, query: str = "", offset: int = 0, limit: int=20):
-    self.db = db
-    self.query = query
-    self.offset = offset
-    self.limit = limit
+    self._db = db
+    self._query = query
+    self._offset = offset
+    self._limit = limit
 
-    self.dataset = select(User) # default database query
-    self.logger = logging.getLogger("service")
+    self._dataset = select(User) # default database query
+    self._logger = logging.getLogger("service")
 
   def call(self):
     struct = Struct(0, [], [])
 
-    self.logger.info(f"{__name__} query {self.query}")
+    self._logger.info(f"{__name__} query {self._query}")
 
     # tokenize query
 
-    struct_tokens = MqlParse(self.query).call()
+    struct_tokens = MqlParse(self._query).call()
 
-    self.logger.info(f"{__name__} tokens {struct_tokens.tokens}")
+    self._logger.info(f"{__name__} tokens {struct_tokens.tokens}")
 
     for token in struct_tokens.tokens:
       value = token["value"]
@@ -53,12 +53,12 @@ class UsersList:
         if match:
           # like query
           value_normal = re.sub(r"~", "", value)
-          self.dataset = self.dataset.where(User.user_id.like('%' + value_normal + '%'))
+          self._dataset = self._dataset.where(User.user_id.like('%' + value_normal + '%'))
         else:
           # match query
-          self.dataset = self.dataset.where(User.user_id == value)
+          self._dataset = self._dataset.where(User.user_id == value)
 
 
-    struct.users = self.db.exec(self.dataset.offset(self.offset).limit(self.limit)).all()
+    struct.users = self._db.exec(self._dataset.offset(self._offset).limit(self._limit)).all()
 
     return struct

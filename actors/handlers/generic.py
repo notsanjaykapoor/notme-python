@@ -1,5 +1,6 @@
 from dataclasses import dataclass
-import json
+
+import asyncio
 import logging
 
 @dataclass
@@ -9,16 +10,16 @@ class Struct:
 
 class HandlerGeneric:
   def __init__(self):
-    self.logger = logging.getLogger("actor")
+    self._logger = logging.getLogger("actor")
 
-  def call(self, message: dict):
+  def call(self, actor_name: str, message: dict):
     struct = Struct(0, [])
 
     try:
-      self.logger.info(f"{__name__} message {message}")
+      self._logger.info(f"actor '{actor_name}' message {message}")
     except Exception as e:
       struct.code = 500
 
-      self.logger.error(f"{__name__} general exception {e}")
+      self._logger.error(f"actor '{actor_name}' exception {e}")
 
     return struct

@@ -21,6 +21,6 @@ class HandlerGeneric:
     except Exception as e:
       struct.code = 500
 
-      self.logger.error(f"{__name__} general exception {e}")
+      self.logger.error(f"{__name__} exception {e}")
 
     return struct
