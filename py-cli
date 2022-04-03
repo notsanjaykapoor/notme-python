@@ -9,19 +9,23 @@ from sqlmodel import Session, SQLModel
 from typing import Optional
 
 import asyncio
+import json
 import logging
 import time
 import typer
 import ulid
 import websocket
 
-from actors.create import ActorCreate
+from actors.example.app import App
 from actors.handlers.generic import HandlerGeneric as ActorHandler
+
 from kafka.handlers.generic import HandlerGeneric as KafkaHandler
 from kafka.reader import KafkaReader
 from kafka.writer import KafkaWriter
+
 from log import logging_init
 from models import user
+
 from services.crypto.pkey.create import PkeyCreate
 from services.crypto.pkey.sign import PkeySign
 from services.crypto.pkey.verify import PkeyVerify
@@ -37,32 +41,57 @@ logger = logging_init("cli")
 app = typer.Typer()
 
 @app.command()
-def actor_example(name: str = "example-0", msg: str = "ping"):
+def actor_client(topic: str = typer.Option(...)):
+  writer = KafkaWriter(topic=topic)
+
+  file = f"{topic}.json" # e.g. example.json
+  data = json.load(open(file))
+
+  for record in data:
+    # write to kafka stream
+    writer.call(
+      key = ulid.new().str,
+      message = record,
+    )
+
+    break
+
+@app.command()
+def actor_server(name: str = typer.Option(...), msg: str = "ping"):
   if name is None:
     name = f"ex-{ulid.new().str}"
 
-  asyncio.run(actor_example_async(name=name, msg=msg))
+  asyncio.run(actor_server_async(name=name, msg=msg))
 
-async def actor_example_async(name: str, msg: str):
-  actor = ActorCreate(name=name, handler=ActorHandler())
+async def actor_server_async(name: str, msg: str):
+  logger.info(f"cli actor_server")
 
-  # create task
-  _struct = actor.call()
+  # start app
+  app = App(name=name)
+  struct_app = app.call()
 
-  message = {
-    "message": msg,
-  }
+  # get app tasks
+  tasks = [actor.task for name, actor in struct_app.actors.items()]
 
-  r = range(100)
+  # wait on tasks
+  logger.info(f"cli actor_server waiting on {len(tasks)} tasks")
+  await asyncio.gather(*tasks)
 
-  for i in r:
-    # suspend current task, allowing other tasks to run
-    await asyncio.sleep(3)
-
-    message["index"] = i
-    message["rid"] = ulid.new().str
-
-    actor.queue.put_nowait(message)
+  # actor_source = struct_manager.actors["source"]
+  #
+  # message = {
+  #   "message": msg,
+  # }
+  #
+  # r = range(5)
+  #
+  # for i in r:
+  #   await asyncio.sleep(3)
+  #
+  #   message["index"] = i
+  #   message["rid"] = ulid.new().str
+  #
+  #   actor_source.queue.put_nowait(message)
 
 @app.command()
 def crypto_sign(data: str = "secret"):
@@ -107,6 +136,15 @@ def crypto_symmetric(data: str = "a secret message"):
   ).call()
 
 @app.command()
+def json_read(file: str = "entities.json"):
+  data = json.load(
+    open(file)
+  )
+
+  for record in data:
+    logger.info(f"record {record}")
+
+@app.command()
 def topic_read(topic: str = typer.Option(...), group: str="python"):
   # call reader with generic handler
   handler = KafkaHandler()
@@ -117,19 +155,18 @@ def topic_read(topic: str = typer.Option(...), group: str="python"):
 def topic_write(topic: str = typer.Option(...), key: str = typer.Option(...)):
   # todo: use async?
 
-  writer = KafkaWriter(
-    topic=topic,
+  writer = KafkaWriter(topic=topic)
+
+  writer.call(
     key=key,
     message={
       "message": "ping",
       "rid": ulid.new().str,
-    },
+    }
   )
 
-  writer.call()
-
 @app.command()
-def user_create(name: str):
+def user_create(name: str = typer.Option(...)):
   logger.info(f"cli user {name} create try")
 
   with Session(engine) as db_session:

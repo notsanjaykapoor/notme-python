@@ -1,8 +1,10 @@
-from dataclasses import dataclass
 import json
 import logging
+import typing
 
-from confluent_kafka import Consumer, KafkaException
+from dataclasses import dataclass
+
+from confluent_kafka import Consumer, KafkaError, KafkaException
 from kafka.config import config_reader
 
 @dataclass
@@ -11,36 +13,37 @@ class Struct:
   errors: list[str]
 
 class KafkaReader:
-  def __init__(self, topic: str, group: str, handler):
-    self.topic = topic
-    self.group = group
-    self.handler = handler
+  def __init__(self, topic: str, group: str, handler: typing.Any = None):
+    self._topic = topic
+    self._group = group
+    self._handler = handler
 
-    config_reader["group.id"] = self.group
+    config_reader["group.id"] = self._group
 
-    self.consumer = Consumer(config_reader)
-    self.topics = []
-    self.logger = logging.getLogger("service")
+    self._consumer = Consumer(config_reader)
+    self._topics = []
+    self._logger = logging.getLogger("service")
 
-    self.topics.append(self.topic)
+    self._topics.append(self._topic)
 
   def call(self):
     struct = Struct(0, [])
 
-    self.logger.info(f"{__name__} starting, topics {self.topics}")
+    self._logger.info(f"{__name__} starting, topics {self._topics}")
 
     try:
-      self.consumer.subscribe(self.topics)
+      self._consumer.subscribe(self._topics)
 
       while True:
-        msg = self.consumer.poll(timeout=1.0)
+        msg = self._consumer.poll(timeout=1.0)
 
         if msg is None:
           continue
 
         if msg.error():
+          # whoops, some type of read error
           if msg.error().code() == KafkaError._PARTITION_EOF:
-            self.logger.info(f"{__name__} partition eof")
+            self._logger.info(f"{__name__} partition eof")
             # todo:
             pass
           elif msg.error():
@@ -48,23 +51,26 @@ class KafkaReader:
         else:
           # process message
 
-          if self.handler is not None:
-            handler_struct = self.handler.call(msg)
+          if self._handler is not None:
+            handler_struct = self._handler.call(msg)
 
             # check return code and ack
             if handler_struct.code == 0:
-              self.logger.info(f"{__name__} ack")
-              self.consumer.commit(asynchronous=False)
-          else:
-              self.logger.info(f"{__name__} no handler ack")
-              self.consumer.commit(asynchronous=False)
+              self._logger.info(f"{__name__} ack")
+              self._consumer.commit(asynchronous=False)
+            else:
+              self._logger.info(f"{__name__} no handler ack")
+              self._consumer.commit(asynchronous=False)
 
     except KafkaException as e:
-      self.logger.error(f"{__name__} kafka exception {e}")
+      self._logger.error(f"{__name__} kafka exception {e}")
     except Exception as e:
-      self.logger.error(f"{__name__} general exception {e}")
+      self._logger.error(f"{__name__} exception {e}")
+    except: # e.g. keyboard interrupt
+      self._logger.error(f"{__name__} exception")
+      raise
     finally:
-      self.consumer.close()
-      self.logger.info(f"{__name__} stopping")
+      self._consumer.close()
+      self._logger.info(f"{__name__} stopping")
 
     return struct
