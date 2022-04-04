@@ -2,15 +2,24 @@ import asyncio
 import logging
 import typing
 
+from kafka.handlers.generic import HandlerGeneric as KafkaHandler
+from kafka.reader import KafkaReader
+
 class Actor:
-  def __init__(self, name: str, queue: asyncio.Queue = None, handler: typing.Any = None, output: asyncio.Queue = None):
+  def __init__(self, name: str, queue: asyncio.Queue = None, topic: str = None, group: str = None, output: asyncio.Queue = None):
     self._name = name
-    self._handler = handler
-    self._task = None
     self._queue = queue
+    self._topic = topic
+    self._group = group
     self._output = output
 
-    if self._queue is None:
+    self._task = None
+    self._handler = None
+
+    if self._topic is not None and self._queue is not None:
+      raise ValueError("invalid args")
+
+    if self._topic is None and self._queue is None:
       self._queue = asyncio.Queue(maxsize=0)
 
     self._logger = logging.getLogger("actor")
@@ -39,8 +48,21 @@ class Actor:
   def queue(self):
     return self._queue
 
-  # actor task default entrypoint
-  async def run(self):
+  async def run_kafka_queue(self):
+    self._logger.info(f"actor '{self._name}' running")
+
+    try:
+      # read from kafka stream
+      self._reader = KafkaReader(self._topic, self._group, self._handler)
+      self._reader.call()
+
+      self._logger.info(f"actor '{self._name}' exiting")
+    except: # e.g. keyboard interrupt
+      self._logger.info(f"actor '{self._name}' exception")
+    finally:
+      self._logger.info(f"actor '{self._name}' exiting")
+
+  async def run_task_queue(self):
     self._logger.info(f"actor '{self._name}' running")
 
     while True:
@@ -57,13 +79,20 @@ class Actor:
         raise
 
   # create and schedule actor task
-  def schedule(self, task_entry=None):
+  def schedule(self, task_entry=None) -> int:
     self._logger.info(f"actor '{self._name}' scheduling")
+
+    if self._handler is None:
+      raise ValueError("handler missing")
 
     if task_entry:
       self._task = asyncio.create_task(task_entry)
+    elif self._topic is not None:
+      self._task = asyncio.create_task(self.run_kafka_queue())
     else:
-      self._task = asyncio.create_task(self.run())
+      self._task = asyncio.create_task(self.run_task_queue())
+
+    return 0
 
   @property
   def task(self):

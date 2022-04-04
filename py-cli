@@ -57,25 +57,21 @@ def actor_client(topic: str = typer.Option(...)):
     break
 
 @app.command()
-def actor_server(name: str = typer.Option(...), msg: str = "ping"):
-  if name is None:
-    name = f"ex-{ulid.new().str}"
+def actor_server(app: str = typer.Option(...), msg: str = "ping"):
+  asyncio.run(actor_server_async(app=app, msg=msg))
 
-  asyncio.run(actor_server_async(name=name, msg=msg))
-
-async def actor_server_async(name: str, msg: str):
+async def actor_server_async(app: str, msg: str):
   logger.info(f"cli actor_server")
 
   # start app
-  app = App(name=name)
-  struct_app = app.call()
+  struct_app = App(toml_file=f"./data/apps/{app}.toml").call()
 
   # get app tasks
-  tasks = [actor.task for name, actor in struct_app.actors.items()]
+  # tasks = [actor.task for name, actor in struct_app.actors.items()]
 
   # wait on tasks
-  logger.info(f"cli actor_server waiting on {len(tasks)} tasks")
-  await asyncio.gather(*tasks)
+  # logger.info(f"cli actor_server waiting on {len(tasks)} tasks")
+  # await asyncio.gather(*tasks)
 
   # actor_source = struct_manager.actors["source"]
   #

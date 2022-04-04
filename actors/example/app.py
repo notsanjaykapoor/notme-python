@@ -1,12 +1,13 @@
 import asyncio
 import logging
+import toml
 
 from dataclasses import dataclass
 
-import actors.example.workers.echo as echo
-import actors.example.workers.source as wsource
-import actors.factory as factory
-import actors.source as source
+import actors.example.workers.echo
+import actors.example.workers.source
+
+from models.actor import Actor
 
 @dataclass
 class Struct:
@@ -15,56 +16,60 @@ class Struct:
   errors: list[str]
 
 class App:
-  def __init__(self, name: str = "example"):
-    self._name = name
+  def __init__(self, toml_file: str):
+    self._toml_file = toml_file
 
-    self._actors = {}
-    self._source = { # kafka topic and group
-      "topic": "example",
-      "group": "group",
-    }
-    self._stages = {
-      "source": ["echo"],
-    }
+    self._toml_dict = toml.load(self._toml_file)
+    self._app_name = self._toml_dict["name"]
+
     self._logger = logging.getLogger("actor")
 
-  def call(self):
+  def call(self) -> Struct:
     struct = Struct(0, {}, [])
 
-    self._logger.info(f"{__name__} '{self._name}' starting")
+    # create actors with handlers
 
-    # create actors
+    toml_kafka = self._toml_dict["kafka"]
 
-    struct_source = source.ActorSource(
-      name=f"{self._name}-source",
-      topic=self._source["topic"],
-      group=self._source["group"],
-      handler=wsource.WorkerSource(
-        actor_name=f"{self._name}-source"
-      ),
-    ).call()
+    actor_source = Actor(
+      name=f"{self._app_name}-source",
+      topic=toml_kafka["topic"],
+      group=toml_kafka["group"],
+    )
 
-    self._actors["source"] = struct_source.actor
+    actor_source.handler = actors.example.workers.source.WorkerSource(
+      actor=actor_source,
+      app_name=self._app_name,
+    )
 
-    struct_factory = factory.ActorFactory(
-      name=f"{self._name}-echo",
-      handler=echo.WorkerEcho(
-        actor_name=f"{self._name}-echo"
-      ),
-    ).call()
+    struct.actors["source"] = actor_source
 
-    self._actors["echo"] = struct_factory.actor
+    actor_echo = Actor(
+      name=f"{self._app_name}-echo",
+    )
+
+    actor_echo.handler = actors.example.workers.echo.WorkerEcho(
+      actor=actor_echo,
+      app_name=self._app_name,
+    )
+
+    struct.actors["echo"] = actor_echo
 
     # stitch pipepline together by setting output queues for each stage
 
-    for key, actor_names in self._stages.items():
-      actor_from = self._actors[key]
-      for actor_name in actor_names:
-        actor_to = self._actors[actor_name]
-        actor_from.output = actor_to.queue
+    toml_stages = self._toml_dict["stages"]
 
-    struct.actors = self._actors
+    for actor_src_name, actor_dst_names in toml_stages.items():
+      actor_src = struct.actors[actor_src_name]
 
-    self._logger.info(f"{__name__} '{self._name}' completed")
+      for actor_dst_name in actor_dst_names:
+        # set actor src output queue == actor dst input queue
+        actor_dst = struct.actors[actor_dst_name]
+        actor_src.output = actor_dst.queue
+
+    # schedule actors
+
+    for _, actor in struct.actors.items():
+      actor.schedule()
 
     return struct

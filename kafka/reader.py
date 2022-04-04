@@ -7,13 +7,15 @@ from dataclasses import dataclass
 from confluent_kafka import Consumer, KafkaError, KafkaException
 from kafka.config import config_reader
 
+from models.actor_message import ActorMessage
+
 @dataclass
 class Struct:
   code: int
   errors: list[str]
 
 class KafkaReader:
-  def __init__(self, topic: str, group: str, handler: typing.Any = None):
+  def __init__(self, topic: str, group: str, handler: typing.Any):
     self._topic = topic
     self._group = group
     self._handler = handler
@@ -49,18 +51,13 @@ class KafkaReader:
           elif msg.error():
             raise KafkaException(msg.error())
         else:
-          # process message
+          # call handler to process message
+          handler_struct = self._handler.call(ActorMessage(msg))
 
-          if self._handler is not None:
-            handler_struct = self._handler.call(msg)
-
-            # check return code and ack
-            if handler_struct.code == 0:
-              self._logger.info(f"{__name__} ack")
-              self._consumer.commit(asynchronous=False)
-            else:
-              self._logger.info(f"{__name__} no handler ack")
-              self._consumer.commit(asynchronous=False)
+          # check return code and ack
+          if handler_struct.code == 0:
+            self._logger.info(f"{__name__} ack")
+            self._consumer.commit(asynchronous=False)
 
     except KafkaException as e:
       self._logger.error(f"{__name__} kafka exception {e}")
