@@ -30,3 +30,13 @@ class WorkerEcho:
       self._logger.error(f"actor '{self._actor.name}' exception")
 
     return struct
+
+  def _deliver(self, message_object: dict) -> int:
+    if self._actor.output is None:
+      # nothing to do
+      return 0
+
+    # add message to actor output queue
+    self._actor.output.put_nowait(message_object)
+
+    return 0

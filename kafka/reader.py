@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+import sys
 import typing
 
 from dataclasses import dataclass
@@ -35,7 +36,7 @@ class KafkaReader:
     else:
       self._log_subject = f"{__name__}"
 
-  def call(self):
+  async def call(self):
     struct = Struct(0, [])
 
     self._logger.info(f"{self._log_subject} reading topics {self._topics}")
@@ -47,6 +48,7 @@ class KafkaReader:
         msg = self._consumer.poll(timeout=1.0)
 
         if msg is None:
+          await self._asyncio_schedule()
           continue
 
         if msg.error():
@@ -54,27 +56,37 @@ class KafkaReader:
           if msg.error().code() == KafkaError._PARTITION_EOF:
             self._logger.info(f"{self._log_subject} partition eof")
             # todo:
-            pass
+            continue
           elif msg.error():
             raise KafkaException(msg.error())
-        else:
-          # call handler to process message
-          handler_struct = self._handler.call(ActorMessage(msg))
 
-          # check return code and ack
-          if handler_struct.code == 0:
-            self._logger.info(f"{self._log_subject} ack")
-            self._consumer.commit(asynchronous=False)
+        # call handler to process message
+        handler_struct = self._handler.call(ActorMessage(msg))
 
+        # check return code and ack
+        if handler_struct.code == 0:
+          self._logger.info(f"{self._log_subject} ack")
+          self._consumer.commit(asynchronous=False)
+
+        await self._asyncio_schedule()
     except KafkaException as e:
       self._logger.error(f"{self._log_subject} kafka exception {e}")
     except Exception as e:
       self._logger.error(f"{self._log_subject} exception {e}")
     except: # e.g. keyboard interrupt
-      self._logger.error(f"{self._log_subject} exception")
+      self._logger.error(f"{self._log_subject} exception {sys.exc_info()[0]}")
       raise
     finally:
       self._consumer.close()
       self._logger.info(f"{self._log_subject} stopping")
 
     return struct
+
+  # play nicely with asyncio
+  async def _asyncio_schedule(self, seconds: float = 0.1) -> int:
+    if self._task is None:
+      return 0
+
+    await asyncio.sleep(seconds)
+
+    return 0

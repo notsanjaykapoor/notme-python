@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import sys
 import typing
 
 from kafka.handlers.generic import HandlerGeneric as KafkaHandler
@@ -48,36 +49,6 @@ class Actor:
   def queue(self):
     return self._queue
 
-  async def run_kafka_queue(self):
-    self._logger.info(f"actor '{self._name}' running")
-
-    try:
-      # read from kafka stream
-      self._reader = KafkaReader(self._topic, self._group, self._handler)
-      self._reader.call()
-
-      self._logger.info(f"actor '{self._name}' exiting")
-    except: # e.g. keyboard interrupt
-      self._logger.info(f"actor '{self._name}' exception")
-    finally:
-      self._logger.info(f"actor '{self._name}' exiting")
-
-  async def run_task_queue(self):
-    self._logger.info(f"actor '{self._name}' running")
-
-    while True:
-      try:
-        # block on queue until message is available
-        message = await self._queue.get()
-
-        struct = self._handler.call(message=message)
-
-        # ack message
-        self._queue.task_done()
-      except: # e.g. keyboard interrupt
-        self._logger.info(f"actor '{self._name}' exception")
-        raise
-
   # create and schedule actor task
   def schedule(self, task_entry=None) -> int:
     self._logger.info(f"actor '{self._name}' scheduling")
@@ -88,11 +59,43 @@ class Actor:
     if task_entry is not None:
       self._task = asyncio.create_task(task_entry, name=self._name)
     elif self._topic is not None:
-      self._task = asyncio.create_task(self.run_kafka_queue(), name=self._name)
+      self._logger.info(f"actor '{self._name}' scheduling kafka")
+      self._task = asyncio.create_task(self._wait_kafka_queue(), name=self._name)
     else:
-      self._task = asyncio.create_task(self.run_task_queue(), name=self._name)
+      self._logger.info(f"actor '{self._name}' scheduling task")
+      self._task = asyncio.create_task(self._wait_task_queue(), name=self._name)
 
     return 0
+
+  async def _wait_kafka_queue(self):
+    self._logger.info(f"actor '{self._name}' running")
+
+    try:
+      # read from kafka stream
+      self._reader = KafkaReader(self._topic, self._group, self._handler)
+      await self._reader.call()
+
+      self._logger.info(f"actor '{self._name}' exiting")
+    except: # e.g. keyboard interrupt
+      self._logger.info(f"actor '{self._name}' kafka exception {sys.exc_info()[0]}")
+    finally:
+      self._logger.info(f"actor '{self._name}' exiting")
+
+  async def _wait_task_queue(self):
+    self._logger.info(f"actor '{self._name}' running")
+
+    try:
+      while True:
+        # block on queue until message is available
+        message = await self._queue.get()
+
+        struct = self._handler.call(message=message)
+
+        # ack message
+        self._queue.task_done()
+    except: # e.g. keyboard interrupt
+      self._logger.info(f"actor '{self._name}' task exception {sys.exc_info()[0]}")
+      raise
 
   @property
   def task(self):

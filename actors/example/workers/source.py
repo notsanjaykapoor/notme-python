@@ -28,13 +28,13 @@ class WorkerSource:
     self._logger.info(f"actor '{self._actor.name}' message header {msg.header()}")
 
     try:
-      message_dict = json.loads(msg.value())
+      message_object = json.loads(msg.value())
 
-      self._logger.info(f"actor '{self._actor.name}' message {message_dict}")
+      self._logger.info(f"actor '{self._actor.name}' message {message_object}")
 
-      if self._actor.output is not None:
-        # todo: write to output queue
-        self._logger.info(f"actor '{self._actor.name}' output todo")
+      self._deliver(
+        self._process(message_object)
+      )
 
       # append to app log
       log_object = {"actor":self._actor.name, **msg.header()}
@@ -45,3 +45,16 @@ class WorkerSource:
       self._logger.error(f"actor '{self._actor.name}' exception {e}")
 
     return struct
+
+  def _process(self, message_object: dict):
+    return message_object
+
+  def _deliver(self, message_object: dict) -> int:
+    if self._actor.output is None:
+      # nothing to do
+      return 0
+
+    # add message to actor output queue
+    self._actor.output.put_nowait(message_object)
+
+    return 0
