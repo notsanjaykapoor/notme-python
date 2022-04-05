@@ -16,7 +16,7 @@ class ActorMessage:
 
     return dict
 
-  def key(self):
+  def key(self) -> bytes:
     return self._message.key()
 
   def key_str(self) -> str:

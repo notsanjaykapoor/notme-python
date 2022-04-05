@@ -85,12 +85,12 @@ class Actor:
     if self._handler is None:
       raise ValueError("handler missing")
 
-    if task_entry:
-      self._task = asyncio.create_task(task_entry)
+    if task_entry is not None:
+      self._task = asyncio.create_task(task_entry, name=self._name)
     elif self._topic is not None:
-      self._task = asyncio.create_task(self.run_kafka_queue())
+      self._task = asyncio.create_task(self.run_kafka_queue(), name=self._name)
     else:
-      self._task = asyncio.create_task(self.run_task_queue())
+      self._task = asyncio.create_task(self.run_task_queue(), name=self._name)
 
     return 0
 

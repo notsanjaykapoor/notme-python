@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 import typing
@@ -25,13 +26,19 @@ class KafkaReader:
     self._consumer = Consumer(config_reader)
     self._topics = []
     self._logger = logging.getLogger("service")
+    self._task = asyncio.current_task()
 
     self._topics.append(self._topic)
+
+    if self._task is not None:
+      self._log_subject = f"actor '{self._task.get_name()}' {__name__}"
+    else:
+      self._log_subject = f"{__name__}"
 
   def call(self):
     struct = Struct(0, [])
 
-    self._logger.info(f"{__name__} starting, topics {self._topics}")
+    self._logger.info(f"{self._log_subject} reading topics {self._topics}")
 
     try:
       self._consumer.subscribe(self._topics)
@@ -45,7 +52,7 @@ class KafkaReader:
         if msg.error():
           # whoops, some type of read error
           if msg.error().code() == KafkaError._PARTITION_EOF:
-            self._logger.info(f"{__name__} partition eof")
+            self._logger.info(f"{self._log_subject} partition eof")
             # todo:
             pass
           elif msg.error():
@@ -56,18 +63,18 @@ class KafkaReader:
 
           # check return code and ack
           if handler_struct.code == 0:
-            self._logger.info(f"{__name__} ack")
+            self._logger.info(f"{self._log_subject} ack")
             self._consumer.commit(asynchronous=False)
 
     except KafkaException as e:
-      self._logger.error(f"{__name__} kafka exception {e}")
+      self._logger.error(f"{self._log_subject} kafka exception {e}")
     except Exception as e:
-      self._logger.error(f"{__name__} exception {e}")
+      self._logger.error(f"{self._log_subject} exception {e}")
     except: # e.g. keyboard interrupt
-      self._logger.error(f"{__name__} exception")
+      self._logger.error(f"{self._log_subject} exception")
       raise
     finally:
       self._consumer.close()
-      self._logger.info(f"{__name__} stopping")
+      self._logger.info(f"{self._log_subject} stopping")
 
     return struct
