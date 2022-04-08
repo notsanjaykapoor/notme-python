@@ -1,0 +1,14 @@
+#!/usr/local/bin/bash
+
+
+echo "stopping kafka"
+eval "brew services stop kafka"
+
+echo "stopping zookeeper"
+eval "brew services stop zookeeper"
+
+echo "starting zookeeper"
+eval "brew services start zookeeper"
+
+echo "starting kafka"
+eval "brew services start kafka"

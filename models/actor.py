@@ -25,6 +25,11 @@ class Actor:
 
     self._logger = logging.getLogger("actor")
 
+
+  def cancel(self):
+    if self._task is not None:
+      self._task.cancel()
+
   @property
   def handler(self):
     return self._handler
@@ -50,19 +55,15 @@ class Actor:
     return self._queue
 
   # create and schedule actor task
-  def schedule(self, task_entry=None) -> int:
-    self._logger.info(f"actor '{self._name}' scheduling")
-
+  def schedule(self) -> int:
     if self._handler is None:
       raise ValueError("handler missing")
 
-    if task_entry is not None:
-      self._task = asyncio.create_task(task_entry, name=self._name)
-    elif self._topic is not None:
-      self._logger.info(f"actor '{self._name}' scheduling kafka")
+    if self._topic is not None:
+      self._logger.info(f"actor '{self._name}' scheduling task kafka")
       self._task = asyncio.create_task(self._wait_kafka_queue(), name=self._name)
     else:
-      self._logger.info(f"actor '{self._name}' scheduling task")
+      self._logger.info(f"actor '{self._name}' scheduling task queue")
       self._task = asyncio.create_task(self._wait_task_queue(), name=self._name)
 
     return 0
@@ -71,13 +72,14 @@ class Actor:
     self._logger.info(f"actor '{self._name}' running")
 
     try:
-      # read from kafka stream
       self._reader = KafkaReader(self._topic, self._group, self._handler)
-      await self._reader.call()
 
-      self._logger.info(f"actor '{self._name}' exiting")
+      # read from kafka stream
+      await self._reader.call()
+    except asyncio.exceptions.CancelledError:
+      self._logger.error(f"actor '{self._name}' kafka cancelled exception")
     except: # e.g. keyboard interrupt
-      self._logger.info(f"actor '{self._name}' kafka exception {sys.exc_info()[0]}")
+      self._logger.error(f"actor '{self._name}' kafka exception {sys.exc_info()[0]}")
     finally:
       self._logger.info(f"actor '{self._name}' exiting")
 
@@ -93,9 +95,12 @@ class Actor:
 
         # ack message
         self._queue.task_done()
+    except asyncio.exceptions.CancelledError:
+      self._logger.error(f"actor '{self._name}' task cancelled exception")
     except: # e.g. keyboard interrupt
-      self._logger.info(f"actor '{self._name}' task exception {sys.exc_info()[0]}")
-      raise
+      self._logger.error(f"actor '{self._name}' task exception {sys.exc_info()[0]}")
+    finally:
+      self._logger.info(f"actor '{self._name}' exiting")
 
   @property
   def task(self):

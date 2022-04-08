@@ -1,0 +1,3 @@
+#!/bin/bash
+
+cat ./data/chess/mega2400_part_01.pgn.txt | grep "Result" | sort | uniq -c

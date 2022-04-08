@@ -11,6 +11,8 @@ from typing import Optional
 import asyncio
 import json
 import logging
+import signal
+import sys
 import time
 import typer
 import ulid
@@ -63,20 +65,30 @@ def actor_server(app: str = typer.Option(...), msg: str = "ping"):
   asyncio.run(actor_server_async(app=app, msg=msg))
 
 async def actor_server_async(app: str, msg: str):
-  logger.info(f"cli actor_server")
+  logger.info(f"cli actor_server starting")
 
   # start app
   struct_app = App(toml_file=f"./data/apps/{app}.toml").call()
 
-  while True:
-    await asyncio.sleep(1)
+  # get app actors
+  actors = [actor for name, actor in struct_app.actors.items()]
 
-  # get app tasks
-  # tasks = [actor.task for name, actor in struct_app.actors.items()]
+  def signal_handler(signum, frame):
+    logger.info(f"cli actor_server signal handler ... cleaning up")
+    for actor in actors:
+      actor.cancel()
+
+  # install signal handler
+  signal.signal(signal.SIGINT, signal_handler)
 
   # wait on tasks
-  # logger.info(f"cli actor_server waiting on {len(tasks)} tasks")
-  # await asyncio.gather(*tasks)
+  logger.info(f"cli actor_server wait on {len(actors)} actors")
+
+  try:
+    tasks = [actor.task for actor in actors]
+    await asyncio.gather(*tasks)
+  except:
+    logger.error(f"cli actor_server exception {sys.exc_info()[0]}")
 
   # actor_source = struct_manager.actors["source"]
   #

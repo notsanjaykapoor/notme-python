@@ -25,6 +25,7 @@ class KafkaReader:
     config_reader["group.id"] = self._group
 
     self._consumer = Consumer(config_reader)
+    self._timeout = 1.0
     self._topics = []
     self._logger = logging.getLogger("service")
     self._task = asyncio.current_task()
@@ -45,10 +46,10 @@ class KafkaReader:
       self._consumer.subscribe(self._topics)
 
       while True:
-        msg = self._consumer.poll(timeout=1.0)
+        msg = self._consumer.poll(timeout=self._timeout)
 
         if msg is None:
-          await self._asyncio_schedule()
+          await self._asyncio_yield()
           continue
 
         if msg.error():
@@ -61,16 +62,18 @@ class KafkaReader:
             raise KafkaException(msg.error())
 
         # call handler to process message
-        handler_struct = self._handler.call(ActorMessage(msg))
+        handler_struct = self._handler.call(msg=ActorMessage(msg))
 
         # check return code and ack
         if handler_struct.code == 0:
           self._logger.info(f"{self._log_subject} ack")
           self._consumer.commit(asynchronous=False)
 
-        await self._asyncio_schedule()
+        await self._asyncio_yield()
     except KafkaException as e:
-      self._logger.error(f"{self._log_subject} kafka exception {e}")
+      self._logger.error(f"{self._log_subject} exception {e}")
+    except asyncio.exceptions.CancelledError:
+      self._logger.error(f"{self._log_subject} cancelled exception")
     except Exception as e:
       self._logger.error(f"{self._log_subject} exception {e}")
     except: # e.g. keyboard interrupt
@@ -78,12 +81,12 @@ class KafkaReader:
       raise
     finally:
       self._consumer.close()
-      self._logger.info(f"{self._log_subject} stopping")
+      self._logger.info(f"{self._log_subject} exiting")
 
     return struct
 
   # play nicely with asyncio
-  async def _asyncio_schedule(self, seconds: float = 0.1) -> int:
+  async def _asyncio_yield(self, seconds: float = 0.1) -> int:
     if self._task is None:
       return 0
 
