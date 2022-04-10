@@ -32,9 +32,6 @@ from models import user
 from services.crypto.pkey.create import PkeyCreate
 from services.crypto.pkey.sign import PkeySign
 from services.crypto.pkey.verify import PkeyVerify
-from services.crypto.symmetric.decrypt import SymmetricDecrypt
-from services.crypto.symmetric.encrypt import SymmetricEncrypt
-from services.crypto.symmetric.create import SymmetricCreate
 from services.users.create import UserCreate
 from services.users.get import UserGet
 from services.users.list import UsersList
@@ -129,33 +126,6 @@ def crypto_sign(data: str = "secret"):
   ).call()
 
   logger.info(f"cli verify {struct_verify}")
-
-@app.command()
-def crypto_symmetric(data: str = "a secret message"):
-  # note: data must be multiple of 16 bytes
-
-  struct_symmetric = SymmetricCreate().call()
-
-  cipher = struct_symmetric.cipher
-
-  struct_encrypt = SymmetricEncrypt(
-    cipher,
-    data
-  ).call()
-
-  struct_encrypt = SymmetricDecrypt(
-    cipher,
-    struct_encrypt.encoded,
-  ).call()
-
-@app.command()
-def json_read(file: str = "entities.json"):
-  data = json.load(
-    open(file)
-  )
-
-  for record in data:
-    logger.info(f"record {record}")
 
 @app.command()
 def topic_read(topic: str = typer.Option(...), group: str="python"):

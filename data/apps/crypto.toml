@@ -1,0 +1,5 @@
+name = "crypto"
+
+[kafka]
+topic = "crypto"
+group = "group"

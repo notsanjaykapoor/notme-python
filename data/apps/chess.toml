@@ -1,0 +1,8 @@
+name = "chess"
+
+[kafka]
+topic = "chess"
+group = "group"
+
+[stages]
+source = ["map"]

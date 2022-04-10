@@ -1,6 +1,7 @@
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from dataclasses import dataclass
 
+import base64
 import logging
 import os
 import typing
@@ -11,8 +12,13 @@ class Struct:
   cipher: typing.Any
   errors: list[str]
 
-class SymmetricCreate:
-  def __init__(self):
+class AesGcmLoad:
+  def __init__(self, key: str):
+    self._key = key
+
+    # base64 decode key, and convert to bytes
+    self._key_bytes = base64.b64decode(self._key)
+
     self.logger = logging.getLogger("service")
 
   def call(self):
@@ -20,10 +26,7 @@ class SymmetricCreate:
 
     self.logger.info(f"{__name__}")
 
-    key = os.urandom(32)
-    iv = os.urandom(16)
-
     # create symmetric key
-    struct.cipher = Cipher(algorithms.AES(key), modes.CBC(iv))
+    struct.cipher = AESGCM(self._key_bytes)
 
     return struct

@@ -12,27 +12,27 @@ class Struct:
   decoded: str
   errors: list[str]
 
-class SymmetricDecrypt:
-  def __init__(self, cipher: typing.Any, encoded: str):
-    self.cipher = cipher
-    self.encoded = encoded
+class AesGcmDecrypt:
+  def __init__(self, cipher: typing.Any, encoded: str, nonce: str):
+    self._cipher = cipher
+    self._encoded = encoded
+    self._nonce = nonce
 
-    self.data_encoding = "utf-8"
+    self._data_encoding = "utf-8"
+
+    self._data_bytes = base64.b64decode(self._encoded)
+    self._nonce_bytes = base64.b64decode(self._nonce)
+
     self.logger = logging.getLogger("service")
 
   def call(self):
     struct = Struct(0, "", [])
 
-    decryptor = self.cipher.decryptor()
-
-    # convert str to bytes
-    data_bytes = base64.b64decode(self.encoded)
-
     # decrypt data
-    decoded_byted = decryptor.update(data_bytes) + decryptor.finalize()
+    plaintext_bytes = self._cipher.decrypt(self._nonce_bytes, self._data_bytes, None)
 
     # convert decoded bytes to string
-    struct.decoded = decoded_byted.decode(self.data_encoding)
+    struct.decoded = plaintext_bytes.decode(self._data_encoding)
 
     self.logger.info(f"{__name__} '{struct.decoded}'")
 

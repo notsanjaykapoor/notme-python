@@ -12,7 +12,7 @@ class Struct:
   encoded: str
   errors: list[str]
 
-class SymmetricEncrypt:
+class AesCbcEncrypt:
   def __init__(self, cipher: typing.Any, data: str):
     self.cipher = cipher
     self.data = data
