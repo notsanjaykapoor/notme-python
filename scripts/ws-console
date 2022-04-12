@@ -8,17 +8,13 @@ import asyncio
 import json
 import logging
 import os
-import signal
 import sys
-import time
 import typer
 import ulid
 import uvloop
 import websockets
 
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
-
-# from starlette.websockets import WebSocket
 
 from log import logging_init
 from services.io.console_socket import IoConsoleSocket

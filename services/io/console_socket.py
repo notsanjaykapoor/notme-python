@@ -18,6 +18,7 @@ class IoConsoleSocket:
     self._ws = ws
 
     self._prompt = ""
+    self._wait_seconds = 0.5
     self._logger = logging.getLogger("service")
 
   async def call(self):
@@ -27,20 +28,22 @@ class IoConsoleSocket:
 
     while True:
       # check socket
-      socket_data = await self._socket(0.5)
+      socket_data = await self._socket(self._wait_seconds)
 
       if socket_data is not None:
+        # console print
         print(socket_data)
 
       # check console
-      console_data = await self._console(0.5)
+      console_data = await self._console(self._wait_seconds)
 
       if console_data is not None:
         if "/exit" in console_data or "/quit" in console_data:
+          # send leaving message and then exit
           await self._ws.send(f"{self._user_id}: leaving")
           break
         else:
-          # send data
+          # send to chat server
           await self._ws.send(f"{self._user_id}: {console_data}")
 
     return struct

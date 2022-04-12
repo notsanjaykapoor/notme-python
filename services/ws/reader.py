@@ -26,9 +26,6 @@ class WsReader:
       while True:
         data = await self._ws.receive_text()
         self._logger.info(f"{request_id.get()} {__name__} received '{data}'")
-
-        # echo message
-        await self._ws.send_text(f"{data}")
     except WebSocketDisconnect:
       self._logger.info(f"{request_id.get()} {__name__} disconnect")
     except:

@@ -182,7 +182,7 @@ def ws_send(message: str = "hey"):
   logger.info(f"cli websocket sending '{message}'")
 
   ws = websocket.WebSocket()
-  ws.connect(os.environ["WS_URL"])
+  ws.connect(f"{os.environ['WS_URL']}/ws")
   ws.send(message)
   ws.close()
 

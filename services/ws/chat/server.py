@@ -29,11 +29,6 @@ class ChatServer:
 
       self._socket_manager.connection_add(self._ws, self._user_id)
 
-      # testing
-      users = self._socket_manager.users()
-      count = self._socket_manager.count()
-      self._logger.info(f"{__name__} count {count} users {users}")
-
       while True:
         data = await self._ws.receive_text()
 

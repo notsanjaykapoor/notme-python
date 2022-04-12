@@ -11,6 +11,7 @@ from models.actor_message import ActorMessage
 
 from services.crypto.symmetric.aesgcm.decrypt import AesGcmDecrypt
 from services.crypto.symmetric.factory import SymmetricFactory
+from services.crypto.symmetric.type import cipher_name
 
 @dataclass
 class Struct:
@@ -61,10 +62,15 @@ class WorkerSource:
 
     struct_factory = SymmetricFactory(self._keys_file, user_from).call()
 
-    struct_encrypt = AesGcmDecrypt(
-      cipher=struct_factory.cipher,
-      encoded=message_dict["encoded"],
-      nonce=message_dict["nonce"]
-    ).call()
+    cipher_name_ = cipher_name(struct_factory.cipher)
 
-    return struct_encrypt.decoded
+    if cipher_name_ == "aesgcm":
+      struct_decrypt = AesGcmDecrypt(
+        cipher=struct_factory.cipher,
+        encoded=message_dict["encoded"],
+        nonce=message_dict["nonce"]
+      ).call()
+    else:
+      raise ValueError("invalid cipher")
+
+    return struct_decrypt.decoded

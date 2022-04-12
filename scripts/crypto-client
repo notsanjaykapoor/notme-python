@@ -53,7 +53,7 @@ def crypto_client(topic: str = typer.Option(...), user_id: str = "kafka@notme.co
     data=message,
   ).call()
 
-  logger.info(f"crypto_client struct {struct_encrypt}")
+  # logger.info(f"crypto_client struct {struct_encrypt}")
 
   writer = KafkaWriter(topic=topic)
 
