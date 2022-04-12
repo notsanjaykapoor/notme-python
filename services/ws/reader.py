@@ -1,7 +1,10 @@
+import logging
+import sys
+
 from dataclasses import dataclass
 from fastapi import WebSocket, WebSocketDisconnect
 
-import logging
+from context import request_id
 
 @dataclass
 class Struct:
@@ -10,24 +13,26 @@ class Struct:
 
 class WsReader:
   def __init__(self, ws: WebSocket):
-    self.ws = ws
+    self._ws = ws
 
-    self.logger = logging.getLogger("service")
+    self._logger = logging.getLogger("service")
 
   async def call(self):
     struct = Struct(0, [])
 
     try:
-      self.logger.info(f"{__name__}")
+      self._logger.info(f"{request_id.get()} {__name__} waiting")
 
       while True:
-        data = await self.ws.receive_text()
-        self.logger.info(f"{__name__} received '{data}'")
-        # await self.ws.send_text(f"message text was: {data}")
+        data = await self._ws.receive_text()
+        self._logger.info(f"{request_id.get()} {__name__} received '{data}'")
+
+        # echo message
+        await self._ws.send_text(f"{data}")
     except WebSocketDisconnect:
-      self.logger.info(f"{__name__} disconnect")
-    except Exception as e:
+      self._logger.info(f"{request_id.get()} {__name__} disconnect")
+    except:
       struct.code = 500
-      self.logger.error(f"{__name__} {e}")
+      self._logger.error(f"{request_id.get()} {__name__} exception {sys.exc_info()[0]}")
 
     return struct

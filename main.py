@@ -5,6 +5,7 @@ load_dotenv() # take environment variables from .env.
 import contextvars
 import logging
 import strawberry
+import sys
 import ulid
 
 from database import engine
@@ -17,11 +18,13 @@ from strawberry.schema.config import StrawberryConfig
 from context import request_id
 from gql.query import GqlQuery
 from log import logging_init
+from models.socket_manager import SocketManager
 from models.user import User
 from services.users.get import UserGet
 from services.users.create import UserCreate
 from services.users.list import UsersList
 from services.ws.reader import WsReader
+from services.ws.chat.server import ChatServer
 
 logger = logging_init("api")
 
@@ -38,15 +41,17 @@ async def get_gql_context(db=Depends(get_db)):
 
 # initialize graphql schema and router
 
-schema = strawberry.Schema(
+gql_schema = strawberry.Schema(
   query=GqlQuery,
   config=StrawberryConfig(auto_camel_case=False),
 )
 
 graphql_router = GraphQLRouter(
-  schema,
+  gql_schema,
   context_getter=get_gql_context,
 )
+
+socket_manager = SocketManager()
 
 app = FastAPI()
 
@@ -110,13 +115,20 @@ def users_list(query: str = "", offset: int = 0, limit: int = 100, db: Session =
 
   return struct.users
 
+@app.websocket("/ws/chat/{user_id}")
+async def websocket_chat_endpoint(websocket: WebSocket, user_id: str):
+  await ChatServer(socket_manager, websocket, user_id).call()
+
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
   await websocket.accept()
 
   try:
+    # generate request id for this connection
+    request_id.set(ulid.new().str)
+
     logger.info(f"{request_id.get()} api.ws connected")
 
     await WsReader(websocket).call()
-  except Exception as e:
-    logger.info(f"{request_id.get()} api.ws exception {e}")
+  except:
+    logger.info(f"{request_id.get()} api.ws exception {sys.exc_info()[0]}")
