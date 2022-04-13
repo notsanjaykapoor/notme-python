@@ -30,6 +30,7 @@ from log import logging_init
 
 from services.crypto.symmetric.aesgcm.encrypt import AesGcmEncrypt
 from services.crypto.symmetric.factory import SymmetricFactory
+from services.crypto.symmetric.name import cipher_name
 
 app = typer.Typer()
 
@@ -48,10 +49,15 @@ def crypto_client(topic: str = typer.Option(...), user_id: str = "kafka@notme.co
     "id": ulid.new().str,
   }
 
-  struct_encrypt = AesGcmEncrypt(
-    cipher=struct_factory.cipher,
-    data=message,
-  ).call()
+  cipher_name_ = cipher_name(struct_factory.cipher)
+
+  if cipher_name_ == "aesgcm":
+    struct_encrypt = AesGcmEncrypt(
+      cipher=struct_factory.cipher,
+      data=message,
+    ).call()
+  else:
+    raise ValueError("invalid cipher")
 
   # logger.info(f"crypto_client struct {struct_encrypt}")
 

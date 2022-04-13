@@ -11,7 +11,7 @@ from models.actor_message import ActorMessage
 
 from services.crypto.symmetric.aesgcm.decrypt import AesGcmDecrypt
 from services.crypto.symmetric.factory import SymmetricFactory
-from services.crypto.symmetric.type import cipher_name
+from services.crypto.symmetric.name import cipher_name
 
 @dataclass
 class Struct:
