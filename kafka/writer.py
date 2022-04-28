@@ -2,6 +2,7 @@ import json
 import logging
 
 from dataclasses import dataclass
+from typing import Any
 
 from confluent_kafka import Producer
 from kafka.config import config_writer
@@ -18,7 +19,7 @@ class KafkaWriter:
     self._producer = Producer(config_writer)
     self._logger = logging.getLogger("service")
 
-  def call(self, key: str, message: {}):
+  def call(self, key: str, message: Any):
     struct = Struct(0, [])
 
     if type(message) is dict:

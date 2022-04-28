@@ -3,7 +3,7 @@ from dataclasses import dataclass
 @dataclass
 class Struct:
   code: int
-  tokens: list[{}]
+  tokens: list[dict]
   errors: list[str]
 
 class MqlParse:

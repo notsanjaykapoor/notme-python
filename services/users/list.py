@@ -21,7 +21,7 @@ class Struct:
 @dataclass
 class StructToken:
   code: int
-  tokens: list[{}]
+  tokens: list[dict]
   errors: list[str]
 
 class UsersList:

@@ -131,6 +131,19 @@ def crypto_sign(data: str = "secret"):
   logger.info(f"cli verify {struct_verify}")
 
 @app.command()
+def json_rewrite(file: str = "./data/example/example.json"):
+  logger.info(f"cli json_rewrite file {file}")
+
+  data = json.load(open(file))
+  records = []
+  with open("./data/example/graph.json", "w") as output:
+    for record in data:
+      record["id"] = ulid.new().str
+      records.append(record)
+
+    output.write(json.dumps(records))
+
+@app.command()
 def topic_read(topic: str = typer.Option(...), group: str="python"):
   # call reader with generic handler
   handler = KafkaHandler()
