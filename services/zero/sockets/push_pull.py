@@ -11,7 +11,7 @@ class Struct:
   errors: list[str]
 
 class ZeroSocketPushPull:
-  def __init__(self, uri_push: str, mode_push: str, uri_pull: str, mode_pull: str):
+  def __init__(self, uri_push: str, mode_push: str, uri_pull: str, mode_pull: str) -> None:
     self._uri_push = uri_push
     self._mode_push = mode_push
     self._uri_pull = uri_pull
@@ -19,7 +19,7 @@ class ZeroSocketPushPull:
 
     self._logger = logging.getLogger("service")
 
-  def call(self):
+  def call(self) -> Struct:
     struct = Struct(0, None, None, [])
 
     struct.socket_push = zmq.Context().socket(zmq.PUSH)

@@ -12,7 +12,7 @@ from models.actor import Actor
 @dataclass
 class Struct:
   code: int
-  actors: {}
+  actors: dict
   errors: list[str]
 
 class App:

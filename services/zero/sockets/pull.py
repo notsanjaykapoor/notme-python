@@ -10,13 +10,13 @@ class Struct:
   errors: list[str]
 
 class ZeroSocketPull:
-  def __init__(self, uri: str, mode: str):
+  def __init__(self, uri: str, mode: str) -> None:
     self._uri = uri
     self._mode = mode
 
     self._logger = logging.getLogger("service")
 
-  def call(self):
+  def call(self) -> Struct:
     struct = Struct(0, None, [])
 
     struct.socket = zmq.Context().socket(zmq.PULL)

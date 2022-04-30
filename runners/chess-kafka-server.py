@@ -1,5 +1,3 @@
-#!/usr/local/bin/python3
-
 from dotenv import load_dotenv
 
 load_dotenv() # take environment variables from .env.
@@ -32,11 +30,11 @@ app = typer.Typer()
 logger = logging_init("cli")
 
 @app.command()
-def chess_server():
+def chess_server(app: str = typer.Option(...)):
   uvloop.install()
-  asyncio.run(chess_server_async())
+  asyncio.run(chess_server_async(app))
 
-async def chess_server_async(app: str = "chess"):
+async def chess_server_async(app: str):
   logger.info(f"chess_server starting")
 
   # start app

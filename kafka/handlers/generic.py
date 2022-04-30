@@ -1,6 +1,8 @@
-from dataclasses import dataclass
 import json
 import logging
+
+from dataclasses import dataclass
+from typing import Any
 
 @dataclass
 class Struct:
@@ -11,7 +13,7 @@ class HandlerGeneric:
   def __init__(self):
     self.logger = logging.getLogger("console")
 
-  def call(self, msg: {}):
+  def call(self, msg: Any):
     struct = Struct(0, [])
 
     try:

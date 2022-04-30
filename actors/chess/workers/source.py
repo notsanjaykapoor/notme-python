@@ -15,11 +15,11 @@ class Struct:
   errors: list[str]
 
 class WorkerSource:
-  def __init__(self, actor: Actor, app_name: str):
+  def __init__(self, actor: Actor, app_name: str) -> None:
     self._actor = actor
     self._app_name = app_name
 
-    self._dict = {}
+    self._dict: dict = {}
 
     self._actor_log = ActorLog(app_name=self._app_name)
     self._logger = logging.getLogger("actor")
@@ -49,10 +49,10 @@ class WorkerSource:
     return struct
 
   # append to app log
-  def _log_append(self, msg: ActorMessage):
+  def _log_append(self, msg: ActorMessage) -> None:
     self._actor_log.append({"actor":self._actor.name, **msg.header()})
 
-  def _process(self, message_str: str):
+  def _process(self, message_str: str) -> None:
     message_str_norm = message_str.strip()
 
     if not message_str_norm in self._dict.keys():

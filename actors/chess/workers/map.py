@@ -11,7 +11,7 @@ class Struct:
   errors: list[str]
 
 class WorkerMap:
-  def __init__(self, actor: Actor, app_name: str):
+  def __init__(self, actor: Actor, app_name: str) -> None:
     self._actor = actor
     self._app_name = app_name
 
@@ -19,7 +19,7 @@ class WorkerMap:
     self._logger = logging.getLogger("actor")
 
   # process task message
-  def call(self, message: dict):
+  def call(self, message: dict) -> Struct:
     struct = Struct(0, [])
 
     try:

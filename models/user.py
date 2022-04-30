@@ -2,7 +2,7 @@ from typing import List, Optional
 
 from sqlmodel import Field, Session, SQLModel
 
-class User(SQLModel, table=True):
+class User(SQLModel, table=True): # type: ignore
   __tablename__ = "users"
 
   id: Optional[int] = Field(default=None, primary_key=True)

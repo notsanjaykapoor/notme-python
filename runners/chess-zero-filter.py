@@ -53,7 +53,7 @@ def chess_zero_filter():
 
         msg_count += 1
 
-        if msg_count % 1000 == 0:
+        if msg_count % 100000 == 0:
           logger.info(f"chess_zero_filter {msg_count}")
 
       case _:

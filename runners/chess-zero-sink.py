@@ -42,8 +42,6 @@ def chess_zero_sink():
 
         dict[message] += 1
 
-        # logger.info(f"chess_zero_sink {dict}")
-
       case "chess-end":
         logger.info(f"chess_zero_sink end {dict}")
 

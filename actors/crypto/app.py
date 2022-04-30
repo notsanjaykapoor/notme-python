@@ -11,11 +11,11 @@ from models.actor import Actor
 @dataclass
 class Struct:
   code: int
-  actors: {}
+  actors: dict
   errors: list[str]
 
 class App:
-  def __init__(self, toml_file: str):
+  def __init__(self, toml_file: str) -> None:
     self._toml_file = toml_file
 
     self._toml_dict = toml.load(self._toml_file)

@@ -25,7 +25,7 @@ class WorkerSource:
 
     self._keys_file = "./keys/keys.toml"
 
-    self._dict = {}
+    self._dict: dict = {}
 
     self._actor_log = ActorLog(app_name=self._app_name)
     self._logger = logging.getLogger("actor")
@@ -37,7 +37,7 @@ class WorkerSource:
     self._logger.info(f"actor '{self._actor.name}' message header {msg.header()}")
 
     try:
-      message_dict = json.loads(msg.value().decode("utf-8"))
+      message_dict = json.loads(msg.value_str())
 
       self._logger.info(f"actor '{self._actor.name}' message {message_dict}")
 
@@ -55,7 +55,7 @@ class WorkerSource:
   def _log_append(self, msg: ActorMessage):
     self._actor_log.append({"actor":self._actor.name, **msg.header()})
 
-  def _process(self, message_dict: str):
+  def _process(self, message_dict: dict):
     user_from = message_dict["from"]
 
     self._logger.info(f"actor '{self._actor.name}' from {user_from}")

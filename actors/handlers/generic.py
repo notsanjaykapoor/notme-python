@@ -9,11 +9,11 @@ class Struct:
   errors: list[str]
 
 class HandlerGeneric:
-  def __init__(self):
+  def __init__(self) -> None:
     self._logger = logging.getLogger("actor")
 
   # called by actor to process a single message
-  def call(self, actor_name: str, message: dict):
+  def call(self, actor_name: str, message: dict) -> Struct:
     struct = Struct(0, [])
 
     try:

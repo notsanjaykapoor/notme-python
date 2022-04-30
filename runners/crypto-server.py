@@ -1,5 +1,3 @@
-#!/usr/local/bin/python3
-
 from dotenv import load_dotenv
 
 load_dotenv() # take environment variables from .env.
@@ -32,9 +30,9 @@ app = typer.Typer()
 logger = logging_init("cli")
 
 @app.command()
-def crypto_server():
+def crypto_server(app: str = typer.Option(...)):
   uvloop.install()
-  asyncio.run(crypto_server_async())
+  asyncio.run(crypto_server_async(app))
 
 async def crypto_server_async(app: str = "crypto"):
   logger.info(f"crypto_server starting")

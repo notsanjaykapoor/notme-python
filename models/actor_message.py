@@ -31,5 +31,8 @@ class ActorMessage:
   def topic(self) -> str:
     return self._message.topic()
 
-  def value(self) -> str:
+  def value(self) -> bytes:
     return self._message.value()
+
+  def value_str(self) -> str:
+    return self._message.value().decode("utf-8")
