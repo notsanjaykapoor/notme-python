@@ -1,31 +1,35 @@
 from dataclasses import dataclass
 
+
 @dataclass
 class Struct:
-  code: int
-  tokens: list[dict]
-  errors: list[str]
+    code: int
+    tokens: list[dict]
+    errors: list[str]
+
 
 class MqlParse:
-  def __init__(self, query: str):
-    self.query = query
+    def __init__(self, query: str):
+        self.query = query
 
-  def call(self):
-    struct = Struct(0, [], [])
+    def call(self):
+        struct = Struct(0, [], [])
 
-    tokens = self.query.split(" ")
+        tokens = self.query.split(" ")
 
-    for token in tokens:
-      if len(token) == 0:
-        # no more tokens to parse
-        break
+        for token in tokens:
+            if len(token) == 0:
+                # no more tokens to parse
+                break
 
-      field, value = token.split(":")
+            field, value = token.split(":")
 
-      # append to list
-      struct.tokens.append({
-        "field": field,
-        "value": value,
-      })
+            # append to list
+            struct.tokens.append(
+                {
+                    "field": field,
+                    "value": value,
+                }
+            )
 
-    return struct
+        return struct

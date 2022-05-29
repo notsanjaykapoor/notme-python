@@ -8,44 +8,46 @@ import actors.crypto.workers.source
 
 from models.actor import Actor
 
+
 @dataclass
 class Struct:
-  code: int
-  actors: dict
-  errors: list[str]
+    code: int
+    actors: dict
+    errors: list[str]
+
 
 class App:
-  def __init__(self, toml_file: str) -> None:
-    self._toml_file = toml_file
+    def __init__(self, toml_file: str) -> None:
+        self._toml_file = toml_file
 
-    self._toml_dict = toml.load(self._toml_file)
-    self._app_name = self._toml_dict["name"]
+        self._toml_dict = toml.load(self._toml_file)
+        self._app_name = self._toml_dict["name"]
 
-    self._logger = logging.getLogger("actor")
+        self._logger = logging.getLogger("actor")
 
-  def call(self) -> Struct:
-    struct = Struct(0, {}, [])
+    def call(self) -> Struct:
+        struct = Struct(0, {}, [])
 
-    # create actors with handlers
+        # create actors with handlers
 
-    toml_kafka = self._toml_dict["kafka"]
+        toml_kafka = self._toml_dict["kafka"]
 
-    actor_source = Actor(
-      name=f"{self._app_name}-source",
-      topic=toml_kafka["topic"],
-      group=toml_kafka["group"],
-    )
+        actor_source = Actor(
+            name=f"{self._app_name}-source",
+            topic=toml_kafka["topic"],
+            group=toml_kafka["group"],
+        )
 
-    actor_source.handler = actors.crypto.workers.source.WorkerSource(
-      actor=actor_source,
-      app_name=self._app_name,
-    )
+        actor_source.handler = actors.crypto.workers.source.WorkerSource(
+            actor=actor_source,
+            app_name=self._app_name,
+        )
 
-    struct.actors["source"] = actor_source
+        struct.actors["source"] = actor_source
 
-    # schedule actors
+        # schedule actors
 
-    for _, actor in struct.actors.items():
-      actor.schedule()
+        for _, actor in struct.actors.items():
+            actor.schedule()
 
-    return struct
+        return struct

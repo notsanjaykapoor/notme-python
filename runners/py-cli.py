@@ -167,17 +167,18 @@ def user_create(name: str = typer.Option(...)):
   logger.info(f"cli user {name} create try")
 
   with Session(engine) as db_session:
-    user = UserGet(db_session, name).call()
+    struct_get = UserGet(db=db_session, user_id=name).call()
 
-    if user:
-      log.info(f"cli result user {name} exists")
+    if struct_get.user:
+      logger.info(f"cli result user {name} exists")
       return 0
 
-    user_id = UserCreate(session, name).call()
+    struct_create = UserCreate(db=db_session, user_id=name).call()
 
-    log.info(f"cli result user {name} created")
+    if struct_create.code == 0:
+      logger.info(f"cli result user {name} created")
 
-    return user_id
+    return struct_create.user_id
 
 @app.command()
 def user_search(query: str = ""):

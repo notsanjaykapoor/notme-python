@@ -3,31 +3,33 @@ import zmq
 
 from dataclasses import dataclass
 
+
 @dataclass
 class Struct:
-  code: int
-  socket: zmq.Socket
-  errors: list[str]
+    code: int
+    socket: zmq.Socket
+    errors: list[str]
+
 
 class ZeroSocketPush:
-  def __init__(self, uri: str, mode: str) -> None:
-    self._uri = uri
-    self._mode = mode
+    def __init__(self, uri: str, mode: str) -> None:
+        self._uri = uri
+        self._mode = mode
 
-    self._logger = logging.getLogger("service")
+        self._logger = logging.getLogger("service")
 
-  def call(self) -> Struct:
-    struct = Struct(0, None, [])
+    def call(self) -> Struct:
+        struct = Struct(0, None, [])
 
-    struct.socket = zmq.Context().socket(zmq.PUSH)
+        struct.socket = zmq.Context().socket(zmq.PUSH)
 
-    if self._mode == "bind":
-      struct.socket.bind(self._uri)
-    elif self._mode == "connect":
-      struct.socket.connect(self._uri)
-    else:
-      raise ValueError("invalid mode")
+        if self._mode == "bind":
+            struct.socket.bind(self._uri)
+        elif self._mode == "connect":
+            struct.socket.connect(self._uri)
+        else:
+            raise ValueError("invalid mode")
 
-    self._logger.info(f"{__name__} uri {self._uri} bound")
+        self._logger.info(f"{__name__} uri {self._uri} bound")
 
-    return struct
+        return struct

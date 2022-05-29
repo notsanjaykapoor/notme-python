@@ -1,6 +1,6 @@
 from dotenv import load_dotenv
 
-load_dotenv() # take environment variables from .env.
+load_dotenv()  # take environment variables from .env.
 
 import contextvars
 import logging
@@ -23,20 +23,22 @@ socket_manager = SocketManager()
 
 app = FastAPI()
 
+
 @app.websocket("/ws/chat/{user_id}")
 async def websocket_chat_endpoint(websocket: WebSocket, user_id: str):
-  await ChatServer(socket_manager, websocket, user_id).call()
+    await ChatServer(socket_manager, websocket, user_id).call()
+
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
-  await websocket.accept()
+    await websocket.accept()
 
-  try:
-    # generate request id for this connection
-    request_id.set(ulid.new().str)
+    try:
+        # generate request id for this connection
+        request_id.set(ulid.new().str)
 
-    logger.info(f"{request_id.get()} api.ws connected")
+        logger.info(f"{request_id.get()} api.ws connected")
 
-    await WsReader(websocket).call()
-  except:
-    logger.info(f"{request_id.get()} api.ws exception {sys.exc_info()[0]}")
+        await WsReader(websocket).call()
+    except:
+        logger.info(f"{request_id.get()} api.ws exception {sys.exc_info()[0]}")
