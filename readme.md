@@ -56,9 +56,39 @@ python ./runners/ws-console.py --user-id user-2
 ```
 
 
-### Kafka
+### Kafka + Redpanda
 
-The crypto example run an actor based server that reads from a kafka topic and uses a set of actors to process each message.
+Kafka install:
+
+```
+docker-compose -f docker-compose-kafka.yml up -d
+```
+
+Kafka topic create:
+
+```
+docker exec -it broker kafka-topics --bootstrap-server broker:9092 --create --topic chess
+
+docker exec -it broker kafka-topics --bootstrap-server broker:9092 --list
+```
+
+Redpanda install:
+
+```
+docker-compose -f docker-compose-redpanda.yml up -d
+
+```
+
+Redpanda topic create:
+
+```
+docker exec -it redpanda rpk topic create chess --brokers=localhost:9092
+
+docker exec -it redpanda rpk topic list --brokers=localhost:9092
+```
+
+
+The crypto example uses an actor based server that reads from a kafka topic with a set of actors to process each message.
 
 ```
 docker exec -it redpanda-1 rpk topic create crypto
@@ -73,10 +103,17 @@ The chess example ...
 ```
 python runners/chess-kafka-server.py --app chess
 
-python runners/chess-kafka-client.py --topic chess --file ./data/chess/mega2400_part_01.pgn.txt
+python runners/chess-kafka-client.py --topic chess --file ./data/chess/mega2400_part_01.pgn.txt --max-records 1000000000
 ```
 
-Publish kafka message:
+The benchmarks for this example comparing kafka vs redpanda:
+
+  1. kafka - 10000 records ~ 18 mins, all 35273 records ~ 66 mins (on power)
+
+  2. redpanda - 10000 records ~ 17 mins, all 35273 records ~ 63 mins (on battery)
+
+
+Publish general kafka message to a specific topic:
 
 ```
 python ./runners/py-cli topic-write  --topic test
@@ -126,6 +163,7 @@ python ./runners/chess-zero-filter.py
 python runners/chess-zero-source.py
 ```
 
+
 ### Curio Channel
 
 This example uses curio channels between a producer and consumer to send messages.
@@ -140,4 +178,25 @@ Then start the consumer:
 
 ```
 python ./runners/chess-curio-sink.py
+```
+
+
+### GRPC Example
+
+Compile proto file:
+
+```
+./scripts/grpc-compile proto/stream.proto
+```
+
+Run the stream server:
+
+```
+python proto/stream_server.py
+```
+
+Then run the stream client:
+
+```
+python proto/stream_client.py
 ```

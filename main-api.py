@@ -66,14 +66,6 @@ def on_shutdown():
     logger.info(f"api.shutdown")
 
 
-@app.get("/")
-def api_ping():
-    return {
-        "code": 0,
-        "message": "pong",
-    }
-
-
 @app.middleware("http")
 async def add_request_id(request: Request, call_next):
     # set request id context var
