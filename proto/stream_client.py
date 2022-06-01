@@ -1,39 +1,44 @@
 from __future__ import print_function
 
+import asyncio
 import grpc
 import stream_pb2
 import stream_pb2_grpc
 
 
-def make_message(message: str) -> stream_pb2.Message:
-    return stream_pb2.Message(message=message)
+async def message_send(call: grpc.aio.Call, count: int):
+    print(f"[message_send] coroutine starting")
+
+    for i in range(0, count):
+        print(f"[message_send] {i}")
+        proto_message = stream_pb2.Message(message=f"message {i}")
+        await call.write(proto_message)
+
+    # await call.done_writing()
+    print(f"[message_send] coroutine exiting")
 
 
-def generate_messages():
-    messages = [
-        make_message("message 1"),
-        make_message("message 2"),
-        make_message("message 3"),
-        make_message("message 4"),
-        make_message("message 5"),
-    ]
-    for msg in messages:
-        print(f"client sending '{msg.message}'")
-        yield msg
+async def message_receive(call: grpc.aio.Call):
+    print(f"[message_receive] coroutine starting")
+
+    async for object in call:
+        if type(object) is stream_pb2.Message:
+            print(f"[message_receive] {object.message}")
+
+    print(f"[message_receive] coroutine exiting")
 
 
-def send_message(stub: stream_pb2_grpc.StreamStub):
-    responses = stub.rpc_stream(generate_messages())
+async def main(port=50051):
+    async with grpc.aio.insecure_channel(f"localhost:{port}") as channel:
+        async_stub = stream_pb2_grpc.StreamStub(channel)
+        async_call = async_stub.rpc_message()
 
-    for response in responses:
-        print(f"client received '{response.message}'")
+        task_rx = asyncio.create_task(message_receive(async_call))
+        task_send = asyncio.create_task(message_send(async_call, 10))
 
-
-def run():
-    with grpc.insecure_channel("localhost:50051") as channel:
-        stub = stream_pb2_grpc.StreamStub(channel)
-        send_message(stub)
+        await task_send
+        await task_rx
 
 
 if __name__ == "__main__":
-    run()
+    asyncio.run(main())

@@ -14,69 +14,56 @@ class StreamStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.rpc_stream = channel.stream_stream(
-            "/stream.Stream/rpc_stream",
-            request_serializer=stream__pb2.Message.SerializeToString,
-            response_deserializer=stream__pb2.Message.FromString,
-        )
+        self.rpc_message = channel.stream_stream(
+                '/stream.Stream/rpc_message',
+                request_serializer=stream__pb2.Message.SerializeToString,
+                response_deserializer=stream__pb2.Message.FromString,
+                )
 
 
 class StreamServicer(object):
     """Missing associated documentation comment in .proto file."""
 
-    def rpc_stream(self, request_iterator, context):
+    def rpc_message(self, request_iterator, context):
         """A Bidirectional streaming RPC.
 
         Accepts a stream of Message sent while a route is being traversed,
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details("Method not implemented!")
-        raise NotImplementedError("Method not implemented!")
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
 
 
 def add_StreamServicer_to_server(servicer, server):
     rpc_method_handlers = {
-        "rpc_stream": grpc.stream_stream_rpc_method_handler(
-            servicer.rpc_stream,
-            request_deserializer=stream__pb2.Message.FromString,
-            response_serializer=stream__pb2.Message.SerializeToString,
-        ),
+            'rpc_message': grpc.stream_stream_rpc_method_handler(
+                    servicer.rpc_message,
+                    request_deserializer=stream__pb2.Message.FromString,
+                    response_serializer=stream__pb2.Message.SerializeToString,
+            ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-        "stream.Stream", rpc_method_handlers
-    )
+            'stream.Stream', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
-# This class is part of an EXPERIMENTAL API.
+ # This class is part of an EXPERIMENTAL API.
 class Stream(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
-    def rpc_stream(
-        request_iterator,
-        target,
-        options=(),
-        channel_credentials=None,
-        call_credentials=None,
-        insecure=False,
-        compression=None,
-        wait_for_ready=None,
-        timeout=None,
-        metadata=None,
-    ):
-        return grpc.experimental.stream_stream(
-            request_iterator,
+    def rpc_message(request_iterator,
             target,
-            "/stream.Stream/rpc_stream",
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.stream_stream(request_iterator, target, '/stream.Stream/rpc_message',
             stream__pb2.Message.SerializeToString,
             stream__pb2.Message.FromString,
-            options,
-            channel_credentials,
-            insecure,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-        )
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

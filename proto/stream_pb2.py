@@ -7,35 +7,41 @@ from google.protobuf import descriptor_pool as _descriptor_pool
 from google.protobuf import message as _message
 from google.protobuf import reflection as _reflection
 from google.protobuf import symbol_database as _symbol_database
-
 # @@protoc_insertion_point(imports)
 
 _sym_db = _symbol_database.Default()
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(
-    b'\n\x0cstream.proto\x12\x06stream"\x1a\n\x07Message\x12\x0f\n\x07message\x18\x01 \x01(\t2>\n\x06Stream\x12\x34\n\nrpc_stream\x12\x0f.stream.Message\x1a\x0f.stream.Message"\x00(\x01\x30\x01\x62\x06proto3'
-)
 
 
-_MESSAGE = DESCRIPTOR.message_types_by_name["Message"]
-Message = _reflection.GeneratedProtocolMessageType(
-    "Message",
-    (_message.Message,),
-    {
-        "DESCRIPTOR": _MESSAGE,
-        "__module__": "stream_pb2"
-        # @@protoc_insertion_point(class_scope:stream.Message)
-    },
-)
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0cstream.proto\x12\x06stream\"\x1a\n\x07Message\x12\x0f\n\x07message\x18\x01 \x01(\t\"#\n\x04User\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x0f\n\x07user_id\x18\x02 \x01(\t2?\n\x06Stream\x12\x35\n\x0brpc_message\x12\x0f.stream.Message\x1a\x0f.stream.Message\"\x00(\x01\x30\x01\x62\x06proto3')
+
+
+
+_MESSAGE = DESCRIPTOR.message_types_by_name['Message']
+_USER = DESCRIPTOR.message_types_by_name['User']
+Message = _reflection.GeneratedProtocolMessageType('Message', (_message.Message,), {
+  'DESCRIPTOR' : _MESSAGE,
+  '__module__' : 'stream_pb2'
+  # @@protoc_insertion_point(class_scope:stream.Message)
+  })
 _sym_db.RegisterMessage(Message)
 
-_STREAM = DESCRIPTOR.services_by_name["Stream"]
+User = _reflection.GeneratedProtocolMessageType('User', (_message.Message,), {
+  'DESCRIPTOR' : _USER,
+  '__module__' : 'stream_pb2'
+  # @@protoc_insertion_point(class_scope:stream.User)
+  })
+_sym_db.RegisterMessage(User)
+
+_STREAM = DESCRIPTOR.services_by_name['Stream']
 if _descriptor._USE_C_DESCRIPTORS == False:
 
-    DESCRIPTOR._options = None
-    _MESSAGE._serialized_start = 24
-    _MESSAGE._serialized_end = 50
-    _STREAM._serialized_start = 52
-    _STREAM._serialized_end = 114
+  DESCRIPTOR._options = None
+  _MESSAGE._serialized_start=24
+  _MESSAGE._serialized_end=50
+  _USER._serialized_start=52
+  _USER._serialized_end=87
+  _STREAM._serialized_start=89
+  _STREAM._serialized_end=152
 # @@protoc_insertion_point(module_scope)

@@ -6,9 +6,14 @@ service Stream {
   // A Bidirectional streaming RPC.
   //
   // Accepts a stream of Message sent while a route is being traversed,
-  rpc rpc_stream(stream Message) returns (stream Message) {}
+  rpc rpc_message(stream Message) returns (stream Message) {}
 }
 
 message Message {
-  string message = 1;
+    string message = 1;
+}
+
+message User {
+    int32 id = 1;
+    string user_id = 2;
 }
