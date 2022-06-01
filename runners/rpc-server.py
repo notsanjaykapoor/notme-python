@@ -8,7 +8,7 @@ import sys
 import ulid
 import zerorpc
 
-sys.path.insert(1, os.path.join(sys.path[0], '..'))
+sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
 from database import engine
 from dataclasses import dataclass, field
@@ -22,12 +22,14 @@ from services.zero.rpc.user import ZeroRpcUser
 
 logger = logging_init("cli")
 
-def rpc_server(port: int = 4242):
-  logger.info(f"rpc_server port {port} starting")
 
-  s = zerorpc.Server(ZeroRpcUser())
-  s.bind(f"tcp://0.0.0.0:{port}")
-  s.run()
+def rpc_server(port: int = 4242):
+    logger.info(f"rpc_server port {port} starting")
+
+    s = zerorpc.Server(ZeroRpcUser())
+    s.bind(f"tcp://0.0.0.0:{port}")
+    s.run()
+
 
 if __name__ == "__main__":
-  rpc_server()
+    rpc_server()

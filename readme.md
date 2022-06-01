@@ -1,11 +1,11 @@
 ### Setup
 
-All dependencies are managed by poetry, and requires python 3.10 to run:
+Install python 3.10.
+
+Install python packages with pip:
 
 ```
-pip install poetry
-
-poetry install
+pip install -r requirements.txt
 ```
 
 
@@ -26,13 +26,13 @@ curl http://127.0.0.1:8001/users
 List users using python client:
 
 ```
-poetry run ./runners/py-cli.py user-search
+python ./runners/py-cli.py user-search
 ```
 
 Create user:
 
 ```
-poetry run ./runners/py-cli.py user-create user-1
+python ./runners/py-cli.py user-create --name user-1
 ```
 
 
@@ -50,9 +50,9 @@ Start the server first:
 Start 2 consoles with different user ids and send messages:
 
 ```
-poetry run python3 ./runners/ws-console.py --user-id user-1
+python ./runners/ws-console.py --user-id user-1
 
-poetry run python3 ./runners/ws-console.py --user-id user-2
+python ./runners/ws-console.py --user-id user-2
 ```
 
 
@@ -61,23 +61,25 @@ poetry run python3 ./runners/ws-console.py --user-id user-2
 The crypto example run an actor based server that reads from a kafka topic and uses a set of actors to process each message.
 
 ```
-poetry run python3 runners/crypto-server.py --app crypto
+docker exec -it redpanda-1 rpk topic create crypto
 
-poetry run python3 runners/crypto-client.py --topic crypto
+python runners/crypto-server.py --app crypto
+
+python runners/crypto-client.py --topic crypto
 ```
 
 The chess example ...
 
 ```
-poetry run python3 runners/chess-kafka-server.py --app chess
+python runners/chess-kafka-server.py --app chess
 
-poetry run python3 runners/chess-kafka-client.py --topic chess --file ./data/chess/mega2400_part_01.pgn.txt
+python runners/chess-kafka-client.py --topic chess --file ./data/chess/mega2400_part_01.pgn.txt
 ```
 
-Publish message:
+Publish kafka message:
 
 ```
-poetry run ./runners/py-cli topic-write  --topic test
+python ./runners/py-cli topic-write  --topic test
 ```
 
 
@@ -88,7 +90,7 @@ The zerorpc examples uses rpc to implement a simple users service.
 Start the server first (defaults to port 4242):
 
 ```
-poetry run python3 ./runners/rpc-server.py
+python ./runners/rpc-server.py
 ```
 
 Once the server is running, you can query it using the zerorpc client:
@@ -117,11 +119,11 @@ This zeromq example is using push/pull sockets to implement a pipeline algorithm
 Start the sink, then the filter, and then the source:
 
 ```
-poetry run python3 runners/chess-zero-sink.py
+python ./runners/chess-zero-sink.py
 
-poetry run python3 runners/chess-zero-filter.py
+python ./runners/chess-zero-filter.py
 
-poetry run python3 runners/chess-zero-source.py
+python runners/chess-zero-source.py
 ```
 
 ### Curio Channel
@@ -131,11 +133,11 @@ This example uses curio channels between a producer and consumer to send message
 Start the producer first:
 
 ```
-poetry run python3 runners/chess-curio-source.py
+python ./runners/chess-curio-source.py
 ```
 
 Then start the consumer:
 
 ```
-poetry run python3 runners/chess-curio-sink.py
+python ./runners/chess-curio-sink.py
 ```

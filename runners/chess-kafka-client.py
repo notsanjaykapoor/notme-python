@@ -1,11 +1,11 @@
 from dotenv import load_dotenv
 
-load_dotenv() # take environment variables from .env.
+load_dotenv()  # take environment variables from .env.
 
 import os
 import sys
 
-sys.path.insert(1, os.path.join(sys.path[0], '..'))
+sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
 import asyncio
 import json
@@ -32,32 +32,41 @@ app = typer.Typer()
 
 logger = logging_init("cli")
 
+
 @app.command()
-def chess_client(topic: str = typer.Option(...), file: str = typer.Option(...)):
-  writer = KafkaWriter(topic=topic)
+def chess_client(
+    topic: str = typer.Option(...),
+    file: str = typer.Option(...),
+    max_records: int = 2**30,
+):
+    writer = KafkaWriter(topic=topic)
 
-  with open(file, mode="r", encoding="ISO-8859-1") as f:
-    msg_count = 0
+    with open(file, mode="r", encoding="ISO-8859-1") as f:
+        msg_count = 0
 
-    for line in f:
-      if "Result" not in line:
-        continue
+        for line in f:
+            if "Result" not in line:
+                continue
 
-      # write message to kafka stream
-      writer.call(
-        key = ulid.new().str,
-        message = line,
-      )
+            # write message to kafka stream
+            writer.call(
+                key=ulid.new().str,
+                message=line,
+            )
 
-      msg_count += 1
+            msg_count += 1
 
-    # write eof marker
-    writer.call(
-      key = ulid.new().str,
-      message = "eof",
-    )
+            if msg_count >= max_records:
+                break
 
-    logger.info(f"message count {msg_count}")
+        # write eof marker
+        writer.call(
+            key=ulid.new().str,
+            message="eof",
+        )
+
+        logger.info(f"message count {msg_count}")
+
 
 if __name__ == "__main__":
-  app()
+    app()

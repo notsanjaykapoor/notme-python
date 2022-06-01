@@ -8,56 +8,58 @@ import sys
 import ulid
 import zmq
 
-sys.path.insert(1, os.path.join(sys.path[0], '..'))
+sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
 from log import logging_init
 from services.zero.sockets.push_pull import ZeroSocketPushPull
 
 logger = logging_init("cli")
 
+
 def chess_zero_filter():
-  filter_uri = os.environ.get("CHESS_ZERO_FILTER_URI")
-  sink_uri = os.environ.get("CHESS_ZERO_SINK_URI")
+    filter_uri = os.environ.get("CHESS_ZERO_FILTER_URI")
+    sink_uri = os.environ.get("CHESS_ZERO_SINK_URI")
 
-  logger.info(f"chess_zero_filter starting")
+    logger.info(f"chess_zero_filter starting")
 
-  struct_socket = ZeroSocketPushPull(
-    uri_pull=filter_uri,
-    mode_pull="connect",
-    uri_push=sink_uri,
-    mode_push="connect",
-  ).call()
+    struct_socket = ZeroSocketPushPull(
+        uri_pull=filter_uri,
+        mode_pull="connect",
+        uri_push=sink_uri,
+        mode_push="connect",
+    ).call()
 
-  socket_pull = struct_socket.socket_pull
-  socket_push = struct_socket.socket_push
+    socket_pull = struct_socket.socket_pull
+    socket_push = struct_socket.socket_push
 
-  msg_count = 0
+    msg_count = 0
 
-  while True:
-    object = socket_pull.recv_json()
-    name = object["name"]
+    while True:
+        object = socket_pull.recv_json()
+        name = object["name"]
 
-    match name:
-      case "chess-start" | "chess-end":
-        # forward message
-        socket_push.send_json(object)
+        match name:
+            case "chess-start" | "chess-end":
+                # forward message
+                socket_push.send_json(object)
 
-        logger.info(f"chess_zero_filter {object}")
+                logger.info(f"chess_zero_filter {object}")
 
-      case "chess-message":
-        # filter message
-        message = object["message"]
+            case "chess-message":
+                # filter message
+                message = object["message"]
 
-        if "Result" in message:
-          socket_push.send_json(object)
+                if "Result" in message:
+                    socket_push.send_json(object)
 
-        msg_count += 1
+                msg_count += 1
 
-        if msg_count % 100000 == 0:
-          logger.info(f"chess_zero_filter {msg_count}")
+                if msg_count % 100000 == 0:
+                    logger.info(f"chess_zero_filter {msg_count}")
 
-      case _:
-        logger.error(f"chess_zero_filter invalid {object}")
+            case _:
+                logger.error(f"chess_zero_filter invalid {object}")
+
 
 if __name__ == "__main__":
-  chess_zero_filter()
+    chess_zero_filter()

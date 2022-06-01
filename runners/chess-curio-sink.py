@@ -4,48 +4,50 @@ import sys
 
 from curio import Channel, run
 
-sys.path.insert(1, os.path.join(sys.path[0], '..'))
+sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
 from log import logging_init
 
 logger = logging_init("cli")
 
+
 async def consumer(ch: Channel):
-  c = await ch.connect(authkey=b'curio')
+    c = await ch.connect(authkey=b"curio")
 
-  msg_count = 0
-  msg_dict = {}
+    msg_count = 0
+    msg_dict = {}
 
-  while True:
-    object = await c.recv()
-    name = object["name"]
+    while True:
+        object = await c.recv()
+        name = object["name"]
 
-    match name:
-      case "chess-start":
-        logger.info(f"consumer {msg_dict}")
+        match name:
+            case "chess-start":
+                logger.info(f"consumer {msg_dict}")
 
-      case "chess-end":
-        logger.info(f"consumer {msg_dict}")
-        break
+            case "chess-end":
+                logger.info(f"consumer {msg_dict}")
+                break
 
-      case "chess-message":
-        # filter message
-        message = object["message"]
+            case "chess-message":
+                # filter message
+                message = object["message"]
 
-        if "Result" in message:
-          if not message in msg_dict.keys():
-            msg_dict[message] = 0
+                if "Result" in message:
+                    if not message in msg_dict.keys():
+                        msg_dict[message] = 0
 
-          msg_dict[message] += 1
+                    msg_dict[message] += 1
 
-        msg_count += 1
+                msg_count += 1
 
-        if msg_count % 50000 == 0:
-          logger.info(f"consumer {msg_count}")
+                if msg_count % 50000 == 0:
+                    logger.info(f"consumer {msg_count}")
 
-      case _:
-        logger.error(f"consumer invalid {object}")
+            case _:
+                logger.error(f"consumer invalid {object}")
 
-if __name__ == '__main__':
-    ch = Channel(('localhost', 9999))
+
+if __name__ == "__main__":
+    ch = Channel(("localhost", 9999))
     run(consumer(ch))

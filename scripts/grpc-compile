@@ -1,0 +1,3 @@
+#! /bin/sh
+
+python -m grpc_tools.protoc --proto_path=./proto $1 --python_out=./proto --grpc_python_out=./proto

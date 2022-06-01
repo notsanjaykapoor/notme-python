@@ -2,12 +2,12 @@
 
 from dotenv import load_dotenv
 
-load_dotenv() # take environment variables from .env.
+load_dotenv()  # take environment variables from .env.
 
 import os
 import sys
 
-sys.path.insert(1, os.path.join(sys.path[0], '..'))
+sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
 import socket
 
@@ -27,7 +27,7 @@ sock.connect((host, port))
 
 # Create instance of NoiseConnection, set up to use NN handshake pattern, Curve25519 for
 # elliptic curve keypair, ChaCha20Poly1305 as cipher function and SHA256 for hashing.
-proto = NoiseConnection.from_name(b'Noise_NN_25519_ChaChaPoly_SHA256')
+proto = NoiseConnection.from_name(b"Noise_NN_25519_ChaChaPoly_SHA256")
 
 # Set role in this connection as initiator
 proto.set_as_initiator()
@@ -48,7 +48,7 @@ payload = proto.read_message(received)
 # As of now, the handshake should be finished (as we are using NN pattern).
 # Any further calls to write_message or read_message would raise NoiseHandshakeError exception.
 # We can use encrypt/decrypt methods of NoiseConnection now for encryption and decryption of messages.
-encrypted_message = proto.encrypt(b'This is an example payload')
+encrypted_message = proto.encrypt(b"This is an example payload")
 sock.sendall(encrypted_message)
 
 ciphertext = sock.recv(2048)
