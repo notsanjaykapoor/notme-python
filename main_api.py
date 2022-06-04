@@ -8,6 +8,8 @@ import strawberry
 import sys
 import ulid
 
+import services
+
 from database import engine
 from dataclasses import dataclass, field
 from fastapi import Depends, FastAPI, HTTPException, Request, WebSocket
@@ -19,9 +21,7 @@ from context import request_id
 from gql.query import GqlQuery
 from log import logging_init
 from models.user import User
-from services.users.get import UserGet
-from services.users.create import UserCreate
-from services.users.list import UsersList
+
 
 logger = logging_init("api")
 
@@ -86,7 +86,7 @@ def api_ping():
 def user_create(user_id: str):
     logger.info(f"{request_id.get()} api.user.create")
 
-    struct = UserCreate(user_id).call()
+    struct = services.users.UserCreate(user_id).call()
 
     return struct.user_id
 
@@ -95,7 +95,7 @@ def user_create(user_id: str):
 def user_get(user_id: str, db: Session = Depends(get_db)):
     logger.info(f"{request_id.get()} api.user.get")
 
-    struct = UserGet(db, user_id).call()
+    struct = services.users.UserGet(db, user_id).call()
 
     return struct.user
 
@@ -106,7 +106,7 @@ def users_list(
 ):
     logger.info(f"{request_id.get()} api.users.list")
 
-    struct = UsersList(db, query, offset, limit).call()
+    struct = services.users.UsersList(db, query, offset, limit).call()
 
     # logger.info(f"api.users.list response {struct}")
 
