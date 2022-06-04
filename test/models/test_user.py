@@ -1,4 +1,3 @@
-import os
 import pytest
 
 import services.users
@@ -10,9 +9,6 @@ from main_api import app, get_db
 
 def test_user(session: Session):  #
     print(f"test_user")
-
-    # def get_session_override():
-    #     return session  #
 
     # app.dependency_overrides[get_db] = get_session_override
 

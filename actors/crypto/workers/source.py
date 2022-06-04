@@ -21,8 +21,7 @@ class Struct:
 
 
 class WorkerSource:
-    def __init__(self, actor: Actor, app_name: str):
-        self._actor = actor
+    def __init__(self, app_name: str):
         self._app_name = app_name
 
         self._keys_file = "./keys/keys.toml"
@@ -33,34 +32,34 @@ class WorkerSource:
         self._logger = logging.getLogger("actor")
 
     # process kafka msg
-    def call(self, msg: ActorMessage) -> Struct:
+    def call(self, actor: Actor, msg: ActorMessage) -> Struct:
         struct = Struct(0, [])
 
-        self._logger.info(f"actor '{self._actor.name}' message header {msg.header()}")
+        self._logger.info(f"actor '{actor.name}' message header {msg.header()}")
 
         try:
             message_dict = json.loads(msg.value_str())
 
-            self._logger.info(f"actor '{self._actor.name}' message {message_dict}")
+            self._logger.info(f"actor '{actor.name}' message {message_dict}")
 
             self._process(message_dict)
 
-            # self._log_append(msg)
+            # self._log_append(actor, msg)
         except Exception as e:
             struct.code = 500
 
-            self._logger.error(f"actor '{self._actor.name}' exception {e}")
+            self._logger.error(f"actor '{actor.name}' exception {e}")
 
         return struct
 
     # append to app log
-    def _log_append(self, msg: ActorMessage):
-        self._actor_log.append({"actor": self._actor.name, **msg.header()})
+    def _log_append(self, actor: Actor, msg: ActorMessage):
+        self._actor_log.append({"actor": actor.name, **msg.header()})
 
-    def _process(self, message_dict: dict):
+    def _process(self, actor: Actor, message_dict: dict):
         user_from = message_dict["from"]
 
-        self._logger.info(f"actor '{self._actor.name}' from {user_from}")
+        self._logger.info(f"actor '{actor.name}' from {user_from}")
 
         struct_factory = services.crypto.symmetric.Factory(
             self._keys_file, user_from

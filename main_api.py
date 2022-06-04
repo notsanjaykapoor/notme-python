@@ -8,6 +8,7 @@ import strawberry
 import sys
 import ulid
 
+import gql
 import services.users
 
 from database import engine
@@ -18,7 +19,6 @@ from strawberry.fastapi import GraphQLRouter
 from strawberry.schema.config import StrawberryConfig
 
 from context import request_id
-from gql.query import GqlQuery
 from log import logging_init
 from models.user import User
 
@@ -39,7 +39,7 @@ async def get_gql_context(db=Depends(get_db)):
 # initialize graphql schema and router
 
 gql_schema = strawberry.Schema(
-    query=GqlQuery,
+    query=gql.Query,
     config=StrawberryConfig(auto_camel_case=False),
 )
 

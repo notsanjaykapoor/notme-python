@@ -14,7 +14,6 @@ import services.ws
 import services.ws.chat
 
 from context import request_id
-from gql.query import GqlQuery
 from log import logging_init
 from models.socket_manager import SocketManager
 

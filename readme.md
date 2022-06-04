@@ -17,19 +17,19 @@ Start server:
 ./scripts/py-api
 ```
 
-List users using curl:
+List users using curl (api server required):
 
 ```
 curl http://127.0.0.1:8001/users
 ```
 
-List users using python client:
+List users using python client (api server not required):
 
 ```
 python ./runners/py-cli.py user-search
 ```
 
-Create user:
+Create user (api server not required):
 
 ```
 python ./runners/py-cli.py user-create --name user-1

@@ -11,39 +11,40 @@ class Actor:
     def __init__(
         self,
         name: str,
+        handler: typing.Callable[[typing.Any, dict], typing.Any],
         queue: asyncio.Queue = None,
         topic: str = None,
         group: str = None,
         output: asyncio.Queue = None,
     ):
         self._name = name
+        self._handler = handler
         self._queue = queue
         self._topic = topic
         self._group = group
         self._output = output
 
         self._task = None
-        self._handler = None
 
-        if self._topic is not None and self._queue is not None:
-            raise ValueError("invalid args")
+        if self._handler is None:
+            raise ValueError("handler missing")
+
+        if self._topic and self._queue:
+            raise ValueError("topic and queue can not both be initialized")
 
         if self._topic is None and self._queue is None:
+            # no topic, create default input queue
             self._queue = asyncio.Queue(maxsize=0)
 
         self._logger = logging.getLogger("actor")
 
     def cancel(self):
-        if self._task is not None:
+        if self._task:
             self._task.cancel()
 
     @property
     def handler(self):
         return self._handler
-
-    @handler.setter
-    def handler(self, h):
-        self._handler = h
 
     @property
     def name(self):
@@ -63,10 +64,7 @@ class Actor:
 
     # create and schedule actor task
     def schedule(self) -> int:
-        if self._handler is None:
-            raise ValueError("handler missing")
-
-        if self._topic is not None:
+        if self._topic:
             self._logger.info(f"actor '{self._name}' scheduling task kafka")
             self._task = asyncio.create_task(self._wait_kafka_queue(), name=self._name)
         else:
@@ -74,6 +72,14 @@ class Actor:
             self._task = asyncio.create_task(self._wait_task_queue(), name=self._name)
 
         return 0
+
+    @property
+    def task(self):
+        return self._task
+
+    @task.setter
+    def task(self, t):
+        self._task = t
 
     async def _wait_kafka_queue(self):
         self._logger.info(f"actor '{self._name}' running")
@@ -100,7 +106,7 @@ class Actor:
                 # block on queue until message is available
                 message = await self._queue.get()
 
-                struct = self._handler.call(message=message)
+                struct = self._handler.call(actor=self, message=message)
 
                 # ack message
                 self._queue.task_done()
@@ -112,11 +118,3 @@ class Actor:
             )
         finally:
             self._logger.info(f"actor '{self._name}' exiting")
-
-    @property
-    def task(self):
-        return self._task
-
-    @task.setter
-    def task(self, t):
-        self._task = t

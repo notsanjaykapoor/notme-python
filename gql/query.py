@@ -14,7 +14,7 @@ logger = logging_init("gql")
 
 
 @strawberry.type
-class GqlQuery:
+class Query:
     @strawberry.field
     def user_get(self, user_id: str, info: Info) -> types.GqlUserGet:
         logger.info(f"gql.{info.field_name} {user_id}")

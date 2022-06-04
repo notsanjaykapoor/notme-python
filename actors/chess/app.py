@@ -35,24 +35,20 @@ class App:
 
         actor_source = Actor(
             name=f"{self._app_name}-source",
+            handler=actors.chess.workers.source.WorkerSource(
+                app_name=self._app_name,
+            ),
             topic=toml_kafka["topic"],
             group=toml_kafka["group"],
-        )
-
-        actor_source.handler = actors.chess.workers.source.WorkerSource(
-            actor=actor_source,
-            app_name=self._app_name,
         )
 
         struct.actors["source"] = actor_source
 
         actor_map = Actor(
             name=f"{self._app_name}-map",
-        )
-
-        actor_map.handler = actors.chess.workers.map.WorkerMap(
-            actor=actor_map,
-            app_name=self._app_name,
+            handler=actors.chess.workers.map.WorkerMap(
+                app_name=self._app_name,
+            ),
         )
 
         struct.actors["map"] = actor_map
