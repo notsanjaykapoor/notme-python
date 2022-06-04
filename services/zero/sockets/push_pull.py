@@ -12,7 +12,7 @@ class Struct:
     errors: list[str]
 
 
-class ZeroSocketPushPull:
+class PushPull:
     def __init__(
         self, uri_push: str, mode_push: str, uri_pull: str, mode_pull: str
     ) -> None:

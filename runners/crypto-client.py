@@ -24,11 +24,11 @@ from typing import Optional
 from kafka.reader import KafkaReader
 from kafka.writer import KafkaWriter
 
+import services.crypto.symmetric
+
 from log import logging_init
 
 from services.crypto.symmetric.aesgcm.encrypt import AesGcmEncrypt
-from services.crypto.symmetric.factory import SymmetricFactory
-from services.crypto.symmetric.name import cipher_name
 
 app = typer.Typer()
 
@@ -45,14 +45,14 @@ def crypto_client(
 
     logger.info(f"crypto_client topic {topic} user_id {user_id}")
 
-    struct_factory = SymmetricFactory(keys_file, user_id).call()
+    struct_factory = services.crypto.symmetric.Factory(keys_file, user_id).call()
 
     message = {
         "message": "ping",
         "id": ulid.new().str,
     }
 
-    cipher_name_ = cipher_name(struct_factory.cipher)
+    cipher_name_ = services.crypto.symmetric.cipher_name(struct_factory.cipher)
 
     if cipher_name_ == "aesgcm":
         struct_encrypt = AesGcmEncrypt(

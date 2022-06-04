@@ -8,7 +8,7 @@ import strawberry
 import sys
 import ulid
 
-import services
+import services.users
 
 from database import engine
 from dataclasses import dataclass, field
@@ -86,7 +86,7 @@ def api_ping():
 def user_create(user_id: str):
     logger.info(f"{request_id.get()} api.user.create")
 
-    struct = services.users.UserCreate(user_id).call()
+    struct = services.users.Create(user_id).call()
 
     return struct.user_id
 
@@ -95,7 +95,7 @@ def user_create(user_id: str):
 def user_get(user_id: str, db: Session = Depends(get_db)):
     logger.info(f"{request_id.get()} api.user.get")
 
-    struct = services.users.UserGet(db, user_id).call()
+    struct = services.users.Get(db, user_id).call()
 
     return struct.user
 
@@ -106,7 +106,7 @@ def users_list(
 ):
     logger.info(f"{request_id.get()} api.users.list")
 
-    struct = services.users.UsersList(db, query, offset, limit).call()
+    struct = services.users.List(db, query, offset, limit).call()
 
     # logger.info(f"api.users.list response {struct}")
 

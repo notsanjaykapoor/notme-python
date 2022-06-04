@@ -10,8 +10,11 @@ import zmq
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
+import services.zero.sockets
+
 from log import logging_init
-from services.zero.sockets.push_pull import ZeroSocketPushPull
+
+import services.zero.sockets
 
 logger = logging_init("cli")
 
@@ -22,7 +25,7 @@ def chess_zero_filter():
 
     logger.info(f"chess_zero_filter starting")
 
-    struct_socket = ZeroSocketPushPull(
+    struct_socket = services.zero.sockets.PushPull(
         uri_pull=filter_uri,
         mode_pull="connect",
         uri_push=sink_uri,

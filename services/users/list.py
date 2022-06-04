@@ -28,7 +28,7 @@ class StructToken:
     errors: list[str]
 
 
-class UsersList:
+class List:
     def __init__(self, db: Session, query: str = "", offset: int = 0, limit: int = 20):
         self._db = db
         self._query = query
@@ -38,7 +38,7 @@ class UsersList:
         self._dataset = select(User)  # default database query
         self._logger = logging.getLogger("api")
 
-    def call(self):
+    def call(self) -> Struct:
         struct = Struct(0, [], [])
 
         self._logger.info(f"{request_id.get()} {__name__} query {self._query}")

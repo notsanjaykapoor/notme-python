@@ -5,13 +5,12 @@ from database import engine
 from dataclasses import dataclass, field
 from sqlmodel import Session, SQLModel
 
+import services.users
+
 from context import request_id
 
-from services.users.get import UserGet
-from services.users.list import UsersList
 
-
-class ZeroRpcUser:
+class User:
     def __init__(self) -> None:
         self._logger = logging.getLogger("service")
 
@@ -21,7 +20,7 @@ class ZeroRpcUser:
         self._logger.info(f"{request_id.get()} rpc user_get {user_id}")
 
         with Session(engine) as db:
-            struct_get = UserGet(db, user_id).call()
+            struct_get = services.users.Get(db, user_id).call()
 
             response = {"code": struct_get.code}
 
@@ -36,7 +35,7 @@ class ZeroRpcUser:
         self._logger.info(f"{request_id.get()} rpc users_list {query}")
 
         with Session(engine) as db:
-            struct_list = UsersList(db, query, offset, limit).call()
+            struct_list = services.users.List(db, query, offset, limit).call()
 
             response = {"code": struct_list.code, "count": len(struct_list.users)}
 

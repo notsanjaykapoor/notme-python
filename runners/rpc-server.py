@@ -16,9 +16,10 @@ from log import logging_init
 from fastapi import Depends, FastAPI, HTTPException, Request, WebSocket
 from sqlmodel import Session, SQLModel
 
+import services.zero.rpc
+
 from context import request_id
 
-from services.zero.rpc.user import ZeroRpcUser
 
 logger = logging_init("cli")
 
@@ -26,7 +27,7 @@ logger = logging_init("cli")
 def rpc_server(port: int = 4242):
     logger.info(f"rpc_server port {port} starting")
 
-    s = zerorpc.Server(ZeroRpcUser())
+    s = zerorpc.Server(services.zero.rpc.User())
     s.bind(f"tcp://0.0.0.0:{port}")
     s.run()
 

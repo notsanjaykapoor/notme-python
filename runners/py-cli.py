@@ -20,6 +20,9 @@ from database import engine
 from sqlmodel import Session, SQLModel
 from typing import Optional
 
+import services.crypto.pkey
+import services.users
+
 from actors.example.app import App
 from actors.handlers.generic import HandlerGeneric as ActorHandler
 
@@ -30,12 +33,6 @@ from kafka.writer import KafkaWriter
 from log import logging_init
 from models import user
 
-from services.crypto.pkey.create import PkeyCreate
-from services.crypto.pkey.sign import PkeySign
-from services.crypto.pkey.verify import PkeyVerify
-from services.users.create import UserCreate
-from services.users.get import UserGet
-from services.users.list import UsersList
 
 logger = logging_init("cli")
 
@@ -110,18 +107,18 @@ async def actor_server_async(app: str, msg: str):
 
 @app.command()
 def crypto_sign(data: str = "secret"):
-    struct_pkey = PkeyCreate().call()
+    struct_pkey = services.crypto.pkey.Create().call()
 
     private_key = struct_pkey.key
     public_key = private_key.public_key()
 
-    struct_sign = PkeySign(private_key, data).call()
+    struct_sign = services.crypto.pkey.Sign(private_key, data).call()
 
     logger.info(f"cli sign {struct_sign}")
 
     signature = struct_sign.encoded
 
-    struct_verify = PkeyVerify(
+    struct_verify = services.crypto.pkey.Verify(
         public_key,
         data,
         signature,
@@ -172,13 +169,13 @@ def user_create(name: str = typer.Option(...)):
     logger.info(f"cli user {name} create try")
 
     with Session(engine) as db_session:
-        struct_get = UserGet(db=db_session, user_id=name).call()
+        struct_get = services.users.Get(db=db_session, user_id=name).call()
 
         if struct_get.user:
             logger.info(f"cli result user {name} exists")
             return 0
 
-        struct_create = UserCreate(db=db_session, user_id=name).call()
+        struct_create = services.users.Create(db=db_session, user_id=name).call()
 
         if struct_create.code == 0:
             logger.info(f"cli result user {name} created")
@@ -189,7 +186,7 @@ def user_create(name: str = typer.Option(...)):
 @app.command()
 def user_search(query: str = ""):
     with Session(engine) as db_session:
-        service = UsersList(db_session, query, 0, 10)
+        service = services.users.List(db_session, query, 0, 10)
         struct = service.call()
 
         for user in struct.users:

@@ -14,7 +14,7 @@ class Struct:
     errors: list[str]
 
 
-class RsaSign:
+class Sign:
     def __init__(self, private_key: Any, data: str):
         self.private_key = private_key
         self.data = data

@@ -5,10 +5,10 @@ from database import engine
 from sqlmodel import Session, SQLModel
 from strawberry.types import Info
 
+import services.users
+
 from gql import types
 from log import logging_init
-from services.users.get import UserGet
-from services.users.list import UsersList
 
 logger = logging_init("gql")
 
@@ -19,7 +19,7 @@ class GqlQuery:
     def user_get(self, user_id: str, info: Info) -> types.GqlUserGet:
         logger.info(f"gql.{info.field_name} {user_id}")
 
-        return UserGet(info.context["db"], user_id).call()
+        return services.users.Get(info.context["db"], user_id).call()
 
     @strawberry.field
     def users_list(
@@ -27,4 +27,4 @@ class GqlQuery:
     ) -> types.GqlUsersList:
         logger.info(f"gql.{info.field_name} query {query}")
 
-        return UsersList(info.context["db"], query, offset, limit).call()
+        return services.users.List(info.context["db"], query, offset, limit).call()

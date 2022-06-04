@@ -1,3 +1,3 @@
-from .create import UserCreate
-from .get import UserGet
-from .list import UsersList
+from .create import Create
+from .get import Get
+from .list import List

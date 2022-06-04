@@ -15,7 +15,7 @@ class Struct:
     errors: list[str]
 
 
-class ChatServer:
+class Server:
     def __init__(self, socket_manager: SocketManager, ws: WebSocket, user_id: str):
         self._socket_manager = socket_manager
         self._ws = ws

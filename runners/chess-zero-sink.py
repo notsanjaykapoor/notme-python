@@ -10,8 +10,9 @@ import zmq
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
+import services.zero.sockets
+
 from log import logging_init
-from services.zero.sockets.pull import ZeroSocketPull
 
 logger = logging_init("cli")
 
@@ -21,7 +22,7 @@ def chess_zero_sink():
 
     logger.info(f"chess_zero_sink starting")
 
-    struct_socket = ZeroSocketPull(uri=sink_uri, mode="bind").call()
+    struct_socket = services.zero.sockets.Pull(uri=sink_uri, mode="bind").call()
     socket_pull = struct_socket.socket
 
     dict = {}

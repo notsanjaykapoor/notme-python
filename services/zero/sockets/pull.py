@@ -11,7 +11,7 @@ class Struct:
     errors: list[str]
 
 
-class ZeroSocketPull:
+class Pull:
     def __init__(self, uri: str, mode: str) -> None:
         self._uri = uri
         self._mode = mode

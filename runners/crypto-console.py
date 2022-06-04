@@ -23,14 +23,13 @@ from database import engine
 from sqlmodel import Session, SQLModel
 from typing import Optional
 
+import services.crypto.pkey
+import services.crypto.pkey.rsa
+
 from log import logging_init
 
 from kafka.reader import KafkaReader
 from kafka.writer import KafkaWriter
-
-from services.crypto.pkey.rsa.sign import RsaSign
-from services.crypto.pkey.rsa.verify import RsaVerify
-from services.crypto.pkey.type import key_type
 
 app = typer.Typer()
 
@@ -45,11 +44,11 @@ def sign(pem_private: str = typer.Option(...), message: str = typer.Option(...))
 
     private_key = serialization.load_pem_private_key(pem_bytes, password=None)
 
-    logger.info(f"private_key {key_type(private_key)}")
+    logger.info(f"private_key {services.crypto.pkey.key_type(private_key)}")
 
     # pdb.set_trace()
 
-    struct_sign = RsaSign(private_key, message).call()
+    struct_sign = services.crypto.pkey.rsa.Sign(private_key, message).call()
 
     logger.info(f"sign {struct_sign}")
 
@@ -72,9 +71,9 @@ def sign_verify(
 
     public_key = serialization.load_pem_public_key(pem_bytes)
 
-    logger.info(f"public_key {key_type(public_key)}")
+    logger.info(f"public_key {services.crypto.pkey.key_type(public_key)}")
 
-    struct_verify = RsaVerify(
+    struct_verify = services.crypto.pkey.rsa.Verify(
         public_key,
         message,
         signature=struct_sign.encoded,

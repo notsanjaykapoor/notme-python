@@ -12,7 +12,7 @@ class Struct:
     errors: list[str]
 
 
-class PkeyCreate:
+class Create:
     def __init__(self):
         self.logger = logging.getLogger("service")
 

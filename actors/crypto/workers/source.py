@@ -5,13 +5,13 @@ import typing
 
 from dataclasses import dataclass
 
+import services.crypto.symmetric
+
 from models.actor import Actor
 from models.actor_log import ActorLog
 from models.actor_message import ActorMessage
 
 from services.crypto.symmetric.aesgcm.decrypt import AesGcmDecrypt
-from services.crypto.symmetric.factory import SymmetricFactory
-from services.crypto.symmetric.name import cipher_name
 
 
 @dataclass
@@ -62,9 +62,11 @@ class WorkerSource:
 
         self._logger.info(f"actor '{self._actor.name}' from {user_from}")
 
-        struct_factory = SymmetricFactory(self._keys_file, user_from).call()
+        struct_factory = services.crypto.symmetric.Factory(
+            self._keys_file, user_from
+        ).call()
 
-        cipher_name_ = cipher_name(struct_factory.cipher)
+        cipher_name_ = services.crypto.symmetric.cipher_name(struct_factory.cipher)
 
         if cipher_name_ == "aesgcm":
             struct_decrypt = AesGcmDecrypt(

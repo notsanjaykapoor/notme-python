@@ -13,7 +13,7 @@ class Struct:
     errors: list[str]
 
 
-class WsReader:
+class Reader:
     def __init__(self, ws: WebSocket):
         self._ws = ws
 

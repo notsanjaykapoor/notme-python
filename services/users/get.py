@@ -19,14 +19,14 @@ class Struct:
     errors: list[str]
 
 
-class UserGet:
+class Get:
     def __init__(self, db: Session, user_id: str):
         self._db = db
         self._user_id = user_id
 
         self._logger = logging.getLogger("api")
 
-    def call(self):
+    def call(self) -> Struct:
         struct = Struct(0, None, [])
 
         self._logger.info(f"{request_id.get()} {__name__} {self._user_id}")

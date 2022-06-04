@@ -10,8 +10,9 @@ import zmq
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
+import services.zero.sockets
+
 from log import logging_init
-from services.zero.sockets.push import ZeroSocketPush
 
 logger = logging_init("cli")
 
@@ -24,7 +25,7 @@ def chess_zero_source(file: str):
 
     logger.info(f"chess_zero_source starting")
 
-    struct_socket = ZeroSocketPush(uri=filter_uri, mode="bind").call()
+    struct_socket = services.zero.sockets.Push(uri=filter_uri, mode="bind").call()
     socket_push = struct_socket.socket
 
     with open(file, mode="r", encoding="ISO-8859-1") as f:

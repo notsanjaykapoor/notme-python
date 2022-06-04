@@ -15,7 +15,7 @@ class Struct:
     errors: list[str]
 
 
-class SymmetricFactory:
+class Factory:
     def __init__(self, toml_file: str, user_id: str):
         self._toml_file = toml_file
         self._user_id = user_id
