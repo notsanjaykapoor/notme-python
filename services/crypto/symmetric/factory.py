@@ -22,7 +22,7 @@ class Factory:
 
         self.logger = logging.getLogger("service")
 
-    def call(self):
+    def call(self) -> Struct:
         struct = Struct(0, None, [])
 
         self.logger.info(f"{__name__}")

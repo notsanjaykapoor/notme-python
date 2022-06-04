@@ -22,7 +22,7 @@ class Sign:
         self.data_encoding = "utf-8"
         self.logger = logging.getLogger("service")
 
-    def call(self):
+    def call(self) -> Struct:
         struct = Struct(0, "", [])
 
         self.logger.info(f"{__name__} data '{self.data}'")
