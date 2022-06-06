@@ -23,7 +23,7 @@ app = typer.Typer()
 def graph_create(file: str = typer.Option(...), max: int = typer.Option(...)):
     connection = models.MemgraphConnection()
 
-    struct_delete = services.memgraph.commands.truncate(connection).call()
+    struct_delete = services.memgraph.commands.truncate(connection)
 
     cursor = connection.cursor()
 

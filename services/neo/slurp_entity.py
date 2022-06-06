@@ -120,10 +120,9 @@ class SlurpEntity:
         rel_created = 0
 
         for entity in target_entities:
-            if entity.type_name == "integer":
-                target_value = int(entity.type_value)  # type: ignore
-            else:
-                target_value = entity.type_value.lower()  # type: ignore
+            target_value = services.entities.graph_value_store(
+                entity.type_name, str(entity.type_value)
+            )
 
             params = {
                 "source_entity_id": source_entity_id,

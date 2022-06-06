@@ -67,23 +67,18 @@ class SlurpSlugs:
         nodes_created = 0
 
         for value in values:
-            if type_name == "integer":
-                # store as int
-                value_create: typing.Union[int, str] = int(value)
-                value_exists: typing.Union[int, str] = value_create
-            else:
-                value_exists = f"'{value.lower()}'"
-                value_create = value.lower()
+            value_store = services.entities.graph_value_store(type_name, value)
+            value_query = services.entities.graph_value_query(type_name, value)
 
             params = {
-                "params": {"value": value_create},
+                "params": {"value": value_store},
             }
 
             # node name is property slug; note that node label can not be set with '$' format
             query_exists = (
                 f"MATCH (p:{slug} "
                 + "{value: "
-                + f"{value_exists}"
+                + f"{value_query}"
                 + "}) RETURN count(p) as count"
             )
 
