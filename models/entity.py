@@ -19,14 +19,6 @@ class Entity(SQLModel, table=True):  # type: ignore
     type_name: str = Field(index=True)
     type_value: typing.Optional[str] = None
 
-    # def graph_model_properties(self) -> dict:
-    #     dict = {"id": self.entity_id}
-
-    #     if self.entity_name == "person":
-    #         dict = dict | self._graph_properties_person()
-
-    #     return dict
-
     def pack(self):
         return {
             "id": self.id,
@@ -36,6 +28,3 @@ class Entity(SQLModel, table=True):  # type: ignore
             "type_name": self.type_name,
             "type_value": self.type_value,
         }
-
-    def _graph_properties_person(self) -> dict:
-        return {}
