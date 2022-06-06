@@ -63,7 +63,7 @@ class SlurpSlugs:
         type_name: str,
         values: typing.List[str],
     ) -> int:
-        """create 'slug' nodes with with value property"""
+        """create nodes labeled with 'slug' with with value property"""
         nodes_created = 0
 
         for value in values:

@@ -44,6 +44,16 @@ def entity_import(truncate: bool = typer.Option(...)):
 
 
 @app.command()
+def graph_labels():
+    query = f"MATCH (n) RETURN distinct labels(n) as label, count(*) as count"
+
+    records = services.neo.query.execute(query, {})
+
+    for record in sorted(records, key=lambda record: -1 * record["count"]):
+        logger.info(f"[graph-cli] {record['label'][0]} {record['count']}")
+
+
+@app.command()
 def person_age_gt(min: int = typer.Option(...)):
     query = "MATCH (p:person)-[:HAS]->(n:age) WHERE n.value >= $min RETURN p as node,n.value as age"
     params = {"min": min}
@@ -66,14 +76,14 @@ def person_age_lt(max: int = typer.Option(...)):
 
 
 @app.command()
-def vehicle_make_eq(name: str = typer.Option(...)):
-    query = "MATCH (v:vehicle)-[:HAS]->(n:make) WHERE n.value = $name RETURN v as node,n.value as make"
-    params = {"name": name}
+def vehicle_make_eq(value: str = typer.Option(...)):
+    query = "MATCH (v:vehicle)-[:HAS]->(n:make) WHERE n.value = $value RETURN v as node,n.value as value"
+    params = {"value": value}
 
     records = services.neo.query.execute(query, params)
 
-    for record in sorted(records, key=lambda record: record["make"]):
-        logger.info(f"[graph-cli] {record['node']['id']} make {record['make']}")
+    for record in sorted(records, key=lambda record: record["value"]):
+        logger.info(f"[graph-cli] {record['node']['id']} make {record['value']}")
 
 
 @app.command()
@@ -84,6 +94,17 @@ def vehicle_makes():
 
     for record in sorted(records, key=lambda record: -1 * record["count"]):
         logger.info(f"[graph-cli] {record['make']} {record['count']}")
+
+
+@app.command()
+def vehicle_stolen_eq(value: str = typer.Option(...)):
+    query = "MATCH (v:vehicle)-[:HAS]->(n:stolen) WHERE n.value = $value RETURN v as node,n.value as value"
+    params = {"value": value}
+
+    records = services.neo.query.execute(query, params)
+
+    for record in sorted(records, key=lambda record: record["value"]):
+        logger.info(f"[graph-cli] {record['node']['id']} stolen {record['value']}")
 
 
 if __name__ == "__main__":

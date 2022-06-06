@@ -56,7 +56,7 @@ def entity_import(
 
         struct = services.entities.Slurp(db=db, objects=objects).call()
 
-        logger.info(f"[db-cli] count {struct.count}")
+        logger.info(f"[db-cli] imported {struct.count}")
 
 
 if __name__ == "__main__":

@@ -19,7 +19,7 @@ class Struct:
 
 
 class SlurpEntity:
-    """Create graph nodes for entity slug"""
+    """Create graph nodes for entity name and relationships to 'slug' nodes"""
 
     def __init__(self, db: Session, driver: neo4j.Driver):
         self._db = db
@@ -77,7 +77,7 @@ class SlurpEntity:
         entity_name: str,
         entities: typing.List[models.Entity],
     ) -> int:
-        """create source node with entity as node type"""
+        """create node labeled with entity_name"""
 
         params = {
             "params": self._map_properties(entities) | {"id": entity_id},
