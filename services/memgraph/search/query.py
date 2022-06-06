@@ -4,7 +4,7 @@ import logging
 import sys
 import typing
 
-from models.memgraph_connection import MemgraphConnection
+import models
 
 
 @dataclass
@@ -15,20 +15,24 @@ class Struct:
     errors: list[str]
 
 
-class MemgraphQuery:
+class Query:
     def __init__(
-        self, query: str, connection: MemgraphConnection = MemgraphConnection()
+        self,
+        query: str,
+        params: dict,
+        connection: models.MemgraphConnection,
     ):
         self._query = query
+        self._params = params
         self._connection = connection
 
         self._cursor = self._connection.cursor()
         self._logger = logging.getLogger("service")
 
-    def call(self):
+    def call(self) -> Struct:
         struct = Struct(0, 0, [], [])
 
-        self._cursor.execute(self._query)
+        self._cursor.execute(self._query, self._params)
 
         struct.count = self._cursor.rowcount
         struct.objects = self._cursor.fetchall()

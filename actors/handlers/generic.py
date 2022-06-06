@@ -10,7 +10,7 @@ class Struct:
     errors: list[str]
 
 
-class HandlerGeneric:
+class Generic:
     def __init__(self) -> None:
         self._logger = logging.getLogger("actor")
 

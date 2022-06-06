@@ -15,7 +15,7 @@ async def consumer(ch: Channel):
     c = await ch.connect(authkey=b"curio")
 
     msg_count = 0
-    msg_dict = {}
+    msg_dict: dict = {}
 
     while True:
         object = await c.recv()

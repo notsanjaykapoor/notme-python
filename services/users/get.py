@@ -1,4 +1,5 @@
 import logging
+from typing import Optional
 
 from dataclasses import dataclass
 from sqlmodel import select, Session
@@ -8,14 +9,15 @@ from sqlmodel.sql.expression import Select, SelectOfScalar
 SelectOfScalar.inherit_cache = True  # type: ignore
 Select.inherit_cache = True  # type: ignore
 
+import models
+
 from context import request_id
-from models.user import User
 
 
 @dataclass
 class Struct:
     code: int
-    user: User
+    user: Optional[models.User]
     errors: list[str]
 
 
@@ -32,7 +34,7 @@ class Get:
         self._logger.info(f"{request_id.get()} {__name__} {self._user_id}")
 
         struct.user = self._db.exec(
-            select(User).where(User.user_id == self._user_id)
+            select(models.User).where(models.User.user_id == self._user_id)
         ).first()
 
         if struct.user is None:

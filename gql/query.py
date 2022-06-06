@@ -1,8 +1,6 @@
 import strawberry
 import typing
 
-from database import engine
-from sqlmodel import Session, SQLModel
 from strawberry.types import Info
 
 import services.users
@@ -19,7 +17,7 @@ class Query:
     def user_get(self, user_id: str, info: Info) -> types.GqlUserGet:
         logger.info(f"gql.{info.field_name} {user_id}")
 
-        return services.users.Get(info.context["db"], user_id).call()
+        return services.users.Get(info.context["db"], user_id).call()  # type: ignore
 
     @strawberry.field
     def users_list(
@@ -27,4 +25,4 @@ class Query:
     ) -> types.GqlUsersList:
         logger.info(f"gql.{info.field_name} query {query}")
 
-        return services.users.List(info.context["db"], query, offset, limit).call()
+        return services.users.List(info.context["db"], query, offset, limit).call()  # type: ignore

@@ -1,16 +1,17 @@
 import logging
+from typing import Optional
 
 from dataclasses import dataclass
 from sqlmodel import select, Session
 from typing import Optional
 
-from models.user import User
+import models
 
 
 @dataclass
 class Struct:
     code: int
-    user_id: int
+    user_id: Optional[int]
     errors: list[str]
 
 
@@ -25,7 +26,7 @@ class Create:
 
         self._logger.info(f"{__name__} user_id {self._user_id}")
 
-        db_object = User(user_id=self._user_id)
+        db_object = models.User(user_id=self._user_id)
 
         self._db.add(db_object)
         self._db.commit()

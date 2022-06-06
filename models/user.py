@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from sqlmodel import Field, Session, SQLModel
+from sqlmodel import Field, SQLModel
 
 
 class User(SQLModel, table=True):  # type: ignore

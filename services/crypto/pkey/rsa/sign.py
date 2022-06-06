@@ -1,7 +1,7 @@
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Optional
 
 import base64
 import logging
@@ -10,7 +10,7 @@ import logging
 @dataclass
 class Struct:
     code: int
-    encoded: str
+    encoded: Optional[bytes]
     errors: list[str]
 
 
@@ -23,7 +23,7 @@ class Sign:
         self.logger = logging.getLogger("service")
 
     def call(self) -> Struct:
-        struct = Struct(0, "", [])
+        struct = Struct(0, None, [])
 
         self.logger.info(f"{__name__} data '{self.data}'")
 

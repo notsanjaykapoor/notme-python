@@ -5,7 +5,7 @@ import os
 import toml
 import typing
 
-from services.crypto.symmetric.aesgcm.load import AesGcmLoad
+import services.crypto.symmetric.aesgcm
 
 
 @dataclass
@@ -33,7 +33,9 @@ class Factory:
         cipher_name = toml_dict["cipher"]
 
         if "aes-gcm" in cipher_name:
-            struct_load = AesGcmLoad(key=toml_dict["key"]).call()
+            struct_load = services.crypto.symmetric.aesgcm.Load(
+                key=toml_dict["key"]
+            ).call()
 
             struct.cipher = struct_load.cipher
         else:

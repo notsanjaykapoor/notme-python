@@ -9,15 +9,16 @@ from sqlmodel.sql.expression import Select, SelectOfScalar
 SelectOfScalar.inherit_cache = True  # type: ignore
 Select.inherit_cache = True  # type: ignore
 
+import models
+import services.mql
+
 from context import request_id
-from models.user import User
-from services.mql.parse import MqlParse
 
 
 @dataclass
 class Struct:
     code: int
-    users: list[User]
+    users: list[models.User]
     errors: list[str]
 
 
@@ -35,7 +36,7 @@ class List:
         self._offset = offset
         self._limit = limit
 
-        self._dataset = select(User)  # default database query
+        self._dataset = select(models.User)  # default database query
         self._logger = logging.getLogger("api")
 
     def call(self) -> Struct:
@@ -45,7 +46,7 @@ class List:
 
         # tokenize query
 
-        struct_tokens = MqlParse(self._query).call()
+        struct_tokens = services.mql.Parse(self._query).call()
 
         self._logger.info(
             f"{request_id.get()} {__name__} tokens {struct_tokens.tokens}"
@@ -61,11 +62,11 @@ class List:
                     # like query
                     value_normal = re.sub(r"~", "", value)
                     self._dataset = self._dataset.where(
-                        User.user_id.like("%" + value_normal + "%")
+                        models.User.user_id.like("%" + value_normal + "%")  # type: ignore
                     )
                 else:
                     # match query
-                    self._dataset = self._dataset.where(User.user_id == value)
+                    self._dataset = self._dataset.where(models.User.user_id == value)
 
         struct.users = self._db.exec(
             self._dataset.offset(self._offset).limit(self._limit)

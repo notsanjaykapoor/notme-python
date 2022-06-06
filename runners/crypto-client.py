@@ -21,14 +21,13 @@ from database import engine
 from sqlmodel import Session, SQLModel
 from typing import Optional
 
-from kafka.reader import KafkaReader
-from kafka.writer import KafkaWriter
+import kafka
 
 import services.crypto.symmetric
+import services.crypto.symmetric.aesgcm
 
 from log import logging_init
 
-from services.crypto.symmetric.aesgcm.encrypt import AesGcmEncrypt
 
 app = typer.Typer()
 
@@ -41,7 +40,7 @@ def crypto_client(
     user_id: str = "kafka@notme.com",
     keys_file: str = "./keys/keys.toml",
 ):
-    writer = KafkaWriter(topic=topic)
+    writer = kafka.Writer(topic=topic)
 
     logger.info(f"crypto_client topic {topic} user_id {user_id}")
 
@@ -55,7 +54,7 @@ def crypto_client(
     cipher_name_ = services.crypto.symmetric.cipher_name(struct_factory.cipher)
 
     if cipher_name_ == "aesgcm":
-        struct_encrypt = AesGcmEncrypt(
+        struct_encrypt = services.crypto.symmetric.aesgcm.Encrypt(
             cipher=struct_factory.cipher,
             data=message,
         ).call()
@@ -64,7 +63,7 @@ def crypto_client(
 
     # logger.info(f"crypto_client struct {struct_encrypt}")
 
-    writer = KafkaWriter(topic=topic)
+    writer = kafka.Writer(topic=topic)
 
     writer.call(
         key=ulid.new().str,

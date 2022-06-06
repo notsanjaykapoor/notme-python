@@ -20,15 +20,13 @@ from database import engine
 from sqlmodel import Session, SQLModel
 from typing import Optional
 
+import kafka
+import kafka.handlers
+
 import services.crypto.pkey
 import services.users
 
 from actors.example.app import App
-from actors.handlers.generic import HandlerGeneric as ActorHandler
-
-from kafka.handlers.generic import HandlerGeneric as KafkaHandler
-from kafka.reader import KafkaReader
-from kafka.writer import KafkaWriter
 
 from log import logging_init
 from models import user
@@ -41,7 +39,7 @@ app = typer.Typer()
 
 @app.command()
 def actor_client(topic: str = typer.Option(...)):
-    writer = KafkaWriter(topic=topic)
+    writer = kafka.Writer(topic=topic)
 
     file = f"{topic}.json"  # e.g. example.json
     data = json.load(open(file))
@@ -118,6 +116,9 @@ def crypto_sign(data: str = "secret"):
 
     signature = struct_sign.encoded
 
+    if signature is None:
+        raise ValueError("signature missing")
+
     struct_verify = services.crypto.pkey.Verify(
         public_key,
         data,
@@ -144,8 +145,8 @@ def json_rewrite(file: str = "./data/example/example.json"):
 @app.command()
 def topic_read(topic: str = typer.Option(...), group: str = "python"):
     # call reader with generic handler
-    handler = KafkaHandler()
-    reader = KafkaReader(topic, group, handler)
+    handler = kafka.handlers.Generic
+    reader = kafka.Reader(topic, group, handler)
     reader.call()
 
 
@@ -153,7 +154,7 @@ def topic_read(topic: str = typer.Option(...), group: str = "python"):
 def topic_write(topic: str = typer.Option(...), key: str = typer.Option(...)):
     # todo: use async?
 
-    writer = KafkaWriter(topic=topic)
+    writer = kafka.Writer(topic=topic)
 
     writer.call(
         key=key,

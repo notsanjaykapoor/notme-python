@@ -14,7 +14,7 @@ class Struct:
     errors: list[str]
 
 
-class KafkaWriter:
+class Writer:
     def __init__(self, topic: str):
         self._topic = topic
 

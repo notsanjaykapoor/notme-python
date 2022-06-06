@@ -24,7 +24,7 @@ class User:
 
             response = {"code": struct_get.code}
 
-            if struct_get.code == 0:
+            if struct_get.user:
                 response |= struct_get.user.pack()
 
             return response

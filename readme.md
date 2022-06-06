@@ -69,6 +69,8 @@ Kafka topic create:
 ```
 docker exec -it broker kafka-topics --bootstrap-server broker:9092 --create --topic chess
 
+docker exec -it broker kafka-topics --bootstrap-server broker:9092 --create --topic crypto
+
 docker exec -it broker kafka-topics --bootstrap-server broker:9092 --list
 ```
 
@@ -84,21 +86,25 @@ Redpanda topic create:
 ```
 docker exec -it redpanda rpk topic create chess --brokers=localhost:9092
 
+docker exec -it redpanda rpk topic create crypto --brokers=localhost:9092
+
 docker exec -it redpanda rpk topic list --brokers=localhost:9092
 ```
 
 
 The crypto example uses an actor based server that reads from a kafka topic with a set of actors to process each message.
 
-```
-docker exec -it redpanda-1 rpk topic create crypto
+Create 'crypto' topic (see above) before running this example.
 
+```
 python runners/crypto-server.py --app crypto
 
 python runners/crypto-client.py --topic crypto
 ```
 
 The chess example ...
+
+Create 'chess' topic (see above) before running this example.
 
 ```
 python runners/chess-kafka-server.py --app chess
@@ -200,3 +206,48 @@ Then run the stream client:
 ```
 python proto/stream_client.py
 ```
+
+### Neo4j Example
+
+Start container:
+
+```
+docker-compose -f docker-compose-neo4j.yml up -d
+```
+
+Start cypher shell:
+
+```
+cypher-shell --addres neo4j://localhost:10687 -u neo4j
+```
+
+
+### Memgraph Example
+
+Docker install: (https://hub.docker.com/r/memgraph/memgraph)
+
+```
+docker-compose -f docker-compose-memgraph.yml up -d
+
+```
+
+Run mg_client interactive client in a python shell:
+
+```
+import mgclient
+
+conn = mgclient.connect(host='127.0.0.1', port=7687)
+
+cursor = conn.cursor()
+
+query = "match (n) return count(*)"
+
+cursor.execute(query); rows = cursor.fetchall(); rows
+```
+
+Load memgraph data:
+
+```
+python ./runners/memgraph-cli.py graph-create --file ./data/example/graph.json --max 10000000
+```
+

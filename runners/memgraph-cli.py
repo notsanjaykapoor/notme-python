@@ -11,9 +11,8 @@ sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
 from log import logging_init
 
-from models.memgraph_connection import MemgraphConnection
-from services.memgraph.parse.record import MemgraphParseRecord
-from services.memgraph.query import MemgraphQuery
+import models
+import services.memgraph
 
 logger = logging_init("cli")
 
@@ -21,8 +20,10 @@ app = typer.Typer()
 
 
 @app.command()
-def graph_create(max: int = typer.Option(...)):
-    connection = MemgraphConnection()
+def graph_create(file: str = typer.Option(...), max: int = typer.Option(...)):
+    connection = models.MemgraphConnection()
+
+    struct_delete = services.memgraph.write.DeleteAll(connection).call()
 
     cursor = connection.cursor()
 
@@ -37,12 +38,11 @@ def graph_create(max: int = typer.Option(...)):
 
     print("json import starting")
 
-    file = "./data/example/graph.json"
-    data = json.load(open(file))
+    objects = json.load(open(file))
     count = 0
 
-    for record in data:
-        struct_parse = MemgraphParseRecord(connection, record).call()
+    for record in objects:
+        struct_parse = services.memgraph.Load(connection, record).call()
 
         if struct_parse.code == 0:
             count += 1
@@ -61,26 +61,54 @@ def graph_create(max: int = typer.Option(...)):
 
 
 @app.command()
-def query_person_age(min: int = typer.Option(...)):
-    query = f"MATCH (p:person)-[:HAS]->(n:age) WHERE n.value >= {min} RETURN p,n.value"
-    struct_query = MemgraphQuery(query).call()
+def person_age_query(min: int = typer.Option(...)):
+    """Find all person nodes with age gte 'min'"""
+    struct_result = services.memgraph.search.PersonAgeGt(
+        min,
+        models.MemgraphConnection(),
+    ).call()
 
-    print(f"query 'age gte {min}' count {struct_query.count}")
+    logger.info(f"query 'age gte {min}' count {struct_result.count}")
 
-    for object in struct_query.objects:
+    for object in sorted(struct_result.objects, key=lambda object: object.age):
+        logger.info(object)
+
+
+@app.command()
+def vehicle_make_query(name: str = typer.Option(...)):
+    """Find all vehicle makes matching 'str'"""
+    struct_result = services.memgraph.search.VehicleMakeEq(
+        name,
+        models.MemgraphConnection(),
+    ).call()
+
+    print(f"query 'vehicle make eq {name}' count {struct_result.count}")
+
+    for object in struct_result.objects:
         print(object)
 
 
 @app.command()
-def query_vehicle_make(name: str = typer.Option(...)):
-    query = (
-        f"MATCH (v:vehicle)-[:HAS]->(n:make) WHERE n.value = '{name}' RETURN v,n.value"
-    )
-    struct_query = MemgraphQuery(query).call()
+def vehicle_makes_group():
+    """Group vehicle makes by make and count"""
 
-    print(f"query 'vehicle make eq {name}' count {struct_query.count}")
+    query = "match (n)-[r]-(m:make) return m.value, count(*)"
 
-    for object in struct_query.objects:
+    struct_result = services.memgraph.search.Query(query, {}).call()
+
+    for object in sorted(struct_result.objects, key=lambda object: object[0]):
+        print(object)
+
+
+@app.command()
+def vehicle_makes_list():
+    """Find all distinct vehicle makes"""
+
+    query = "match (m:make) return m.value"
+
+    struct_result = services.memgraph.search.Query(query, {}).call()
+
+    for object in sorted(struct_result.objects, key=lambda object: object[0]):
         print(object)
 
 

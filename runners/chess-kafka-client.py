@@ -21,10 +21,9 @@ from database import engine
 from sqlmodel import Session, SQLModel
 from typing import Optional
 
-from actors.example.app import App
+import kafka
 
-from kafka.reader import KafkaReader
-from kafka.writer import KafkaWriter
+from actors.example.app import App
 
 from log import logging_init
 
@@ -39,7 +38,7 @@ def chess_client(
     file: str = typer.Option(...),
     max_records: int = 2**30,
 ):
-    writer = KafkaWriter(topic=topic)
+    writer = kafka.Writer(topic=topic)
 
     with open(file, mode="r", encoding="ISO-8859-1") as f:
         msg_count = 0

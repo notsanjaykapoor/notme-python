@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from confluent_kafka import Consumer, KafkaError, KafkaException
 from kafka.config import config_reader
 
-from models.actor_message import ActorMessage
+import models
 
 
 @dataclass
@@ -18,8 +18,8 @@ class Struct:
     errors: list[str]
 
 
-class KafkaReader:
-    def __init__(self, topic: str, group: str, handler: typing.Any):
+class Reader:
+    def __init__(self, topic: str, group: str, handler: typing.Callable):
         self._topic = topic
         self._group = group
         self._handler = handler
@@ -34,10 +34,15 @@ class KafkaReader:
 
         self._topics.append(self._topic)
 
-        if self._task is not None:
+        if self._task:
             self._log_subject = f"actor '{self._task.get_name()}' {__name__}"
+            self._actor_name = self._task.get_name()
         else:
             self._log_subject = f"{__name__}"
+            self._actor_name = "kafka"
+
+        # create default actor used for callback during message processing
+        self._actor = models.Actor(name=self._actor_name, handler=self)
 
     async def call(self):
         struct = Struct(0, [])
@@ -64,7 +69,10 @@ class KafkaReader:
                         raise KafkaException(msg.error())
 
                 # call handler to process message
-                handler_struct = self._handler.call(msg=ActorMessage(msg))
+                handler_struct = self._handler.call(
+                    actor=self._actor,
+                    msg=models.ActorMessage(msg),
+                )
 
                 # check return code and ack
                 if handler_struct.code == 0:

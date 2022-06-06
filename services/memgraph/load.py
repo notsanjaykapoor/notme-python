@@ -13,7 +13,7 @@ class Struct:
     errors: list[str]
 
 
-class MemgraphParseRecord:
+class Load:
     def __init__(self, connection: MemgraphConnection, record: dict):
         self._connection = connection
         self._record = record

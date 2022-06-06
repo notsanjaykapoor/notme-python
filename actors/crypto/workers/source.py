@@ -5,13 +5,9 @@ import typing
 
 from dataclasses import dataclass
 
+import models
 import services.crypto.symmetric
-
-from models.actor import Actor
-from models.actor_log import ActorLog
-from models.actor_message import ActorMessage
-
-from services.crypto.symmetric.aesgcm.decrypt import AesGcmDecrypt
+import services.crypto.symmetric.aesgcm
 
 
 @dataclass
@@ -28,11 +24,11 @@ class WorkerSource:
 
         self._dict: dict = {}
 
-        self._actor_log = ActorLog(app_name=self._app_name)
+        self._actor_log = models.ActorLog(app_name=self._app_name)
         self._logger = logging.getLogger("actor")
 
     # process kafka msg
-    def call(self, actor: Actor, msg: ActorMessage) -> Struct:
+    def call(self, actor: models.Actor, msg: models.ActorMessage) -> Struct:
         struct = Struct(0, [])
 
         self._logger.info(f"actor '{actor.name}' message header {msg.header()}")
@@ -42,7 +38,7 @@ class WorkerSource:
 
             self._logger.info(f"actor '{actor.name}' message {message_dict}")
 
-            self._process(message_dict)
+            self._process(actor, message_dict)
 
             # self._log_append(actor, msg)
         except Exception as e:
@@ -53,10 +49,10 @@ class WorkerSource:
         return struct
 
     # append to app log
-    def _log_append(self, actor: Actor, msg: ActorMessage):
+    def _log_append(self, actor: models.Actor, msg: models.ActorMessage):
         self._actor_log.append({"actor": actor.name, **msg.header()})
 
-    def _process(self, actor: Actor, message_dict: dict):
+    def _process(self, actor: models.Actor, message_dict: dict):
         user_from = message_dict["from"]
 
         self._logger.info(f"actor '{actor.name}' from {user_from}")
@@ -68,7 +64,7 @@ class WorkerSource:
         cipher_name_ = services.crypto.symmetric.cipher_name(struct_factory.cipher)
 
         if cipher_name_ == "aesgcm":
-            struct_decrypt = AesGcmDecrypt(
+            struct_decrypt = services.crypto.symmetric.aesgcm.Decrypt(
                 cipher=struct_factory.cipher,
                 encoded=message_dict["encoded"],
                 nonce=message_dict["nonce"],

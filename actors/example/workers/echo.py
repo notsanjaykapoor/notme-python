@@ -33,7 +33,7 @@ class WorkerEcho:
         return struct
 
     def _deliver(self, actor: Actor, message_object: dict) -> int:
-        if self._actor.output is None:
+        if actor.output is None:
             # nothing to do
             return 0
 

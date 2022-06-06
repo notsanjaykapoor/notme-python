@@ -13,7 +13,7 @@ class Struct:
     errors: list[str]
 
 
-class AesCbcCreate:
+class Create:
     def __init__(self):
         self.logger = logging.getLogger("service")
 

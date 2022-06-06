@@ -28,9 +28,6 @@ import services.crypto.pkey.rsa
 
 from log import logging_init
 
-from kafka.reader import KafkaReader
-from kafka.writer import KafkaWriter
-
 app = typer.Typer()
 
 logger = logging_init("cli")

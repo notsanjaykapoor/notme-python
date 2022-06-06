@@ -14,7 +14,7 @@ class Struct:
 
 
 class Verify:
-    def __init__(self, public_key: Any, data: str, signature: str):
+    def __init__(self, public_key: Any, data: str, signature: bytes):
         self.public_key = public_key
         self.data = data
         self.signature = signature

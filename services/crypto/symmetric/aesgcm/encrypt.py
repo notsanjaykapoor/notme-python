@@ -16,7 +16,7 @@ class Struct:
     errors: list[str]
 
 
-class AesGcmEncrypt:
+class Encrypt:
     def __init__(self, cipher: typing.Any, data: dict, nonce: bytes = None):
         self._cipher = cipher
         self._data = data

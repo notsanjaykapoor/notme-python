@@ -3,15 +3,14 @@ import logging
 import sys
 import typing
 
-from kafka.handlers.generic import HandlerGeneric as KafkaHandler
-from kafka.reader import KafkaReader
+import kafka
 
 
 class Actor:
     def __init__(
         self,
         name: str,
-        handler: typing.Callable[[typing.Any, dict], typing.Any],
+        handler: typing.Any,
         queue: asyncio.Queue = None,
         topic: str = None,
         group: str = None,
@@ -24,7 +23,7 @@ class Actor:
         self._group = group
         self._output = output
 
-        self._task = None
+        self._task: typing.Optional[asyncio.Task] = None
 
         if self._handler is None:
             raise ValueError("handler missing")
@@ -85,7 +84,7 @@ class Actor:
         self._logger.info(f"actor '{self._name}' running")
 
         try:
-            self._reader = KafkaReader(self._topic, self._group, self._handler)
+            self._reader = kafka.Reader(self._topic, self._group, self._handler)
 
             # read from kafka stream
             await self._reader.call()

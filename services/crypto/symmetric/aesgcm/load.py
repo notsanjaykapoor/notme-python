@@ -14,7 +14,7 @@ class Struct:
     errors: list[str]
 
 
-class AesGcmLoad:
+class Load:
     def __init__(self, key: str):
         self._key = key
 

@@ -9,6 +9,7 @@ import sys
 import ulid
 
 import gql
+import services.entities
 import services.users
 
 from database import engine
@@ -18,10 +19,10 @@ from sqlmodel import Session, SQLModel
 from strawberry.fastapi import GraphQLRouter
 from strawberry.schema.config import StrawberryConfig
 
+import models
+
 from context import request_id
 from log import logging_init
-from models.user import User
-
 
 logger = logging_init("api")
 
@@ -74,6 +75,19 @@ async def add_request_id(request: Request, call_next):
     return response
 
 
+@app.get("/entities", response_model=list[models.Entity])
+def entities_list(
+    query: str = "", offset: int = 0, limit: int = 100, db: Session = Depends(get_db)
+):
+    logger.info(f"{request_id.get()} api.entities.list")
+
+    struct = services.entities.List(db, query, offset, limit).call()
+
+    # logger.info(f"api.users.list response {struct}")
+
+    return struct.entities
+
+
 @app.get("/ping")
 def api_ping():
     return {
@@ -83,15 +97,15 @@ def api_ping():
 
 
 @app.post("/users", response_model=int)
-def user_create(user_id: str):
+def user_create(user_id: str, db: Session = Depends(get_db)):
     logger.info(f"{request_id.get()} api.user.create")
 
-    struct = services.users.Create(user_id).call()
+    struct = services.users.Create(db, user_id).call()
 
     return struct.user_id
 
 
-@app.get("/users/{user_id}", response_model=User)
+@app.get("/users/{user_id}", response_model=models.User)
 def user_get(user_id: str, db: Session = Depends(get_db)):
     logger.info(f"{request_id.get()} api.user.get")
 
@@ -100,7 +114,7 @@ def user_get(user_id: str, db: Session = Depends(get_db)):
     return struct.user
 
 
-@app.get("/users", response_model=list[User])
+@app.get("/users", response_model=list[models.User])
 def users_list(
     query: str = "", offset: int = 0, limit: int = 100, db: Session = Depends(get_db)
 ):
