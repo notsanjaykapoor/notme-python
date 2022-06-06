@@ -19,7 +19,7 @@ import models
 import services.db
 import services.entities
 import services.memgraph
-import services.neo
+import services.graph
 
 logger = logging_init("cli")
 

@@ -111,7 +111,7 @@ class SlurpEntity:
         )
 
     def _get_node_count(self, query: str, params: dict) -> int:
-        result = services.neo.query.execute(query, params, self._driver)
+        result = services.graph.query.execute(query, params, self._driver)
         return result[0]["count"]
 
     def _map_properties(self, entities: typing.List[models.Entity]) -> dict:

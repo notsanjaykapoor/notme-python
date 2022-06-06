@@ -23,19 +23,19 @@ class Slurp:
     def __init__(self, db: Session):
         self._db = db
 
-        self._driver = services.neo.get_driver()
+        self._driver = services.graph.get_driver()
         self._logger = logging.getLogger("service")
 
     def call(self) -> Struct:
         struct = Struct(0, 0, 0, [])
 
-        struct_slugs = services.neo.SlurpSlugs(self._db, self._driver).call()
+        struct_slugs = services.graph.SlurpSlugs(self._db, self._driver).call()
         struct.nodes_created += struct_slugs.nodes_created
 
-        struct_entities = services.neo.SlurpEntity(self._db, self._driver).call()
+        struct_entities = services.graph.SlurpEntity(self._db, self._driver).call()
         struct.nodes_created += struct_entities.nodes_created
 
-        struct_relationships = services.neo.SlurpRelationships(
+        struct_relationships = services.graph.SlurpRelationships(
             self._db, self._driver
         ).call()
 

@@ -3,11 +3,11 @@ import neo4j
 import os
 import sys
 
-import services.neo
+import services.graph
 
 
 def truncate():
-    driver = services.neo.get_driver()
+    driver = services.graph.get_driver()
 
     query = "MATCH(n) CALL { WITH n DETACH DELETE n } IN TRANSACTIONS OF 1000 ROWS"
 

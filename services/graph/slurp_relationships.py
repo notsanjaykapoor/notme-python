@@ -127,5 +127,5 @@ class SlurpRelationships:
         )
 
     def _get_graph_count(self, query: str, params: dict) -> int:
-        result = services.neo.query.execute(query, params, self._driver)
+        result = services.graph.query.execute(query, params, self._driver)
         return result[0]["count"]

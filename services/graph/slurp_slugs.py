@@ -106,5 +106,5 @@ class SlurpSlugs:
         return tx.run(query, params)
 
     def _get_node_count(self, query: str, params: dict) -> int:
-        result = services.neo.query.execute(query, {}, self._driver)
+        result = services.graph.query.execute(query, {}, self._driver)
         return result[0]["count"]
