@@ -34,7 +34,12 @@ class Slurp:
 
         struct_entities = services.neo.SlurpEntity(self._db, self._driver).call()
         struct.nodes_created += struct_entities.nodes_created
-        struct.relationships_created += struct_entities.relationships_created
+
+        struct_relationships = services.neo.SlurpRelationships(
+            self._db, self._driver
+        ).call()
+
+        struct.relationships_created += struct_relationships.relationships_created
 
         self._close()
 

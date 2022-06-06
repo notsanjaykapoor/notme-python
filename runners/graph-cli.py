@@ -35,24 +35,31 @@ def graph_import(truncate: bool = typer.Option(...)):
 
 
 @app.command()
-def graph_node_count():
+def graph_nodes_count():
     query = "MATCH(n) return count(*) as count"
     records, summary = services.neo.query.execute_with_summary(query, {})
 
     for record in records:
-        logger.info(f"[graph-cli] total {record['count']}")
+        logger.info(f"[graph-cli] total nodes {record['count']}")
 
-    query = f"MATCH (n) RETURN distinct labels(n) as label, count(*) as count"
+    query = "match(n)-[r]-(x) where (n:case or n:person or n:vehicle) return count(r) as count"
+    records, summary = services.neo.query.execute_with_summary(query, {})
 
     records = services.neo.query.execute(query, {})
 
     for record in sorted(records, key=lambda record: -1 * record["count"]):
-        logger.info(f"[graph-cli] {record['label'][0]} {record['count']}")
+        logger.info(f"[graph-cli] total relationships {record['count']}")
+
+    query = f"MATCH (n) RETURN distinct labels(n) as label, count(*) as count"
+    records = services.neo.query.execute(query, {})
+
+    for record in sorted(records, key=lambda record: -1 * record["count"]):
+        logger.info(f"[graph-cli] node {record['label'][0]} {record['count']}")
 
 
 @app.command()
 def person_age_gt(min: int = typer.Option(...)):
-    query = "MATCH (p:person)-[:HAS]->(n:age) WHERE n.value >= $min RETURN p as node,n.value as age"
+    query = "MATCH (p:person)-[:has]->(n:age) WHERE n.value >= $min RETURN p as node,n.value as age"
     params = {"min": min}
 
     records = services.neo.query.execute(query, params)
@@ -63,7 +70,7 @@ def person_age_gt(min: int = typer.Option(...)):
 
 @app.command()
 def person_age_lt(max: int = typer.Option(...)):
-    query = "MATCH (p:person)-[:HAS]->(n:age) WHERE n.value <= $max RETURN p as node,n.value as age"
+    query = "MATCH (p:person)-[:has]->(n:age) WHERE n.value <= $max RETURN p as node,n.value as age"
     params = {"max": max}
 
     records = services.neo.query.execute(query, params)
@@ -74,7 +81,7 @@ def person_age_lt(max: int = typer.Option(...)):
 
 @app.command()
 def vehicle_make_eq(value: str = typer.Option(...)):
-    query = "MATCH (v:vehicle)-[:HAS]->(n:make) WHERE n.value = $value RETURN v as node,n.value as value"
+    query = "MATCH (v:vehicle)-[:has]->(n:make) WHERE n.value = $value RETURN v as node,n.value as value"
     params = {"value": value}
 
     records = services.neo.query.execute(query, params)
@@ -85,7 +92,7 @@ def vehicle_make_eq(value: str = typer.Option(...)):
 
 @app.command()
 def vehicle_makes():
-    query = f"MATCH (s)-[:HAS]-(n:make) RETURN n.value as make, count(*) as count"
+    query = f"MATCH (s)-[:has]-(n:make) RETURN n.value as make, count(*) as count"
 
     records = services.neo.query.execute(query, {})
 
@@ -95,7 +102,7 @@ def vehicle_makes():
 
 @app.command()
 def vehicle_stolen_eq(value: str = typer.Option(...)):
-    query = "MATCH (v:vehicle)-[:HAS]->(n:stolen) WHERE n.value = $value RETURN v as node,n.value as value"
+    query = "MATCH (v:vehicle)-[:has]->(n:stolen) WHERE n.value = $value RETURN v as node,n.value as value"
     params = {"value": value}
 
     records = services.neo.query.execute(query, params)

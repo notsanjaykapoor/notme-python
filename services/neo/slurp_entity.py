@@ -14,7 +14,6 @@ import services.entities
 class Struct:
     code: int
     nodes_created: int
-    relationships_created: int
     errors: typing.List[str]
 
 
@@ -29,13 +28,13 @@ class SlurpEntity:
         self._logger = logging.getLogger("service")
 
     def call(self) -> Struct:
-        struct = Struct(0, 0, 0, [])
+        struct = Struct(0, 0, [])
 
         # find all unique entity ids
         struct_ids = services.entities.ListIds(db=self._db).call()
 
         for id in struct_ids.ids:
-            # find entities
+            # find entities by entity_id
             struct_list = services.entities.List(
                 db=self._db,
                 query=f"entity_id:{id}",
@@ -51,7 +50,6 @@ class SlurpEntity:
             # partition entities
 
             source_entities = self._filter_source_properties(struct_list.entities)
-            target_entities = self._filter_target_entities(struct_list.entities)
 
             # create entity node(s)
 
@@ -59,15 +57,6 @@ class SlurpEntity:
                 entity_id, entity_name, source_entities
             )
             struct.nodes_created += nodes_created
-
-            # create relationships between entity and target nodes
-
-            relationships_created = self._create_node_relationships(
-                source_entity_id=entity_id,
-                source_entity_name=entity_name,
-                target_entities=target_entities,
-            )
-            struct.relationships_created += relationships_created
 
         return struct
 
@@ -90,9 +79,9 @@ class SlurpEntity:
             + "}) RETURN count(p) as count"
         )
 
-        graph_count = self._get_graph_count(query_exists, params)
+        node_count = self._get_node_count(query_exists, params)
 
-        if graph_count:
+        if node_count:
             # node exists
             return 0
 
@@ -109,54 +98,6 @@ class SlurpEntity:
             )
             return 1
 
-    def _create_node_relationships(
-        self,
-        source_entity_id: str,
-        source_entity_name: str,
-        target_entities: typing.List[models.Entity],
-    ) -> int:
-        """create relationships between entity node and target 'slug' nodes"""
-
-        rel_created = 0
-
-        for entity in target_entities:
-            target_value = services.entities.graph_value_store(
-                entity.type_name, str(entity.type_value)
-            )
-
-            params = {
-                "source_entity_id": source_entity_id,
-                "target_value": target_value,
-            }
-
-            query_exists = f"""
-            MATCH (n1:{source_entity_name})-[r:HAS]-(n2:{entity.slug})
-            WHERE n1.id = $source_entity_id and n2.value = $target_value
-            RETURN count(r) as count
-            """
-
-            graph_count = self._get_graph_count(query_exists, params)
-
-            if graph_count:
-                # node exists
-                return 0
-
-            query_create = f"""
-            MATCH (n1:{source_entity_name}), (n2:{entity.slug})
-            WHERE n1.id = $source_entity_id and n2.value = $target_value
-            CREATE (n1)-[r:HAS]->(n2)
-            """
-
-            self._logger.info(
-                f"{__name__} create relationship entity {source_entity_name}:{source_entity_id} slug {entity.slug}"
-            )
-
-            with self._driver.session() as session:
-                session.write_transaction(self._create_with_tx, query_create, params)
-                rel_created += 1
-
-        return rel_created
-
     @staticmethod
     def _create_with_tx(tx: neo4j.Transaction, query: str, params: dict):
         return tx.run(query, params)
@@ -169,19 +110,7 @@ class SlurpEntity:
             filter(lambda entity: entity.slug in self._entity_properties, entities)
         )
 
-    def _filter_target_entities(
-        self, entities: typing.List[models.Entity]
-    ) -> typing.List[models.Entity]:
-        """filter entities that should be added as graph nodes"""
-        return list(
-            filter(
-                lambda entity: entity.slug not in self._entity_properties
-                and entity.type_value,
-                entities,
-            )
-        )
-
-    def _get_graph_count(self, query: str, params: dict) -> int:
+    def _get_node_count(self, query: str, params: dict) -> int:
         result = services.neo.query.execute(query, params, self._driver)
         return result[0]["count"]
 
