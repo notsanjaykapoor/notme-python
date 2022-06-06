@@ -23,7 +23,7 @@ app = typer.Typer()
 def graph_create(file: str = typer.Option(...), max: int = typer.Option(...)):
     connection = models.MemgraphConnection()
 
-    struct_delete = services.memgraph.write.DeleteAll(connection).call()
+    struct_delete = services.memgraph.commands.truncate(connection).call()
 
     cursor = connection.cursor()
 
@@ -61,40 +61,12 @@ def graph_create(file: str = typer.Option(...), max: int = typer.Option(...)):
 
 
 @app.command()
-def person_age_query(min: int = typer.Option(...)):
-    """Find all person nodes with age gte 'min'"""
-    struct_result = services.memgraph.search.PersonAgeGt(
-        min,
-        models.MemgraphConnection(),
-    ).call()
-
-    logger.info(f"query 'age gte {min}' count {struct_result.count}")
-
-    for object in sorted(struct_result.objects, key=lambda object: object.age):
-        logger.info(object)
-
-
-@app.command()
-def vehicle_make_query(name: str = typer.Option(...)):
-    """Find all vehicle makes matching 'str'"""
-    struct_result = services.memgraph.search.VehicleMakeEq(
-        name,
-        models.MemgraphConnection(),
-    ).call()
-
-    print(f"query 'vehicle make eq {name}' count {struct_result.count}")
-
-    for object in struct_result.objects:
-        print(object)
-
-
-@app.command()
 def vehicle_makes_group():
     """Group vehicle makes by make and count"""
 
     query = "match (n)-[r]-(m:make) return m.value, count(*)"
 
-    struct_result = services.memgraph.search.Query(query, {}).call()
+    struct_result = services.memgraph.search.query(query, {}).call()
 
     for object in sorted(struct_result.objects, key=lambda object: object[0]):
         print(object)
@@ -106,7 +78,7 @@ def vehicle_makes_list():
 
     query = "match (m:make) return m.value"
 
-    struct_result = services.memgraph.search.Query(query, {}).call()
+    struct_result = services.memgraph.search.query(query, {}).call()
 
     for object in sorted(struct_result.objects, key=lambda object: object[0]):
         print(object)

@@ -79,7 +79,7 @@ class SlurpSlugs:
                 "params": {"value": value_create},
             }
 
-            # node name is property slug; note that node name can not be set with '$' format
+            # node name is property slug; note that node label can not be set with '$' format
             query_exists = (
                 f"MATCH (p:{slug} "
                 + "{value: "
@@ -87,29 +87,29 @@ class SlurpSlugs:
                 + "}) RETURN count(p) as count"
             )
 
-            query_count = self._get_query_count(query_exists, {})
+            node_count = self._get_node_count(query_exists, {})
 
-            if query_count:
+            if node_count:
                 # node exists
                 continue
 
-            # node name is property slug; note that node name can not be set with '$' format
+            # node name is property slug; note that node label can not be set with '$' format
             query_create = f"CREATE (p:{slug} $params) RETURN p"
 
             self._logger.info(f"{__name__} slug:{slug} value:{value}")
 
-            # self._logger.info(f"{__name__} create {query} {params}")
-
             with self._driver.session() as session:
-                session.write_transaction(self._create_with_tx, query_create, params)
+                session.write_transaction(
+                    self._create_nodes_with_tx, query_create, params
+                )
                 nodes_created += 1
 
         return nodes_created
 
     @staticmethod
-    def _create_with_tx(tx: neo4j.Transaction, query: str, params: dict):
+    def _create_nodes_with_tx(tx: neo4j.Transaction, query: str, params: dict):
         return tx.run(query, params)
 
-    def _get_query_count(self, query: str, params: dict) -> int:
+    def _get_node_count(self, query: str, params: dict) -> int:
         result = services.neo.query.execute(query, {}, self._driver)
         return result[0]["count"]

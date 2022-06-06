@@ -15,26 +15,13 @@ class Struct:
     errors: list[str]
 
 
-class Query:
-    def __init__(
-        self,
-        query: str,
-        params: dict,
-        connection: models.MemgraphConnection,
-    ):
-        self._query = query
-        self._params = params
-        self._connection = connection
+def query(query: str, params: dict, connection: models.MemgraphConnection) -> Struct:
+    struct = Struct(0, 0, [], [])
 
-        self._cursor = self._connection.cursor()
-        self._logger = logging.getLogger("service")
+    cursor = connection.cursor()
+    cursor.execute(query, params)
 
-    def call(self) -> Struct:
-        struct = Struct(0, 0, [], [])
+    struct.count = cursor.rowcount
+    struct.objects = cursor.fetchall()
 
-        self._cursor.execute(self._query, self._params)
-
-        struct.count = self._cursor.rowcount
-        struct.objects = self._cursor.fetchall()
-
-        return struct
+    return struct

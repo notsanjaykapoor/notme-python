@@ -25,16 +25,7 @@ app = typer.Typer()
 
 
 @app.command()
-def entity_count():
-    query = "MATCH(n) return count(*) as count"
-    records = services.neo.query.execute(query, {})
-
-    for record in records:
-        logger.info(f"[graph-cli] entity count {record['count']}")
-
-
-@app.command()
-def entity_import(truncate: bool = typer.Option(...)):
+def graph_import(truncate: bool = typer.Option(...)):
     if truncate:
         services.neo.commands.truncate()
         logger.info(f"[graph-cli] truncated")
@@ -44,7 +35,13 @@ def entity_import(truncate: bool = typer.Option(...)):
 
 
 @app.command()
-def graph_labels():
+def graph_node_count():
+    query = "MATCH(n) return count(*) as count"
+    records, summary = services.neo.query.execute_with_summary(query, {})
+
+    for record in records:
+        logger.info(f"[graph-cli] total {record['count']}")
+
     query = f"MATCH (n) RETURN distinct labels(n) as label, count(*) as count"
 
     records = services.neo.query.execute(query, {})

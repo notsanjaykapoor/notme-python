@@ -62,7 +62,7 @@ class SlurpEntity:
 
             # create relationships between entity and target nodes
 
-            relationships_created = self._create_relationships(
+            relationships_created = self._create_node_relationships(
                 source_entity_id=entity_id,
                 source_entity_name=entity_name,
                 target_entities=target_entities,
@@ -83,7 +83,6 @@ class SlurpEntity:
             "params": self._map_properties(entities) | {"id": entity_id},
         }
 
-        # query_exists = f"MATCH (p:{entity_name} $params) RETURN count(p)"
         query_exists = (
             f"MATCH (p:{entity_name} "
             + "{id: "
@@ -91,13 +90,13 @@ class SlurpEntity:
             + "}) RETURN count(p) as count"
         )
 
-        query_count = self._get_query_count(query_exists, params)
+        graph_count = self._get_graph_count(query_exists, params)
 
-        if query_count:
+        if graph_count:
             # node exists
             return 0
 
-        # create node; note that node name can not be set with '$' format
+        # create node; note that node label can not be set with '$' format
         query_create = f"CREATE (p:{entity_name} $params) RETURN p.id"
 
         self._logger.info(
@@ -110,13 +109,13 @@ class SlurpEntity:
             )
             return 1
 
-    def _create_relationships(
+    def _create_node_relationships(
         self,
         source_entity_id: str,
         source_entity_name: str,
         target_entities: typing.List[models.Entity],
     ) -> int:
-        """create relationships between entity node and target nodes"""
+        """create relationships between entity node and target 'slug' nodes"""
 
         rel_created = 0
 
@@ -137,9 +136,9 @@ class SlurpEntity:
             RETURN count(r) as count
             """
 
-            query_count = self._get_query_count(query_exists, params)
+            graph_count = self._get_graph_count(query_exists, params)
 
-            if query_count:
+            if graph_count:
                 # node exists
                 return 0
 
@@ -183,7 +182,7 @@ class SlurpEntity:
             )
         )
 
-    def _get_query_count(self, query: str, params: dict) -> int:
+    def _get_graph_count(self, query: str, params: dict) -> int:
         result = services.neo.query.execute(query, params, self._driver)
         return result[0]["count"]
 
