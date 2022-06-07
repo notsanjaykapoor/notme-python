@@ -35,11 +35,17 @@ class Slurp:
         struct_entities = services.graph.SlurpEntity(self._db, self._driver).call()
         struct.nodes_created += struct_entities.nodes_created
 
-        struct_relationships = services.graph.SlurpRelationships(
+        struct_connections = services.graph.SlurpConnections(
             self._db, self._driver
         ).call()
 
-        struct.relationships_created += struct_relationships.relationships_created
+        struct.relationships_created += struct_connections.relationships_created
+
+        # struct_relationships = services.graph.SlurpRelationships(
+        #     self._db, self._driver
+        # ).call()
+
+        # struct.relationships_created += struct_relationships.relationships_created
 
         self._close()
 

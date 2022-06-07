@@ -19,8 +19,8 @@ from context import request_id
 @dataclass
 class Struct:
     code: int
-    entities: typing.List[models.Entity]
-    entities_count: int
+    objects: typing.List[models.GraphConnectionEntity]
+    objects_count: int
     errors: typing.List[str]
 
 
@@ -38,8 +38,8 @@ class List:
         self._offset = offset
         self._limit = limit
 
-        self._dataset = select(models.Entity)  # default database query
-        self._logger = logging.getLogger("api")
+        self._dataset = select(models.GraphConnectionEntity)  # default database query
+        self._logger = logging.getLogger("service")
 
     def call(self) -> Struct:
         struct = Struct(0, [], 0, [])
@@ -57,51 +57,43 @@ class List:
         for token in struct_tokens.tokens:
             value = token["value"]
 
-            if token["field"] == "entity_id":
+            if token["field"] == "entity_name":
                 match = re.match(r"^~", value)
 
                 if match:
                     # like query
                     value_normal = re.sub(r"~", "", value)
                     self._dataset = self._dataset.where(
-                        models.Entity.entity_id.like("%" + value_normal + "%")  # type: ignore
+                        models.GraphConnectionEntity.entity_name.like("%" + value_normal + "%")  # type: ignore
                     )
                 else:
                     # match query
                     self._dataset = self._dataset.where(
-                        models.Entity.entity_id == value
+                        models.GraphConnectionEntity.entity_name == value
                     )
-            elif token["field"] == "entity_name":
+            elif token["field"] == "entity_slug":
                 match = re.match(r"^~", value)
 
                 if match:
                     # like query
                     value_normal = re.sub(r"~", "", value)
                     self._dataset = self._dataset.where(
-                        models.Entity.entity_name.like("%" + value_normal + "%")  # type: ignore
+                        models.GraphConnectionEntity.entity_slug.like("%" + value_normal + "%")  # type: ignore
                     )
                 else:
                     # match query
                     self._dataset = self._dataset.where(
-                        models.Entity.entity_name == value
+                        models.GraphConnectionEntity.entity_slug == value
                     )
-            elif token["field"] == "slug":
-                match = re.match(r"^~", value)
+            elif token["field"] == "id":
+                self._dataset = self._dataset.where(
+                    models.GraphConnectionEntity.id == value
+                )
 
-                if match:
-                    # like query
-                    value_normal = re.sub(r"~", "", value)
-                    self._dataset = self._dataset.where(
-                        models.Entity.slug.like("%" + value_normal + "%")  # type: ignore
-                    )
-                else:
-                    # match query
-                    self._dataset = self._dataset.where(models.Entity.slug == value)
-
-        struct.entities = self._db.exec(
+        struct.objects = self._db.exec(
             self._dataset.offset(self._offset).limit(self._limit)
         ).all()
 
-        struct.entities_count = len(struct.entities)
+        struct.objects_count = len(struct.objects)
 
         return struct

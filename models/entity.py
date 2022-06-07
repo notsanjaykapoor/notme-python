@@ -3,8 +3,6 @@ import typing
 from sqlmodel import Field, SQLModel
 from sqlalchemy import UniqueConstraint
 
-import models
-
 
 class Entity(SQLModel, table=True):  # type: ignore
     __tablename__ = "entities"
