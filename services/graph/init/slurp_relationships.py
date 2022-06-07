@@ -17,6 +17,7 @@ class Struct:
     errors: typing.List[str]
 
 
+# deprecated
 class SlurpRelationships:
     """Create graph relationships from entity node to 'slug' nodes"""
 

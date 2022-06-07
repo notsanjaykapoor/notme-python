@@ -7,8 +7,7 @@ import typing
 from dataclasses import dataclass
 from sqlmodel import select, Session
 
-import models
-import services.entities
+import services.graph
 
 
 @dataclass
@@ -29,22 +28,26 @@ class Slurp:
     def call(self) -> Struct:
         struct = Struct(0, 0, 0, [])
 
-        struct_slugs = services.graph.SlurpSlugs(self._db, self._driver).call()
-        struct.nodes_created += struct_slugs.nodes_created
+        struct_entities = services.graph.init.SlurpEntity(self._db, self._driver).call()
 
-        struct_entities = services.graph.SlurpEntity(self._db, self._driver).call()
         struct.nodes_created += struct_entities.nodes_created
 
-        struct_connections = services.graph.SlurpConnections(
+        struct_slugs = services.graph.init.SlurpEntitySlugs(
+            self._db, self._driver
+        ).call()
+
+        struct.nodes_created += struct_slugs.nodes_created
+
+        struct_connections = services.graph.init.SlurpEntityConnections(
             self._db, self._driver
         ).call()
 
         struct.relationships_created += struct_connections.relationships_created
 
-        # struct_relationships = services.graph.SlurpRelationships(
+        # deprecated
+        # struct_relationships = services.graph.init.SlurpRelationships(
         #     self._db, self._driver
         # ).call()
-
         # struct.relationships_created += struct_relationships.relationships_created
 
         self._close()

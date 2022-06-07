@@ -17,7 +17,7 @@ class Struct:
     errors: typing.List[str]
 
 
-class SlurpSlugs:
+class SlurpEntitySlugs:
     """Create graph nodes for entity slugs"""
 
     def __init__(self, db: Session, driver: neo4j.Driver):

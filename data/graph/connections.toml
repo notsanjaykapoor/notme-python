@@ -1,0 +1,54 @@
+[[connections]]
+entity_name = "case"
+entity_slug = "city"
+rel_name = "has"
+
+[[connections]]
+entity_name = "case"
+entity_slug = "incident_type"
+rel_name = "has"
+
+[[connections]]
+entity_name = "case"
+entity_slug = "status"
+rel_name = "has"
+
+[[connections]]
+entity_name = "case"
+entity_slug = "year"
+rel_name = "has"
+
+[[connections]]
+entity_name = "person"
+entity_slug = "age"
+rel_name = "has"
+
+[[connections]]
+entity_name = "person"
+entity_slug = "eye_color"
+rel_name = "has"
+
+[[connections]]
+entity_name = "person"
+entity_slug = "hair_color"
+rel_name = "has"
+
+[[connections]]
+entity_name = "vehicle"
+entity_slug = "impounded"
+rel_name = "has"
+
+[[connections]]
+entity_name = "vehicle"
+entity_slug = "make"
+rel_name = "has"
+
+[[connections]]
+entity_name = "vehicle"
+entity_slug = "stolen"
+rel_name = "has"
+
+[[connections]]
+entity_name = "vehicle"
+entity_slug = "year"
+rel_name = "has"
