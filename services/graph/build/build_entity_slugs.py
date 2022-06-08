@@ -4,7 +4,7 @@ import sys
 import typing
 
 from dataclasses import dataclass
-from sqlmodel import select, Session
+from sqlmodel import Session
 
 import models
 import services.entities
@@ -17,7 +17,7 @@ class Struct:
     errors: typing.List[str]
 
 
-class SlurpEntitySlugs:
+class BuildEntitySlugs:
     """Create graph nodes for entity slugs"""
 
     def __init__(self, db: Session, driver: neo4j.Driver):

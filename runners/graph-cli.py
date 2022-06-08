@@ -11,27 +11,35 @@ from sqlmodel import Session, SQLModel
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
-from database import engine
 from log import logging_init
 
+import database
 import models
 import services.db
 import services.entities
 import services.graph
+import services.graph.build
+import services.graph.connections
 
 logger = logging_init("cli")
 
 app = typer.Typer()
 
 
+# initialize database
+database.migrate(database.engine)
+
+
 @app.command()
-def graph_import(truncate: bool = typer.Option(...)):
+def graph_build(truncate: bool = typer.Option(...)):
     if truncate:
         services.graph.commands.truncate()
         logger.info(f"[graph-cli] truncated")
 
-    with Session(engine) as db:
-        struct = services.graph.Slurp(db=db).call()
+    with Session(database.engine) as db:
+        services.graph.connections.Build(db=db).call()
+
+        services.graph.build.Build(db=db).call()
 
 
 @app.command()

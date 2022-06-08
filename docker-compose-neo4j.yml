@@ -2,7 +2,7 @@ version: "3"
 services:
   neo4j:
     image: "neo4j:latest"
-    container_name: neo
+    container_name: notme_neo
     ports:
       - "10687:7687"
       - "10474:7474"

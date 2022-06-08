@@ -12,10 +12,11 @@ from sqlmodel import select, Session, SQLModel
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
-from database import engine
 from log import logging_init
 
+import database
 import models
+import services.data_models
 import services.db
 import services.entities
 import services.memgraph
@@ -25,23 +26,35 @@ logger = logging_init("cli")
 
 app = typer.Typer()
 
+# initialize database
+database.migrate(database.engine)
+
 
 # db dependency
 def get_db():
-    with Session(engine) as session:
+    with Session(database.engine) as session:
         yield session
 
 
 @app.command()
+def data_model_slurp(
+    file: str = typer.Option(...),
+    truncate: bool = typer.Option(...),
+):
+    with Session(database.engine) as db:
+        services.data_models.Slurp(db=db, toml_file=file).call()
+
+
+@app.command()
 def entity_count():
-    with Session(engine) as db:
+    with Session(database.engine) as db:
         count = db.exec(select([func.count(models.Entity.id)])).one()
 
     logger.info(f"[db-cli] entity_count {count}")
 
 
 @app.command()
-def entity_import(
+def entity_slurp(
     file: str = typer.Option(...),
     truncate: bool = typer.Option(...),
 ):
@@ -49,7 +62,7 @@ def entity_import(
 
     logger.info(f"[db-cli] file {file} objects {len(objects)} truncate {truncate}")
 
-    with Session(engine) as db:
+    with Session(database.engine) as db:
         if truncate:
             services.db.truncate_table(db=db, table_name="entities")
             logger.info(f"[db-cli] entities truncated")

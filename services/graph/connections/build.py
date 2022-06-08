@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from sqlmodel import select, Session
 
 import models
+import services.data_models
 import services.graph
 
 
@@ -19,22 +20,28 @@ class Struct:
     errors: typing.List[str]
 
 
-class Factory:
-    def __init__(self, db: Session, toml_file: str):
-        self._db = db
-        self._toml_file = toml_file
+class Build:
+    """create graph connections from data model connections"""
 
-        self._toml_dict = toml.load(self._toml_file)
+    def __init__(self, db: Session):
+        self._db = db
 
     def call(self) -> Struct:
         struct = Struct(0, 0, 0, [])
 
-        connections = self._toml_dict["connections"]
+        struct_list = services.data_models.List(
+            db=self._db, query="", offset=0, limit=1000
+        ).call()
 
-        for object in connections:
+        for data_model in struct_list.objects:
+            connection_object = {
+                "entity_name": data_model.object_name,
+                "entity_slug": data_model.object_slug,
+            }
+
             struct_create = services.graph.connections.Create(
                 db=self._db,
-                object=object,
+                object=connection_object,
             ).call()
 
             if struct_create.code == 0:

@@ -18,7 +18,7 @@ class Struct:
     errors: typing.List[str]
 
 
-class SlurpEntityConnections:
+class BuildEntityConnections:
     """Create graph relationships using GraphConnectionEntity rules"""
 
     def __init__(self, db: Session, driver: neo4j.Driver):

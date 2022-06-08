@@ -221,6 +221,15 @@ Start cypher shell:
 cypher-shell --addres neo4j://localhost:10687 -u neo4j
 ```
 
+Load graph data:
+
+```
+python ./runners/memgraph-cli.py graph-create --file ./data/example/graph.json --max 10000000
+```
+
+Total nodes: 3169
+Total relationships: 9742
+
 
 ### Memgraph Example
 
@@ -243,11 +252,5 @@ cursor = conn.cursor()
 query = "match (n) return count(*)"
 
 cursor.execute(query); rows = cursor.fetchall(); rows
-```
-
-Load memgraph data:
-
-```
-python ./runners/memgraph-cli.py graph-create --file ./data/example/graph.json --max 10000000
 ```
 

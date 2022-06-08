@@ -5,9 +5,9 @@ import sys
 import typing
 
 from dataclasses import dataclass
-from sqlmodel import select, Session
+from sqlmodel import Session
 
-import services.graph
+import services.graph.build
 
 
 @dataclass
@@ -18,7 +18,7 @@ class Struct:
     errors: typing.List[str]
 
 
-class Slurp:
+class Build:
     def __init__(self, db: Session):
         self._db = db
 
@@ -28,31 +28,25 @@ class Slurp:
     def call(self) -> Struct:
         struct = Struct(0, 0, 0, [])
 
-        struct_entities = services.graph.init.SlurpEntity(self._db, self._driver).call()
+        struct_entities = services.graph.build.BuildEntity(
+            self._db, self._driver
+        ).call()
 
         struct.nodes_created += struct_entities.nodes_created
 
-        struct_slugs = services.graph.init.SlurpEntitySlugs(
+        struct_slugs = services.graph.build.BuildEntitySlugs(
             self._db, self._driver
         ).call()
 
         struct.nodes_created += struct_slugs.nodes_created
 
-        struct_connections = services.graph.init.SlurpEntityConnections(
+        struct_connections = services.graph.build.BuildEntityConnections(
             self._db, self._driver
         ).call()
 
         struct.relationships_created += struct_connections.relationships_created
 
-        # deprecated
-        # struct_relationships = services.graph.init.SlurpRelationships(
-        #     self._db, self._driver
-        # ).call()
-        # struct.relationships_created += struct_relationships.relationships_created
-
         self._close()
-
-        print(struct)
 
         return struct
 

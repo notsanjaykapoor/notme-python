@@ -8,6 +8,7 @@ from sqlmodel import select, Session
 
 import models
 import services.entities
+import services.graph.query
 
 
 @dataclass
@@ -17,8 +18,8 @@ class Struct:
     errors: typing.List[str]
 
 
-class SlurpEntity:
-    """Create graph nodes for entity name and relationships to 'slug' nodes"""
+class BuildEntity:
+    """create graph nodes for entity name and relationships to 'slug' nodes"""
 
     def __init__(self, db: Session, driver: neo4j.Driver):
         self._db = db

@@ -11,8 +11,11 @@ import models
 @dataclass
 class Struct:
     code: int
-    id: int
+    id: typing.Optional[int]
     errors: typing.List[str]
+
+
+RELATIONSHIP_DEFAULT = "has"
 
 
 class Create:
@@ -31,12 +34,12 @@ class Create:
             db_object = models.GraphConnectionEntity(
                 entity_name=self._object["entity_name"],
                 entity_slug=self._object["entity_slug"],
-                rel_name=self._object["rel_name"],
+                rel_name=self._object.get("rel_name", RELATIONSHIP_DEFAULT),
             )
             self._db.add(db_object)
             self._db.commit()
 
-            struct.id = db_object.id  # type: ignore
+            struct.id = db_object.id
         except exc.IntegrityError:
             self._db.rollback()
             struct.code = 409

@@ -6,7 +6,7 @@ import ulid
 from sqlmodel import Session
 
 import services.entities
-import services.graph
+import services.graph.connections
 
 
 def test_graph_connections_list(session: Session):

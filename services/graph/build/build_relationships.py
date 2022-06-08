@@ -4,7 +4,7 @@ import sys
 import typing
 
 from dataclasses import dataclass
-from sqlmodel import select, Session
+from sqlmodel import Session
 
 import models
 import services.entities
@@ -18,7 +18,7 @@ class Struct:
 
 
 # deprecated
-class SlurpRelationships:
+class BuildRelationships:
     """Create graph relationships from entity node to 'slug' nodes"""
 
     def __init__(self, db: Session, driver: neo4j.Driver):
