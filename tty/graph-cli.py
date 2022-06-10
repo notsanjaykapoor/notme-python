@@ -20,7 +20,6 @@ import services.entities
 import services.graph
 import services.graph.build
 import services.graph.commands
-import services.graph.connections
 import services.graph.driver
 import services.graph.stream
 
@@ -41,8 +40,6 @@ def graph_build(truncate: bool = typer.Option(...)):
 
     with Session(database.engine) as db:
         with services.graph.driver.get() as driver:
-            # services.graph.connections.Build(db=db).call()
-
             offset = 0
             limit = 1000
 
@@ -89,17 +86,19 @@ def graph_count():
 
 @app.command()
 def match_neighbors(
-    person_1: str = typer.Option(...),
+    node: str = typer.Option(...),
     max_hops: int = typer.Option(...),
 ):
+    name, id = node.split(":", 1)
+
     query = (
-        f"match p = (s:person {{id: $id_1}})-[r*1.."
+        f"match p = (s:{name} {{id: $id_1}})-[r*1.."
         + str(max_hops)
         + f"]-(e) return s,e,relationships(p) as r"
     )
 
     params = {
-        "id_1": person_1,
+        "id_1": id,
     }
 
     logger.info(f"[graph-cli] {query} {params}")
@@ -127,14 +126,17 @@ def match_neighbors(
 
 @app.command()
 def match_shortest_path(
-    person_1: str = typer.Option(...),
-    person_2: str = typer.Option(...),
+    node_1: str = typer.Option(...),
+    node_2: str = typer.Option(...),
 ):
-    query = f"match (p1:person {{id: $id_1}}), (p2:person {{id: $id_2}}), p = allShortestPaths((p1)-[r*]-(p2)) return p"
+    name_1, id_1 = node_1.split(":", 1)
+    name_2, id_2 = node_2.split(":", 1)
+
+    query = f"match (p1:{name_1} {{id: $id_1}}), (p2:{name_2} {{id: $id_2}}), p = allShortestPaths((p1)-[r*]-(p2)) return p"
 
     params = {
-        "id_1": person_1,
-        "id_2": person_2,
+        "id_1": id_1,
+        "id_2": id_2,
     }
 
     logger.info(f"[graph-cli] {query} {params}")
