@@ -8,6 +8,7 @@ import models
 import services.data_links
 import services.entities
 import services.graph
+import services.graph.query
 import services.graph.stream
 import services.graph.tx
 

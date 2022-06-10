@@ -40,16 +40,18 @@ class Process:
 
         struct.nodes_created += struct_node_rules.nodes_created
 
-        struct_relationships = services.graph.stream.CreateRelationshipsHas(
+        struct_relationships_has = services.graph.stream.CreateRelationshipsHas(
             db=self._db, driver=self._driver, entity=self._entity
         ).call()
 
-        struct.relationships_created += struct_relationships.relationships_created
+        struct.relationships_created += struct_relationships_has.relationships_created
 
-        struct_relationships = services.graph.stream.CreateRelationshipsLinked(
+        struct_relationships_linked = services.graph.stream.CreateRelationshipsLinked(
             db=self._db, driver=self._driver, entity=self._entity
         ).call()
 
-        struct.relationships_created += struct_relationships.relationships_created
+        struct.relationships_created += (
+            struct_relationships_linked.relationships_created
+        )
 
         return struct

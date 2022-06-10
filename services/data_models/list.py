@@ -20,7 +20,7 @@ from context import request_id
 class Struct:
     code: int
     objects: list[models.Entity]
-    objects_count: int
+    count: int
     errors: list[str]
 
 
@@ -107,6 +107,6 @@ class List:
             self._dataset.offset(self._offset).limit(self._limit)
         ).all()
 
-        struct.objects_count = len(struct.objects)
+        struct.count = len(struct.objects)
 
         return struct

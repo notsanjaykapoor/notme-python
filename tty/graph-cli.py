@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -14,7 +16,6 @@ sys.path.insert(1, os.path.join(sys.path[0], ".."))
 from log import logging_init
 
 import database
-import models
 import services.db
 import services.entities
 import services.graph

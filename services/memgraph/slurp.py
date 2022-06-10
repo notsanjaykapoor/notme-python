@@ -38,9 +38,9 @@ class Slurp:
                 limit=self._limit,
             ).call()
 
-            self._logger.info(f"{__name__} {struct_list.entities_count}")
+            self._logger.info(f"{__name__} {struct_list.count}")
 
-            if not struct_list.entities:
+            if not struct_list.objects:
                 break
 
             self._offset += self._limit

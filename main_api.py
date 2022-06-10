@@ -85,7 +85,7 @@ def entities_list(
 
     # logger.info(f"api.users.list response {struct}")
 
-    return struct.entities
+    return struct.objects
 
 
 @app.get("/ping")

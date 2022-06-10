@@ -5,6 +5,7 @@ from dataclasses import dataclass
 
 import models
 import services.graph
+import services.graph.query
 import services.graph.tx
 
 

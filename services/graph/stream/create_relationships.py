@@ -5,6 +5,7 @@ import logging
 import models
 import services.entities
 import services.graph
+import services.graph.tx
 
 
 class CreateRelationships:
