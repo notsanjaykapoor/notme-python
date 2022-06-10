@@ -6,7 +6,6 @@ import ulid
 from sqlmodel import Session
 
 import services.data_models
-import services.graph.connections
 
 
 def test_data_models_slurp(session: Session):
@@ -23,10 +22,3 @@ def test_data_models_slurp(session: Session):
 
     assert struct_list.code == 0
     assert struct_list.objects_count == 13
-
-    # build graph connections
-
-    struct_build = services.graph.connections.Build(db=session).call()
-
-    assert struct_build.code == 0
-    assert struct_build.created == 13

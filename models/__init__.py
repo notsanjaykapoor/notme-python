@@ -5,6 +5,5 @@ from .data_link import DataLink
 from .data_model import DataModel
 from .data_node import DataNode
 from .entity import Entity
-from .graph_connection_entity import GraphConnectionEntity
 from .memgraph_connection import MemgraphConnection
 from .user import User
