@@ -1,13 +1,8 @@
-import logging
-import neo4j
-import os
-import sys
-
-import services.graph
+import services.graph.driver
 
 
 def truncate():
-    driver = services.graph.get_driver()
+    driver = services.graph.driver.get()
 
     query = "MATCH(n) CALL { WITH n DETACH DELETE n } IN TRANSACTIONS OF 1000 ROWS"
 

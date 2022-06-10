@@ -32,12 +32,12 @@ def test_entity_list(session: Session, entity_id: str):
         query=f"entity_id:{entity_id}",
     ).call()
 
-    assert len(struct_list.entities) == 1
-    assert struct_list.entities[0].entity_id == entity_id
+    assert struct_list.count == 1
+    assert struct_list.objects[0].entity_id == entity_id
 
     struct_list = services.entities.List(
         db=session,
         query="entity_id:~xxx",
     ).call()
 
-    assert len(struct_list.entities) == 0
+    assert struct_list.count == 0

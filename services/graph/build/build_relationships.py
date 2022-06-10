@@ -1,7 +1,5 @@
 import logging
 import neo4j
-import sys
-import typing
 
 from dataclasses import dataclass
 from sqlmodel import Session
@@ -14,12 +12,12 @@ import services.entities
 class Struct:
     code: int
     relationships_created: int
-    errors: typing.List[str]
+    errors: list[str]
 
 
 # deprecated
 class BuildRelationships:
-    """Create graph relationships from entity node to 'slug' nodes"""
+    """create graph relationships from entity node to 'slug' nodes"""
 
     def __init__(self, db: Session, driver: neo4j.Driver):
         self._db = db
@@ -55,8 +53,8 @@ class BuildRelationships:
             # create relationships between entity and target nodes
 
             relationships_created = self._create_node_relationships(
-                source_entity_id=entity_id,
-                source_entity_name=entity_name,
+                entity_id=entity_id,
+                entity_name=entity_name,
                 target_entities=target_entities,
             )
             struct.relationships_created += relationships_created
@@ -65,9 +63,9 @@ class BuildRelationships:
 
     def _create_node_relationships(
         self,
-        source_entity_id: str,
-        source_entity_name: str,
-        target_entities: typing.List[models.Entity],
+        entity_id: str,
+        entity_name: str,
+        target_entities: list[models.Entity],
     ) -> int:
         """create relationships between entity node and target 'slug' nodes"""
 
@@ -79,13 +77,14 @@ class BuildRelationships:
             )
 
             params = {
-                "source_entity_id": source_entity_id,
+                "entity_id": entity_id,
+                "entity_id": entity_id,
                 "target_value": target_value,
             }
 
             query_exists = f"""
-            MATCH (n1:{source_entity_name})-[r:has]-(n2:{entity.slug})
-            WHERE n1.id = $source_entity_id and n2.value = $target_value
+            MATCH (n1:{entity_name})-[r:has]-(n2:{entity.slug})
+            WHERE n1.id = $entity_id and n2.id = $entity_id and n2.value = $target_value
             RETURN count(r) as count
             """
 
@@ -96,13 +95,13 @@ class BuildRelationships:
                 return 0
 
             query_create = f"""
-            MATCH (n1:{source_entity_name}), (n2:{entity.slug})
-            WHERE n1.id = $source_entity_id and n2.value = $target_value
+            MATCH (n1:{entity_name}), (n2:{entity.slug})
+            WHERE n1.id = $entity_id and n2.id = $entity_id and n2.value = $target_value
             CREATE (n1)-[r:has]->(n2)
             """
 
             self._logger.info(
-                f"{__name__} create relationship entity {source_entity_name}:{source_entity_id} slug {entity.slug}"
+                f"{__name__} create relationship entity {entity_name}:{entity_id} slug {entity.slug}"
             )
 
             with self._driver.session() as session:
@@ -116,8 +115,8 @@ class BuildRelationships:
         return tx.run(query, params)
 
     def _filter_target_entities(
-        self, entities: typing.List[models.Entity]
-    ) -> typing.List[models.Entity]:
+        self, entities: list[models.Entity]
+    ) -> list[models.Entity]:
         """filter entities that should be added as graph nodes"""
         return list(
             filter(

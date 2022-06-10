@@ -13,6 +13,7 @@ class DataModel(SQLModel, table=True):  # type: ignore
     )
 
     id: typing.Optional[int] = Field(default=None, primary_key=True)
+
     object_name: str = Field(index=True)
     object_slug: str = Field(index=True)
     object_type: str = Field(index=True)

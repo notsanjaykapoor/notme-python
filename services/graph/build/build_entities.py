@@ -18,7 +18,7 @@ class Struct:
     errors: typing.List[str]
 
 
-class BuildEntity:
+class BuildEntities:
     """create graph nodes for entity name and relationships to 'slug' nodes"""
 
     def __init__(self, db: Session, driver: neo4j.Driver):

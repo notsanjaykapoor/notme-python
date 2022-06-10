@@ -1,6 +1,5 @@
 import logging
 import toml
-import typing
 
 from dataclasses import dataclass
 from sqlmodel import select, Session
@@ -12,7 +11,7 @@ import services.data_models
 class Struct:
     code: int
     created: int
-    errors: typing.List[str]
+    errors: list[str]
 
 
 class Slurp:
@@ -30,7 +29,7 @@ class Slurp:
         data_model_names = self._toml_dict.keys()
 
         for name in data_model_names:
-            objects: typing.List[dict] = []
+            objects: list[dict] = []
 
             for dict in self._toml_dict[name].values():
                 object = {

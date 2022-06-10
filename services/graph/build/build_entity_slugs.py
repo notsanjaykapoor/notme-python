@@ -48,11 +48,14 @@ class BuildEntitySlugs:
 
             # filter out empty/none values
             slug_values = list(
-                filter(lambda value: value is not None, struct_values.values)
+                filter(
+                    lambda dict: dict["type_value"] is not None, struct_values.values
+                )
             )
 
             # create nodes
             nodes_created = self._create_nodes(slug, type_name, slug_values)
+
             struct.nodes_created += nodes_created
 
         return struct
@@ -61,24 +64,27 @@ class BuildEntitySlugs:
         self,
         slug: str,
         type_name: str,
-        values: typing.List[str],
+        values: list[dict],
     ) -> int:
-        """create nodes labeled with 'slug' with with value property"""
+        """create nodes labeled with 'slug' with with specified values"""
         nodes_created = 0
 
-        for value in values:
-            value_store = services.entities.graph_value_store(type_name, value)
-            value_query = services.entities.graph_value_query(type_name, value)
+        for dict in values:
+            entity_id = dict["entity_id"]
+            type_value = dict["type_value"]
 
-            params = {
-                "params": {"value": value_store},
-            }
+            value_store = services.entities.graph_value_store(type_name, type_value)
+            value_query = services.entities.graph_value_query(type_name, type_value)
 
-            # node name is property slug; note that node label can not be set with '$' format
+            # node name is property slug:
+            # note - that node label can not be set with '$' format
+            # note - parameter maps cannot be used in match patterns
             query_exists = (
                 f"MATCH (p:{slug} "
                 + "{value: "
                 + f"{value_query}"
+                + ", id: "
+                + f"'{entity_id}'"
                 + "}) RETURN count(p) as count"
             )
 
@@ -88,14 +94,21 @@ class BuildEntitySlugs:
                 # node exists
                 continue
 
+            params_create = {
+                "params": {
+                    "id": entity_id,
+                    "value": value_store,
+                },
+            }
+
             # node name is property slug; note that node label can not be set with '$' format
             query_create = f"CREATE (p:{slug} $params) RETURN p"
 
-            self._logger.info(f"{__name__} slug:{slug} value:{value}")
+            self._logger.info(f"{__name__} slug:{slug} props:{dict}")
 
             with self._driver.session() as session:
                 session.write_transaction(
-                    self._create_nodes_with_tx, query_create, params
+                    self._create_nodes_with_tx, query_create, params_create
                 )
                 nodes_created += 1
 

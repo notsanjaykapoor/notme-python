@@ -1,11 +1,6 @@
-import logging
-
-import typing
-
 from dataclasses import dataclass
 from sqlmodel import select, Session
 
-import models
 import services.entities
 
 
@@ -13,11 +8,11 @@ import services.entities
 class Struct:
     code: int
     count: int
-    errors: typing.List[str]
+    errors: list[str]
 
 
 class Slurp:
-    def __init__(self, db: Session, objects: typing.List[dict]):
+    def __init__(self, db: Session, objects: list[dict]):
         self._db = db
         self._objects = objects
 
@@ -42,7 +37,7 @@ class Slurp:
 
         return struct
 
-    def _get_entities_count(self, entity_objects: typing.List[dict]) -> int:
+    def _get_entities_count(self, entity_objects: list[dict]) -> int:
         if not entity_objects:
             return 0
 
@@ -52,10 +47,10 @@ class Slurp:
             self._db, query=f"entity_id:{entity_id}", offset=0, limit=100
         ).call()
 
-        return struct_list.entities_count
+        return struct_list.count
 
-    def _object_to_entities(self, object: dict) -> typing.List[dict]:
-        entities: typing.List[dict] = []
+    def _object_to_entities(self, object: dict) -> list[dict]:
+        entities: list[dict] = []
 
         for properties in object["properties"]:
             entities.append(self._object_to_entity(object, properties))

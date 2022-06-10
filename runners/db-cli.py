@@ -16,11 +16,12 @@ from log import logging_init
 
 import database
 import models
+import services.data_links
 import services.data_models
+import services.data_nodes
 import services.db
 import services.entities
-import services.memgraph
-import services.graph
+import services.graph.commands
 
 logger = logging_init("cli")
 
@@ -37,12 +38,33 @@ def get_db():
 
 
 @app.command()
-def data_model_slurp(
-    file: str = typer.Option(...),
+def data_config_slurp(
+    path: str = "./data/slurp",
     truncate: bool = typer.Option(...),
 ):
     with Session(database.engine) as db:
-        services.data_models.Slurp(db=db, toml_file=file).call()
+        if truncate:
+            services.db.truncate_table(db=db, table_name="data_links")
+            services.db.truncate_table(db=db, table_name="data_nodes")
+            services.db.truncate_table(db=db, table_name="data_models")
+
+            logger.info(f"[db-cli] data config truncated")
+
+        struct_models = services.data_models.Slurp(
+            db=db, toml_file=f"{path}/data_models.toml"
+        ).call()
+
+        struct_nodes = services.data_nodes.Slurp(
+            db=db, toml_file=f"{path}/data_nodes.toml"
+        ).call()
+
+        struct_links = services.data_links.Slurp(
+            db=db, toml_file=f"{path}/data_links.toml"
+        ).call()
+
+        logger.info(
+            f"[db-cli] imported data config, models {struct_models.created} nodes {struct_nodes.created} links {struct_links.created}"
+        )
 
 
 @app.command()
@@ -67,8 +89,10 @@ def entity_slurp(
             services.db.truncate_table(db=db, table_name="entities")
             logger.info(f"[db-cli] entities truncated")
 
-        struct = services.entities.Slurp(db=db, objects=objects).call()
+            services.graph.commands.truncate()
+            logger.info(f"[db-cli] graph truncated")
 
+        struct = services.entities.Slurp(db=db, objects=objects).call()
         logger.info(f"[db-cli] imported {struct.count}")
 
 

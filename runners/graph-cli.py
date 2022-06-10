@@ -19,7 +19,10 @@ import services.db
 import services.entities
 import services.graph
 import services.graph.build
+import services.graph.commands
 import services.graph.connections
+import services.graph.driver
+import services.graph.stream
 
 logger = logging_init("cli")
 
@@ -37,13 +40,32 @@ def graph_build(truncate: bool = typer.Option(...)):
         logger.info(f"[graph-cli] truncated")
 
     with Session(database.engine) as db:
-        services.graph.connections.Build(db=db).call()
+        with services.graph.driver.get() as driver:
+            # services.graph.connections.Build(db=db).call()
 
-        services.graph.build.Build(db=db).call()
+            offset = 0
+            limit = 1000
+
+            while True:
+                struct_list = services.entities.List(
+                    db=db, query="", offset=offset, limit=limit
+                ).call()
+
+                if not struct_list.objects:
+                    break
+
+                for entity in struct_list.objects:
+                    services.graph.stream.Process(
+                        db=db, driver=driver, entity=entity
+                    ).call()
+
+                offset += limit
+
+    graph_count()
 
 
 @app.command()
-def graph_nodes_count():
+def graph_count():
     query = "MATCH(n) return count(*) as count"
     records, summary = services.graph.query.execute_with_summary(query, {})
 
@@ -66,8 +88,76 @@ def graph_nodes_count():
 
 
 @app.command()
+def match_neighbors(
+    person_1: str = typer.Option(...),
+    max_hops: int = typer.Option(...),
+):
+    query = (
+        f"match p = (s:person {{id: $id_1}})-[r*1.."
+        + str(max_hops)
+        + f"]-(e) return s,e,relationships(p) as r"
+    )
+
+    params = {
+        "id_1": person_1,
+    }
+
+    logger.info(f"[graph-cli] {query} {params}")
+
+    records = services.graph.query.execute(query, params)
+
+    if not records:
+        logger.info(f"[graph-cli] no records found")
+
+    for i, record in enumerate(records):
+        logger.info("")
+        node_start = record["s"]
+        node_end = record["e"]
+        relationships = record["r"]
+
+        import ipdb
+
+        # ipdb.set_trace()
+
+        logger.info(f"[graph-cli] record {i+1}")
+        logger.info(f"[graph-cli] start {node_start}")
+        logger.info(f"[graph-cli] end {node_end}")
+        logger.info(f"[graph-cli] rels {relationships}")
+
+
+@app.command()
+def match_shortest_path(
+    person_1: str = typer.Option(...),
+    person_2: str = typer.Option(...),
+):
+    query = f"match (p1:person {{id: $id_1}}), (p2:person {{id: $id_2}}), p = allShortestPaths((p1)-[r*]-(p2)) return p"
+
+    params = {
+        "id_1": person_1,
+        "id_2": person_2,
+    }
+
+    logger.info(f"[graph-cli] {query} {params}")
+
+    records = services.graph.query.execute(query, params)
+
+    if not records:
+        logger.info(f"[graph-cli] no path found")
+
+    for i, record in enumerate(records):
+        logger.info("")
+
+        path = record["p"]
+
+        logger.info(f"[graph-cli] path {i+1}")
+
+        for node in path.nodes:
+            logger.info(f"[graph-cli] node {node.labels} {node.values()}")
+
+
+@app.command()
 def person_age_gt(min: int = typer.Option(...)):
-    query = "MATCH (p:person)-[:has]->(n:age) WHERE n.value >= $min RETURN p as node,n.value as age"
+    query = "MATCH (p:person)-[:has]-(n:age) WHERE n.value >= $min RETURN p as node,n.value as age"
     params = {"min": min}
 
     records = services.graph.query.execute(query, params)
@@ -78,7 +168,7 @@ def person_age_gt(min: int = typer.Option(...)):
 
 @app.command()
 def person_age_lt(max: int = typer.Option(...)):
-    query = "MATCH (p:person)-[:has]->(n:age) WHERE n.value <= $max RETURN p as node,n.value as age"
+    query = "MATCH (p:person)-[:has]-(n:age) WHERE n.value <= $max RETURN p as node,n.value as age"
     params = {"max": max}
 
     records = services.graph.query.execute(query, params)
@@ -89,7 +179,7 @@ def person_age_lt(max: int = typer.Option(...)):
 
 @app.command()
 def vehicle_make_eq(value: str = typer.Option(...)):
-    query = "MATCH (v:vehicle)-[:has]->(n:make) WHERE n.value = $value RETURN v as node,n.value as value"
+    query = "MATCH (v:vehicle)-[:has]-(n:make) WHERE n.value = $value RETURN v as node,n.value as value"
     params = {"value": value}
 
     records = services.graph.query.execute(query, params)

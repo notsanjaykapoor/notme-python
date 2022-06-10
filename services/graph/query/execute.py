@@ -1,17 +1,17 @@
-import logging
 import neo4j
 import typing
 
 import services.graph
+import services.graph.driver
 
 
 def execute(
     query: str,
     params: dict,
     driver: typing.Optional[neo4j.Driver] = None,
-) -> typing.List[neo4j.Record]:
+) -> list[neo4j.Record]:
     if not driver:
-        driver = services.graph.get_driver()
+        driver = services.graph.driver.get()
 
     with driver.session() as session:
         result = session.run(query, params)
@@ -24,9 +24,9 @@ def execute_with_summary(
     query: str,
     params: dict,
     driver: typing.Optional[neo4j.Driver] = None,
-) -> typing.Tuple[typing.List[neo4j.Record], neo4j.ResultSummary]:
+) -> tuple[list[neo4j.Record], neo4j.ResultSummary]:
     if not driver:
-        driver = services.graph.get_driver()
+        driver = services.graph.driver.get()
 
     with driver.session() as session:
         result = session.run(query, params)

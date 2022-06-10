@@ -19,9 +19,9 @@ from context import request_id
 @dataclass
 class Struct:
     code: int
-    objects: typing.List[models.Entity]
+    objects: list[models.Entity]
     objects_count: int
-    errors: typing.List[str]
+    errors: list[str]
 
 
 @dataclass
@@ -39,7 +39,7 @@ class List:
         self._limit = limit
 
         self._dataset = select(models.DataModel)  # default database query
-        self._logger = logging.getLogger("api")
+        self._logger = logging.getLogger("service")
 
     def call(self) -> Struct:
         struct = Struct(0, [], 0, [])

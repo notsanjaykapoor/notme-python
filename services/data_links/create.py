@@ -29,10 +29,11 @@ class Create:
 
         try:
             for object in self._objects:
-                db_object = models.DataModel(
-                    object_name=object["object_name"],
-                    object_slug=object["object_slug"],
-                    object_type=object["object_type"],
+                db_object = models.DataLink(
+                    src_name=object["src_name"],
+                    src_slug=object["src_slug"],
+                    dst_name=object["dst_name"],
+                    dst_slug=object["dst_slug"],
                 )
 
                 self._db.add(db_object)
@@ -45,6 +46,6 @@ class Create:
             self._db.rollback()
             struct.code = 409
 
-            self._logger.error(f"{__name__} data model create error")
+            self._logger.error(f"{__name__} data link create error")
 
         return struct

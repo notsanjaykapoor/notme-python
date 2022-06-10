@@ -1,7 +1,5 @@
 import logging
 import neo4j
-import sys
-import typing
 
 from dataclasses import dataclass
 from sqlmodel import select, Session
@@ -15,11 +13,11 @@ import services.graph
 class Struct:
     code: int
     relationships_created: int
-    errors: typing.List[str]
+    errors: list[str]
 
 
 class BuildEntityConnections:
-    """Create graph relationships using GraphConnectionEntity rules"""
+    """create graph relationships using GraphConnectionEntity rules"""
 
     def __init__(self, db: Session, driver: neo4j.Driver):
         self._db = db
@@ -60,7 +58,7 @@ class BuildEntityConnections:
 
         return struct
 
-    def _create_node_relationships(self, entities: typing.List[models.Entity]) -> int:
+    def _create_node_relationships(self, entities: list[models.Entity]) -> int:
         """create relationships between entity node and target 'slug' nodes"""
 
         rel_created = 0
@@ -81,7 +79,7 @@ class BuildEntityConnections:
 
             query_exists = f"""
             MATCH (n1:{entity.entity_name})-[r:has]-(n2:{entity.slug})
-            WHERE n1.id = $entity_id and n2.value = $target_value
+            WHERE n1.id = $entity_id and n2.id = $entity_id and n2.value = $target_value
             RETURN count(r) as count
             """
 
@@ -93,7 +91,7 @@ class BuildEntityConnections:
 
             query_create = f"""
             MATCH (n1:{entity.entity_name}), (n2:{entity.slug})
-            WHERE n1.id = $entity_id and n2.value = $target_value
+            WHERE n1.id = $entity_id and n2.id = $entity_id and n2.value = $target_value
             CREATE (n1)-[r:has]->(n2)
             """
 
