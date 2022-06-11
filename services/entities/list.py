@@ -1,9 +1,8 @@
 import logging
 import re
-import typing
+import sqlmodel
 
 from dataclasses import dataclass
-from sqlmodel import select, Session
 
 from sqlmodel.sql.expression import Select, SelectOfScalar
 
@@ -32,13 +31,16 @@ class StructToken:
 
 
 class List:
-    def __init__(self, db: Session, query: str = "", offset: int = 0, limit: int = 20):
+    def __init__(
+        self, db: sqlmodel.Session, query: str = "", offset: int = 0, limit: int = 20
+    ):
         self._db = db
         self._query = query
         self._offset = offset
         self._limit = limit
 
-        self._dataset = select(models.Entity)  # default database query
+        self._model = models.Entity
+        self._dataset = sqlmodel.select(models.Entity)  # default database query
         self._logger = logging.getLogger("api")
 
     def call(self) -> Struct:
@@ -64,13 +66,11 @@ class List:
                     # like query
                     value_normal = re.sub(r"~", "", value)
                     self._dataset = self._dataset.where(
-                        models.Entity.entity_id.like("%" + value_normal + "%")  # type: ignore
+                        self._model.entity_id.like("%" + value_normal + "%")  # type: ignore
                     )
                 else:
                     # match query
-                    self._dataset = self._dataset.where(
-                        models.Entity.entity_id == value
-                    )
+                    self._dataset = self._dataset.where(self._model.entity_id == value)
             elif token["field"] == "entity_name":
                 match = re.match(r"^~", value)
 
@@ -78,12 +78,12 @@ class List:
                     # like query
                     value_normal = re.sub(r"~", "", value)
                     self._dataset = self._dataset.where(
-                        models.Entity.entity_name.like("%" + value_normal + "%")  # type: ignore
+                        self._model.entity_name.like("%" + value_normal + "%")  # type: ignore
                     )
                 else:
                     # match query
                     self._dataset = self._dataset.where(
-                        models.Entity.entity_name == value
+                        self._model.entity_name == value
                     )
             elif token["field"] == "slug":
                 match = re.match(r"^~", value)
@@ -92,7 +92,7 @@ class List:
                     # like query
                     value_normal = re.sub(r"~", "", value)
                     self._dataset = self._dataset.where(
-                        models.Entity.slug.like("%" + value_normal + "%")  # type: ignore
+                        self._model.slug.like("%" + value_normal + "%")  # type: ignore
                     )
                 else:
                     # match query
@@ -104,13 +104,11 @@ class List:
                     # like query
                     value_normal = re.sub(r"~", "", value)
                     self._dataset = self._dataset.where(
-                        models.Entity.type_value.like("%" + value_normal + "%")  # type: ignore
+                        self._model.type_value.like("%" + value_normal + "%")  # type: ignore
                     )
                 else:
                     # match query
-                    self._dataset = self._dataset.where(
-                        models.Entity.type_value == value
-                    )
+                    self._dataset = self._dataset.where(self._model.type_value == value)
 
         struct.objects = self._db.exec(
             self._dataset.offset(self._offset).limit(self._limit)

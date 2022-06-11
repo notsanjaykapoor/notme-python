@@ -1,8 +1,8 @@
 import logging
 import re
+import sqlmodel
 
 from dataclasses import dataclass
-from sqlmodel import select, Session
 
 from sqlmodel.sql.expression import Select, SelectOfScalar
 
@@ -30,13 +30,16 @@ class StructToken:
 
 
 class List:
-    def __init__(self, db: Session, query: str = "", offset: int = 0, limit: int = 20):
+    def __init__(
+        self, db: sqlmodel.Session, query: str = "", offset: int = 0, limit: int = 20
+    ):
         self._db = db
         self._query = query
         self._offset = offset
         self._limit = limit
 
-        self._dataset = select(models.User)  # default database query
+        self._model = models.User
+        self._dataset = sqlmodel.select(models.User)  # default database query
         self._logger = logging.getLogger("api")
 
     def call(self) -> Struct:
@@ -62,11 +65,11 @@ class List:
                     # like query
                     value_normal = re.sub(r"~", "", value)
                     self._dataset = self._dataset.where(
-                        models.User.user_id.like("%" + value_normal + "%")  # type: ignore
+                        self._model.user_id.like("%" + value_normal + "%")  # type: ignore
                     )
                 else:
                     # match query
-                    self._dataset = self._dataset.where(models.User.user_id == value)
+                    self._dataset = self._dataset.where(self._model.user_id == value)
 
         struct.users = self._db.exec(
             self._dataset.offset(self._offset).limit(self._limit)

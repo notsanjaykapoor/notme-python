@@ -4,13 +4,11 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-import json
 import os
+import sqlalchemy
+import sqlmodel
 import sys
 import typer
-
-from sqlalchemy import func
-from sqlmodel import select, Session, SQLModel
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
@@ -19,27 +17,32 @@ import log
 import models
 import services.entities
 
+import db_cli_boot
+
 logger = log.init("cli")
 
 app = typer.Typer()
 entity_app = typer.Typer()
+app.add_typer(db_cli_boot.app, name="boot")
 app.add_typer(entity_app, name="entity")
 
 # initialize database
-database.migrate(database.engine)
+database.migrate()
 
 
 @entity_app.command("count")
 def entity_count():
-    with Session(database.engine) as db:
-        count = db.exec(select([func.count(models.Entity.id)])).one()
+    with database.session() as db:
+        count = db.exec(
+            sqlmodel.select([sqlalchemy.func.count(models.Entity.id)])
+        ).one()
 
     logger.info(f"[db-cli] entity_count {count}")
 
 
 @entity_app.command("list")
 def entity_list(query: str = typer.Option("", "--query", "-q")):
-    with Session(database.engine) as db:
+    with database.session() as db:
         struct_list = services.entities.List(db, query, 0, 1000).call()
 
         logger.info(f"[db-cli] entity_list {struct_list.count}")

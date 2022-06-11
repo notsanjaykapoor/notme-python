@@ -6,9 +6,9 @@ load_dotenv()  # take environment variables from .env.
 
 import asyncio
 import json
-import logging
 import os
 import signal
+import sqlmodel
 import sys
 import time
 import typer
@@ -18,23 +18,17 @@ import websocket
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
-from database import engine
-from sqlmodel import Session, SQLModel
-from typing import Optional
-
+import database
 import kafka
 import kafka.handlers
-
+import log
 import services.crypto.pkey
 import services.users
 
 from actors.example.app import App
 
-from log import logging_init
-from models import user
 
-
-logger = logging_init("cli")
+logger = log.init("cli")
 
 app = typer.Typer()
 
@@ -171,7 +165,7 @@ def topic_write(topic: str = typer.Option(...), key: str = typer.Option(...)):
 def user_create(name: str = typer.Option(...)):
     logger.info(f"cli user {name} create try")
 
-    with Session(engine) as db_session:
+    with sqlmodel.Session(database.engine) as db_session:
         struct_get = services.users.Get(db=db_session, user_id=name).call()
 
         if struct_get.user:
@@ -188,7 +182,7 @@ def user_create(name: str = typer.Option(...)):
 
 @app.command()
 def user_search(query: str = ""):
-    with Session(engine) as db_session:
+    with sqlmodel.Session(database.engine) as db_session:
         service = services.users.List(db_session, query, 0, 10)
         struct = service.call()
 

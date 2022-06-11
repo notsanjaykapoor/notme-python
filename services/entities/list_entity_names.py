@@ -1,12 +1,11 @@
+import dataclasses
 import logging
-
-from dataclasses import dataclass
-from sqlmodel import select, Session
+import sqlmodel
 
 import models
 
 
-@dataclass
+@dataclasses.dataclass
 class Struct:
     code: int
     values: list[str]
@@ -15,10 +14,10 @@ class Struct:
 
 
 class ListEntityNames:
-    def __init__(self, db: Session):
+    def __init__(self, db: sqlmodel.Session):
         self._db = db
 
-        self._dataset = select(
+        self._dataset = sqlmodel.select(
             models.Entity.entity_name,
         ).distinct()
         self._logger = logging.getLogger("service")

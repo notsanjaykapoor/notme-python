@@ -1,8 +1,7 @@
 import os
 import pytest
-
-from sqlmodel import Session, SQLModel, create_engine, select
-from sqlmodel.pool import StaticPool
+import sqlmodel
+import sqlmodel.pool
 
 
 @pytest.fixture(name="session")  #
@@ -11,13 +10,15 @@ def session_fixture():  #
 
     # print(f"session_fixture db {test_db_name}")
 
-    engine = create_engine(
-        test_db_name, connect_args={"check_same_thread": False}, poolclass=StaticPool
+    engine = sqlmodel.create_engine(
+        test_db_name,
+        connect_args={"check_same_thread": False},
+        poolclass=sqlmodel.pool.StaticPool,
     )
 
-    SQLModel.metadata.create_all(engine)
+    sqlmodel.SQLModel.metadata.create_all(engine)
 
-    with Session(engine) as session:
+    with sqlmodel.Session(engine) as session:
         yield session  #
 
-    SQLModel.metadata.drop_all(engine)
+    sqlmodel.SQLModel.metadata.drop_all(engine)

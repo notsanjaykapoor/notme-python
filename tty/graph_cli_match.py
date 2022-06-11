@@ -4,12 +4,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-import json
 import os
 import sys
 import typer
-
-from sqlmodel import Session
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
@@ -35,7 +32,7 @@ def neighbors(
     """find all neighbors filted by label and constrained by hops"""
     name, id = node.split(":", 1)
 
-    with Session(database.engine) as db:
+    with database.session() as db:
         struct_list = services.entities.ListEntityNames(db).call()
         # map to list of list values, e.g. [['case'], ['person']]
         node_labels = [[name] for name in struct_list.values]

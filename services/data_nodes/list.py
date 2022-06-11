@@ -1,8 +1,8 @@
 import logging
 import re
+import sqlmodel
 
 from dataclasses import dataclass
-from sqlmodel import select, Session
 
 from sqlmodel.sql.expression import Select, SelectOfScalar
 
@@ -31,14 +31,16 @@ class StructToken:
 
 
 class List:
-    def __init__(self, db: Session, query: str = "", offset: int = 0, limit: int = 20):
+    def __init__(
+        self, db: sqlmodel.Session, query: str = "", offset: int = 0, limit: int = 20
+    ):
         self._db = db
         self._query = query
         self._offset = offset
         self._limit = limit
 
         self._model = models.DataNode
-        self._dataset = select(self._model)  # default database query
+        self._dataset = sqlmodel.select(self._model)  # default database query
         self._logger = logging.getLogger("service")
 
     def call(self) -> Struct:

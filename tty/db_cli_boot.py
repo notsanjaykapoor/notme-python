@@ -29,20 +29,20 @@ logger = log.init("cli")
 app = typer.Typer()
 
 # initialize database
-database.migrate(database.engine)
+database.migrate()
 
 
 # db dependency
 def get_db():
-    with Session(database.engine) as session:
+    with database.session() as session:
         yield session
 
 
 @app.command()
-def boot(
+def call(
     json_file: str = typer.Option(..., "--file", "-f", help="json data file"),
-    path: str = typer.Option("./data/slurp", "--path", "-p", help="config path"),
     truncate: bool = typer.Option(...),
+    path: str = typer.Option("./data/slurp", "--path", "-p", help="config path"),
 ):
     objects = json.load(open(json_file))
 
