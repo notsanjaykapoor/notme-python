@@ -1,5 +1,5 @@
 import os
-
+import sqlalchemy
 import sqlmodel
 
 connect_args = {
@@ -18,3 +18,11 @@ def migrate():
 # get session object
 def session():
     return sqlmodel.Session(engine)
+
+
+@sqlalchemy.event.listens_for(engine, "connect")
+def set_sqlite_pragma(dbapi_connection, connection_record):
+    # print("sqlachemy connect event")
+    cursor = dbapi_connection.cursor()
+    cursor.execute("pragma journal_mode=wal")
+    cursor.close()
