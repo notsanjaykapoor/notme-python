@@ -14,9 +14,8 @@ from sqlmodel import select, Session, SQLModel
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
-from log import logging_init
-
 import database
+import log
 import models
 import services.data_links
 import services.data_models
@@ -25,7 +24,7 @@ import services.db
 import services.entities
 import services.graph.commands
 
-logger = logging_init("cli")
+logger = log.init("cli")
 
 app = typer.Typer()
 
@@ -40,17 +39,24 @@ def get_db():
 
 
 @app.command()
-def data_config_slurp(
-    path: str = "./data/slurp",
+def boot(
+    json_file: str = typer.Option(..., "--file", "-f", help="json data file"),
+    path: str = typer.Option("./data/slurp", "--path", "-p", help="config path"),
     truncate: bool = typer.Option(...),
 ):
+    objects = json.load(open(json_file))
+
     with Session(database.engine) as db:
         if truncate:
+            services.graph.commands.truncate()
+
+            services.db.truncate_table(db=db, table_name="entities")
+
             services.db.truncate_table(db=db, table_name="data_links")
             services.db.truncate_table(db=db, table_name="data_nodes")
             services.db.truncate_table(db=db, table_name="data_models")
 
-            logger.info(f"[db-cli] data config truncated")
+            logger.info(f"[db-cli] db and graph truncated")
 
         struct_models = services.data_models.Slurp(
             db=db, toml_file=f"{path}/data_models.toml"
@@ -64,38 +70,13 @@ def data_config_slurp(
             db=db, toml_file=f"{path}/data_links.toml"
         ).call()
 
+        struct_entity_slurp = services.entities.Slurp(db=db, objects=objects).call()
+
         logger.info(
             f"[db-cli] imported data config, models {struct_models.created} nodes {struct_nodes.created} links {struct_links.created}"
         )
 
-
-@app.command()
-def entity_count():
-    with Session(database.engine) as db:
-        count = db.exec(select([func.count(models.Entity.id)])).one()
-
-    logger.info(f"[db-cli] entity_count {count}")
-
-
-@app.command()
-def entity_slurp(
-    file: str = typer.Option(...),
-    truncate: bool = typer.Option(...),
-):
-    objects = json.load(open(file))
-
-    logger.info(f"[db-cli] file {file} objects {len(objects)} truncate {truncate}")
-
-    with Session(database.engine) as db:
-        if truncate:
-            services.db.truncate_table(db=db, table_name="entities")
-            logger.info(f"[db-cli] entities truncated")
-
-            services.graph.commands.truncate()
-            logger.info(f"[db-cli] graph truncated")
-
-        struct = services.entities.Slurp(db=db, objects=objects).call()
-        logger.info(f"[db-cli] imported {struct.count}")
+        logger.info(f"[db-cli] entities imported {struct_entity_slurp.count}")
 
 
 if __name__ == "__main__":

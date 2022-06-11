@@ -1,0 +1,86 @@
+#!/usr/bin/env python
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
+import json
+import os
+import sys
+import typer
+
+from sqlmodel import Session
+
+sys.path.insert(1, os.path.join(sys.path[0], ".."))
+
+import database
+import log
+import services.db
+import services.entities
+import services.graph
+import services.graph.build
+import services.graph.commands
+import services.graph.driver
+import services.graph.stream
+
+logger = log.logging_init("cli")
+
+app = typer.Typer()
+
+# initialize database
+database.migrate(database.engine)
+
+
+@app.command()
+def boot(truncate: bool = typer.Option(...)):
+    if truncate:
+        services.graph.commands.truncate()
+        logger.info(f"[graph-cli] truncated")
+
+    with Session(database.engine) as db:
+        with services.graph.driver.get() as driver:
+            offset = 0
+            limit = 1000
+
+            while True:
+                struct_list = services.entities.List(
+                    db=db, query="", offset=offset, limit=limit
+                ).call()
+
+                if not struct_list.objects:
+                    break
+
+                for entity in struct_list.objects:
+                    services.graph.stream.Process(
+                        db=db, driver=driver, entity=entity
+                    ).call()
+
+                offset += limit
+
+    graph_count()
+
+
+def graph_count():
+    query = "MATCH(n) return count(*) as count"
+    records, summary = services.graph.query.execute_with_summary(query, {})
+
+    for record in records:
+        logger.info(f"[graph-cli] total nodes {record['count']}")
+
+    query = "match(n)-[r]-(x) where (n:case or n:person or n:vehicle) return count(r) as count"
+    records, summary = services.graph.query.execute_with_summary(query, {})
+
+    records = services.graph.query.execute(query, {})
+
+    for record in sorted(records, key=lambda record: -1 * record["count"]):
+        logger.info(f"[graph-cli] total relationships {record['count']}")
+
+    query = f"MATCH (n) RETURN distinct labels(n) as label, count(*) as count"
+    records = services.graph.query.execute(query, {})
+
+    for record in sorted(records, key=lambda record: -1 * record["count"]):
+        logger.info(f"[graph-cli] node {record['label'][0]} {record['count']}")
+
+
+if __name__ == "__main__":
+    app()

@@ -22,72 +22,83 @@ FORMAT: str = "%(asctime)s - %(levelname)s - %(message)s"
 # }
 
 logging_config = {
-  "version": 1, # mandatory field
-  # if you want to overwrite existing loggers' configs
-  # "disable_existing_loggers": False,
-  "formatters": {
-    "basic": {
-      "format": FORMAT,
-    }
-  },
-  "handlers": {
-    "cli": {
-      "formatter": "basic",
-      "class": "logging.StreamHandler",
-      "stream": "ext://sys.stderr",
-      "level": LOG_LEVEL,
+    "version": 1,  # mandatory field
+    # if you want to overwrite existing loggers' configs
+    # "disable_existing_loggers": False,
+    "formatters": {
+        "basic": {
+            "format": FORMAT,
+        }
     },
-    "console": {
-      "formatter": "basic",
-      "class": "logging.StreamHandler",
-      "stream": "ext://sys.stderr",
-      "level": LOG_LEVEL,
-    }
-  },
-  "loggers": {
-    "actor": {
-      "handlers": ["console"],
-      "level": LOG_LEVEL,
-      # "propagate": False
+    "handlers": {
+        "cli": {
+            "formatter": "basic",
+            "class": "logging.StreamHandler",
+            "stream": "ext://sys.stderr",
+            "level": LOG_LEVEL,
+        },
+        "console": {
+            "formatter": "basic",
+            "class": "logging.StreamHandler",
+            "stream": "ext://sys.stderr",
+            "level": LOG_LEVEL,
+        },
     },
-    "api": {
-      "handlers": ["console"],
-      "level": LOG_LEVEL,
-      # "propagate": False
+    "loggers": {
+        "actor": {
+            "handlers": ["console"],
+            "level": LOG_LEVEL,
+            # "propagate": False
+        },
+        "api": {
+            "handlers": ["console"],
+            "level": LOG_LEVEL,
+            # "propagate": False
+        },
+        "cli": {
+            "handlers": ["console"],
+            "level": LOG_LEVEL,
+            # "propagate": False
+        },
+        "console": {
+            "handlers": ["console"],
+            "level": LOG_LEVEL,
+            # "propagate": False
+        },
+        "gql": {
+            "handlers": ["console"],
+            "level": LOG_LEVEL,
+            # "propagate": False
+        },
+        "service": {
+            "handlers": ["console"],
+            "level": LOG_LEVEL,
+            # "propagate": False
+        },
+        "strawberry.execution": {
+            "handlers": ["console"],
+            "level": LOG_LEVEL,
+            # "propagate": False
+        },
     },
-    "cli": {
-      "handlers": ["console"],
-      "level": LOG_LEVEL,
-      # "propagate": False
-    },
-    "console": {
-      "handlers": ["console"],
-      "level": LOG_LEVEL,
-      # "propagate": False
-    },
-    "gql": {
-      "handlers": ["console"],
-      "level": LOG_LEVEL,
-      # "propagate": False
-    },
-    "service": {
-      "handlers": ["console"],
-      "level": LOG_LEVEL,
-      # "propagate": False
-    },
-    "strawberry.execution": {
-      "handlers": ["console"],
-      "level": LOG_LEVEL,
-      # "propagate": False
-    }
-  },
 }
 
+
+def init(name: str):
+    dictConfig(logging_config)
+
+    logger = logging.getLogger(name)
+
+    # coloredlogs.install(level='DEBUG', logger=logger, milliseconds=True, fmt=FORMAT)
+
+    return logger
+
+
 def logging_init(name: str):
-  dictConfig(logging_config)
+    dictConfig(logging_config)
 
-  logger = logging.getLogger(name)
+    logger = logging.getLogger(name)
 
-  # coloredlogs.install(level='DEBUG', logger=logger, milliseconds=True, fmt=FORMAT)
+    # coloredlogs.install(level='DEBUG', logger=logger, milliseconds=True, fmt=FORMAT)
 
-  return logger
+    return logger
