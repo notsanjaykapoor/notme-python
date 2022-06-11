@@ -12,12 +12,10 @@ sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
 import database
 import log
-import services.db
 import services.entities
-import services.graph
-import services.graph.commands
+import services.graph.tx
 import services.graph.driver
-import services.graph.stream
+import services.graph.query
 
 logger = log.logging_init("cli")
 
@@ -56,7 +54,8 @@ def neighbors(
 
     logger.info(f"[graph-cli] {query} {params}")
 
-    records = services.graph.query.execute(query, params)
+    with services.graph.driver.get().session() as session:
+        records = session.read_transaction(services.graph.tx.read, query, params)
 
     if not records:
         logger.info(f"[graph-cli] no records found")
@@ -99,7 +98,8 @@ def shortest_path(
 
     logger.info(f"[graph-cli] {query} {params}")
 
-    records = services.graph.query.execute(query, params)
+    with services.graph.driver.get().session() as session:
+        records = session.read_transaction(services.graph.tx.read, query, params)
 
     if not records:
         logger.info(f"[graph-cli] no path found")

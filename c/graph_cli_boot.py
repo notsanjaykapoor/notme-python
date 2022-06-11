@@ -12,9 +12,7 @@ sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
 import database
 import log
-import services.db
 import services.entities
-import services.graph
 import services.graph.commands
 import services.graph.driver
 import services.graph.stream
@@ -54,7 +52,7 @@ def call(truncate: bool = typer.Option(...)):
 
                 db_offset += db_limit
 
-    os.system("./tty/graph-cli count")
+    os.system("./c/graph-cli count")
 
 
 if __name__ == "__main__":
