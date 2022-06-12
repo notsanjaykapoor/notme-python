@@ -1,10 +1,10 @@
-from dataclasses import dataclass
-
-import aioconsole
 import asyncio
 import logging
 import sys
 import typing
+from dataclasses import dataclass
+
+import aioconsole
 import websockets
 
 

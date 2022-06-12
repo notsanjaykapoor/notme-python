@@ -1,11 +1,10 @@
 import logging
 import sys
-
 from dataclasses import dataclass
+
 from fastapi import WebSocket, WebSocketDisconnect
 
 from context import request_id
-
 from models.socket_manager import SocketManager
 
 

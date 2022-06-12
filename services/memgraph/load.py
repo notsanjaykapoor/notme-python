@@ -1,8 +1,7 @@
-from dataclasses import dataclass
-
 import logging
 import sys
 import typing
+from dataclasses import dataclass
 
 from models.memgraph_connection import MemgraphConnection
 

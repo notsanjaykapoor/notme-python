@@ -1,8 +1,8 @@
 import logging
-import toml
-
 from dataclasses import dataclass
-from sqlmodel import select, Session
+
+import toml
+from sqlmodel import Session, select
 
 import services.data_models
 

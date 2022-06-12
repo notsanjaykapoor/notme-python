@@ -1,9 +1,8 @@
 import logging
+from dataclasses import dataclass
 from typing import Optional
 
-from dataclasses import dataclass
-from sqlmodel import select, Session
-from typing import Optional
+from sqlmodel import Session, select
 
 import models
 

@@ -1,9 +1,8 @@
 import logging
 import re
-import sqlmodel
-
 from dataclasses import dataclass
 
+import sqlmodel
 from sqlmodel.sql.expression import Select, SelectOfScalar
 
 SelectOfScalar.inherit_cache = True  # type: ignore
@@ -11,7 +10,6 @@ Select.inherit_cache = True  # type: ignore
 
 import models
 import services.mql
-
 from context import request_id
 
 

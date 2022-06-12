@@ -1,12 +1,11 @@
 import logging
 import sys
-
 from dataclasses import dataclass
+
 from sqlalchemy import exc
 from sqlmodel import Session
 
 import models
-
 import services.data_nodes
 
 

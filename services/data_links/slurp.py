@@ -1,7 +1,7 @@
 import logging
-import toml
-
 from dataclasses import dataclass
+
+import toml
 from sqlmodel import Session
 
 import services.data_links

@@ -1,16 +1,14 @@
 import logging
-import sqlmodel
 import typing
-
 from dataclasses import dataclass
 
+import sqlmodel
 from sqlmodel.sql.expression import Select, SelectOfScalar
 
 SelectOfScalar.inherit_cache = True  # type: ignore
 Select.inherit_cache = True  # type: ignore
 
 import models
-
 from context import request_id
 
 

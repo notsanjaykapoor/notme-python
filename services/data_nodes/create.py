@@ -1,6 +1,6 @@
 import logging
-
 from dataclasses import dataclass
+
 from sqlalchemy import exc
 from sqlmodel import Session
 

@@ -1,10 +1,10 @@
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.asymmetric import ec
+import base64
+import logging
 from dataclasses import dataclass
 from typing import Any, Optional
 
-import base64
-import logging
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import ec
 
 
 @dataclass

@@ -1,13 +1,12 @@
 import logging
-import ulid
-
-from database import engine
 from dataclasses import dataclass, field
+
+import ulid
 from sqlmodel import Session, SQLModel
 
 import services.users
-
 from context import request_id
+from database import engine
 
 
 class User:

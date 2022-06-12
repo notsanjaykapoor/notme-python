@@ -1,9 +1,8 @@
 import logging
 import re
-import sqlmodel
-
 from dataclasses import dataclass
 
+import sqlmodel
 from sqlmodel.sql.expression import Select, SelectOfScalar
 
 SelectOfScalar.inherit_cache = True  # type: ignore
@@ -11,7 +10,6 @@ Select.inherit_cache = True  # type: ignore
 
 import models
 import services.mql
-
 from context import request_id
 
 
@@ -32,7 +30,7 @@ class StructToken:
 
 class List:
     def __init__(
-        self, db: sqlmodel.Session, query: str = "", offset: int = 0, limit: int = 20
+        self, db: sqlmodel.Session, query: str = "", offset: int = 0, limit: int = 100
     ):
         self._db = db
         self._query = query
@@ -60,13 +58,18 @@ class List:
             value = token["value"]
 
             if token["field"] == "entity_id":
-                match = re.match(r"^~", value)
+                # match = re.match(r"^~", value)
 
-                if match:
+                if match := re.match(r"^~", value):
                     # like query
                     value_normal = re.sub(r"~", "", value)
                     self._dataset = self._dataset.where(
                         self._model.entity_id.like("%" + value_normal + "%")  # type: ignore
+                    )
+                elif match := re.match(r"\S+\|\S+", value):
+                    values = value.split("|")
+                    self._dataset = self._dataset.where(
+                        self._model.entity_id.in_(values)  # type: ignore
                     )
                 else:
                     # match query

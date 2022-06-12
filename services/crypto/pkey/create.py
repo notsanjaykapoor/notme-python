@@ -1,8 +1,8 @@
-from cryptography.hazmat.primitives.asymmetric import ec
-from dataclasses import dataclass
-
 import logging
 import typing
+from dataclasses import dataclass
+
+from cryptography.hazmat.primitives.asymmetric import ec
 
 
 @dataclass

@@ -1,9 +1,9 @@
 import logging
 import typing
-
 from dataclasses import dataclass
+
 from sqlalchemy import exc
-from sqlmodel import select, Session
+from sqlmodel import Session, select
 
 import models
 
@@ -11,16 +11,17 @@ import models
 @dataclass
 class Struct:
     code: int
-    entity_ids: typing.List[str]
-    entity_count: int
-    errors: typing.List[str]
+    ids: list[str]
+    count: int
+    errors: list[str]
 
 
 class Create:
-    def __init__(self, db: Session, entity_objects: typing.List[dict]):
+    def __init__(self, db: Session, entity_objects: list[dict]):
         self._db = db
         self._entity_objects = entity_objects
-        self._logger = logging.getLogger("api")
+
+        self._logger = logging.getLogger("service")
 
     def call(self) -> Struct:
         struct = Struct(0, [], 0, [])
@@ -37,18 +38,14 @@ class Create:
                     type_value=entity_object["type_value"],
                 )
                 self._db.add(db_object)
+                self._db.commit()
 
-                struct.entity_ids.append(db_object.entity_id)
-                struct.entity_count += 1
-
-            # commit all entities as a single transaction
-            self._db.commit()
+                struct.ids.append(db_object.entity_id)
+                struct.count += 1
         except exc.IntegrityError:
             self._db.rollback()
-            struct.entity_ids = []
-            struct.entity_count = 0
             struct.code = 409
 
-            self._logger.error(f"{__name__} entity create error")
+            self._logger.error(f"{__name__} error")
 
         return struct

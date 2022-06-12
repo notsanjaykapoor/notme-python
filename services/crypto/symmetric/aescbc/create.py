@@ -1,9 +1,9 @@
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-from dataclasses import dataclass
-
 import logging
 import os
 import typing
+from dataclasses import dataclass
+
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
 
 @dataclass

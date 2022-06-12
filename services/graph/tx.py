@@ -1,4 +1,5 @@
 import collections
+
 import neo4j
 
 GraphResult = collections.namedtuple("GraphResult", "records summary")

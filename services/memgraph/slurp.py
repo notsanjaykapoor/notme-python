@@ -1,11 +1,9 @@
-from dataclasses import dataclass
-
 import logging
 import sys
-
 from dataclasses import dataclass
-from sqlmodel import select, Session
 from typing import List
+
+from sqlmodel import Session, select
 
 import models
 import services.entities

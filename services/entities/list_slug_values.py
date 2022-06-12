@@ -1,7 +1,7 @@
 import logging
-
 from dataclasses import dataclass
-from sqlmodel import select, Session
+
+from sqlmodel import Session, select
 
 import models
 

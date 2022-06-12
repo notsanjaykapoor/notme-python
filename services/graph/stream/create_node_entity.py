@@ -1,7 +1,7 @@
 import logging
-import neo4j
-
 from dataclasses import dataclass
+
+import neo4j
 
 import models
 import services.graph

@@ -1,7 +1,8 @@
-import neo4j
+import logging
 import typing
 
-import logging
+import neo4j
+
 import models
 import services.entities
 import services.graph

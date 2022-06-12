@@ -1,7 +1,7 @@
 import logging
-import zmq
-
 from dataclasses import dataclass
+
+import zmq
 
 
 @dataclass

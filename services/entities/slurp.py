@@ -1,5 +1,6 @@
 from dataclasses import dataclass
-from sqlmodel import select, Session
+
+import sqlmodel
 
 import services.entities
 
@@ -12,7 +13,7 @@ class Struct:
 
 
 class Slurp:
-    def __init__(self, db: Session, objects: list[dict]):
+    def __init__(self, db: sqlmodel.Session, objects: list[dict]):
         self._db = db
         self._objects = objects
 
@@ -33,7 +34,7 @@ class Slurp:
             ).call()
 
             if struct_create.code == 0:
-                struct.count += struct_create.entity_count
+                struct.count += struct_create.count
 
         return struct
 

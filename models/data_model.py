@@ -1,7 +1,7 @@
 import typing
 
-from sqlmodel import Field, SQLModel
 from sqlalchemy import UniqueConstraint
+from sqlmodel import Field, SQLModel
 
 
 class DataModel(SQLModel, table=True):  # type: ignore

@@ -1,5 +1,6 @@
-import neo4j
 import typing
+
+import neo4j
 
 import services.graph
 import services.graph.driver

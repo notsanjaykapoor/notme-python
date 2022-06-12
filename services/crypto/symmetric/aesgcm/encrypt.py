@@ -1,11 +1,11 @@
-from cryptography.hazmat.primitives.ciphers import Cipher
-from dataclasses import dataclass
-
 import base64
 import json
 import logging
 import os
 import typing
+from dataclasses import dataclass
+
+from cryptography.hazmat.primitives.ciphers import Cipher
 
 
 @dataclass
