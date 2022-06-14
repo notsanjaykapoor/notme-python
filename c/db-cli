@@ -1,54 +1,25 @@
 #!/usr/bin/env python
 
-from dotenv import load_dotenv
-
-load_dotenv()
-
 import os
-import sqlalchemy
-import sqlmodel
 import sys
-import typer
+
+import dotenv
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
-import database
-import log
-import models
-import services.entities
+dotenv.load_dotenv()
 
-import db_cli_boot
+import db_cli_boot  # noqa: E402
+import db_cli_entity  # noqa: E402
+import typer  # noqa: E402
+
+import log  # noqa: E402
 
 logger = log.init("cli")
 
 app = typer.Typer()
-entity_app = typer.Typer()
 app.add_typer(db_cli_boot.app, name="boot")
-app.add_typer(entity_app, name="entity")
-
-# initialize database
-database.migrate()
-
-
-@entity_app.command("count")
-def entity_count():
-    with database.session() as db:
-        count = db.exec(
-            sqlmodel.select([sqlalchemy.func.count(models.Entity.id)])
-        ).one()
-
-    logger.info(f"[db-cli] entity_count {count}")
-
-
-@entity_app.command("list")
-def entity_list(query: str = typer.Option("", "--query", "-q")):
-    with database.session() as db:
-        struct_list = services.entities.List(db, query, 0, 1000).call()
-
-        logger.info(f"[db-cli] entity_list {struct_list.count}")
-
-        for entity in struct_list.objects:
-            logger.info(f"[db-cli] {entity.pack()}")
+app.add_typer(db_cli_entity.app, name="entity")
 
 
 if __name__ == "__main__":

@@ -5,12 +5,12 @@ from dataclasses import dataclass
 import sqlmodel
 from sqlmodel.sql.expression import Select, SelectOfScalar
 
-SelectOfScalar.inherit_cache = True  # type: ignore
-Select.inherit_cache = True  # type: ignore
-
 import models
 import services.mql
 from context import request_id
+
+SelectOfScalar.inherit_cache = True  # type: ignore
+Select.inherit_cache = True  # type: ignore
 
 
 @dataclass
@@ -29,9 +29,7 @@ class StructToken:
 
 
 class List:
-    def __init__(
-        self, db: sqlmodel.Session, query: str = "", offset: int = 0, limit: int = 100
-    ):
+    def __init__(self, db: sqlmodel.Session, query: str = "", offset: int = 0, limit: int = 100):
         self._db = db
         self._query = query
         self._offset = offset
@@ -50,9 +48,7 @@ class List:
 
         struct_tokens = services.mql.Parse(self._query).call()
 
-        self._logger.info(
-            f"{request_id.get()} {__name__} tokens {struct_tokens.tokens}"
-        )
+        self._logger.info(f"{request_id.get()} {__name__} tokens {struct_tokens.tokens}")
 
         for token in struct_tokens.tokens:
             value = token["value"]
@@ -63,14 +59,10 @@ class List:
                 if match := re.match(r"^~", value):
                     # like query
                     value_normal = re.sub(r"~", "", value)
-                    self._dataset = self._dataset.where(
-                        self._model.entity_id.like("%" + value_normal + "%")  # type: ignore
-                    )
+                    self._dataset = self._dataset.where(self._model.entity_id.like("%" + value_normal + "%"))  # type: ignore
                 elif match := re.match(r"\S+\|\S+", value):
                     values = value.split("|")
-                    self._dataset = self._dataset.where(
-                        self._model.entity_id.in_(values)  # type: ignore
-                    )
+                    self._dataset = self._dataset.where(self._model.entity_id.in_(values))  # type: ignore
                 else:
                     # match query
                     self._dataset = self._dataset.where(self._model.entity_id == value)
@@ -80,23 +72,17 @@ class List:
                 if match:
                     # like query
                     value_normal = re.sub(r"~", "", value)
-                    self._dataset = self._dataset.where(
-                        self._model.entity_name.like("%" + value_normal + "%")  # type: ignore
-                    )
+                    self._dataset = self._dataset.where(self._model.entity_name.like("%" + value_normal + "%"))  # type: ignore
                 else:
                     # match query
-                    self._dataset = self._dataset.where(
-                        self._model.entity_name == value
-                    )
+                    self._dataset = self._dataset.where(self._model.entity_name == value)
             elif token["field"] == "slug":
                 match = re.match(r"^~", value)
 
                 if match:
                     # like query
                     value_normal = re.sub(r"~", "", value)
-                    self._dataset = self._dataset.where(
-                        self._model.slug.like("%" + value_normal + "%")  # type: ignore
-                    )
+                    self._dataset = self._dataset.where(self._model.slug.like("%" + value_normal + "%"))  # type: ignore
                 else:
                     # match query
                     self._dataset = self._dataset.where(models.Entity.slug == value)
@@ -106,16 +92,12 @@ class List:
                 if match:
                     # like query
                     value_normal = re.sub(r"~", "", value)
-                    self._dataset = self._dataset.where(
-                        self._model.type_value.like("%" + value_normal + "%")  # type: ignore
-                    )
+                    self._dataset = self._dataset.where(self._model.type_value.like("%" + value_normal + "%"))  # type: ignore
                 else:
                     # match query
                     self._dataset = self._dataset.where(self._model.type_value == value)
 
-        struct.objects = self._db.exec(
-            self._dataset.offset(self._offset).limit(self._limit)
-        ).all()
+        struct.objects = self._db.exec(self._dataset.offset(self._offset).limit(self._limit)).all()
 
         struct.count = len(struct.objects)
 

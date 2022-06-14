@@ -1,14 +1,14 @@
+import dataclasses
 import logging
-import typing
-from dataclasses import dataclass
+import sys
 
-from sqlalchemy import exc
-from sqlmodel import Session, select
+import sqlalchemy
+import sqlmodel
 
 import models
 
 
-@dataclass
+@dataclasses.dataclass
 class Struct:
     code: int
     ids: list[str]
@@ -17,7 +17,7 @@ class Struct:
 
 
 class Create:
-    def __init__(self, db: Session, entity_objects: list[dict]):
+    def __init__(self, db: sqlmodel.Session, entity_objects: list[dict]):
         self._db = db
         self._entity_objects = entity_objects
 
@@ -42,10 +42,13 @@ class Create:
 
                 struct.ids.append(db_object.entity_id)
                 struct.count += 1
-        except exc.IntegrityError:
+        except sqlalchemy.exc.IntegrityError:
             self._db.rollback()
             struct.code = 409
-
-            self._logger.error(f"{__name__} error")
+            self._logger.error(f"{__name__} {sys.exc_info()[0]} error")
+        except Exception:
+            self._db.rollback()
+            struct.code = 500
+            self._logger.error(f"{__name__} {sys.exc_info()[0]} exception")
 
         return struct

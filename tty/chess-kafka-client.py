@@ -1,37 +1,22 @@
 #!/usr/bin/env python
 
-from dotenv import load_dotenv
-
-load_dotenv()  # take environment variables from .env.
-
 import os
 import sys
 
-sys.path.insert(1, os.path.join(sys.path[0], ".."))
-
-import asyncio
-import json
-import logging
-import signal
-import time
+import dotenv
 import typer
 import ulid
-import uvloop
-import websocket
 
-from database import engine
-from sqlmodel import Session, SQLModel
-from typing import Optional
+sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
-import kafka
+import kafka  # noqa: E402
+import log  # noqa: E402
 
-from actors.example.app import App
-
-from log import logging_init
+dotenv.load_dotenv()
 
 app = typer.Typer()
 
-logger = logging_init("cli")
+logger = log.logging_init("cli")
 
 
 @app.command()

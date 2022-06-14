@@ -1,7 +1,5 @@
 import json
 import logging
-import typing
-
 from dataclasses import dataclass
 
 from models.actor import Actor

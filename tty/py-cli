@@ -4,29 +4,27 @@ from dotenv import load_dotenv
 
 load_dotenv()  # take environment variables from .env.
 
-import asyncio
-import json
-import os
-import signal
-import sqlmodel
-import sys
-import time
-import typer
-import ulid
-import uvloop
-import websocket
+import asyncio  # noqa: E402
+import json  # noqa: E402
+import os  # noqa: E402
+import signal  # noqa: E402
+import sys  # noqa: E402
+
+import sqlmodel  # noqa: E402
+import typer  # noqa: E402
+import ulid  # noqa: E402
+import uvloop  # noqa: E402
+import websocket  # noqa: E402
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
-import database
-import kafka
-import kafka.handlers
-import log
-import services.crypto.pkey
-import services.users
-
-from actors.example.app import App
-
+import database  # noqa: E402
+import kafka  # noqa: E402
+import kafka.handlers  # noqa: E402
+import log  # noqa: E402
+import services.crypto.pkey  # noqa: E402
+import services.users  # noqa: E402
+from actors.example.app import App  # noqa: E402
 
 logger = log.init("cli")
 
@@ -57,7 +55,7 @@ def actor_server(app: str = typer.Option(...), msg: str = "ping"):
 
 
 async def actor_server_async(app: str, msg: str):
-    logger.info(f"cli actor_server starting")
+    logger.info("cli actor_server starting")
 
     # start app
     struct_app = App(toml_file=f"./data/apps/{app}.toml").call()
@@ -66,7 +64,7 @@ async def actor_server_async(app: str, msg: str):
     actors = [actor for name, actor in struct_app.actors.items()]
 
     def signal_handler(signum, frame):
-        logger.info(f"cli actor_server signal handler ... cleaning up")
+        logger.info("cli actor_server signal handler ... cleaning up")
         for actor in actors:
             actor.cancel()
 
@@ -79,7 +77,7 @@ async def actor_server_async(app: str, msg: str):
     try:
         tasks = [actor.task for actor in actors]
         await asyncio.gather(*tasks)
-    except:
+    except KeyboardInterrupt:
         logger.error(f"cli actor_server exception {sys.exc_info()[0]}")
 
     # actor_source = struct_manager.actors["source"]
@@ -140,10 +138,15 @@ def json_rewrite(file: str = "./data/example/example.json"):
 
 @app.command()
 def topic_read(topic: str = typer.Option(...), group: str = "python"):
+    uvloop.install()
+    asyncio.run(topic_read_async(topic=topic, group=group))
+
+
+async def topic_read_async(topic: str = typer.Option(...), group: str = "python"):
     # call reader with generic handler
-    handler = kafka.handlers.Generic
+    handler = kafka.handlers.Generic()
     reader = kafka.Reader(topic, group, handler)
-    reader.call()
+    await reader.call()
 
 
 @app.command()

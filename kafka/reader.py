@@ -1,51 +1,41 @@
 import asyncio
-import json
+import dataclasses
 import logging
 import sys
-import typing
 
-from dataclasses import dataclass
+import confluent_kafka
 
-from confluent_kafka import Consumer, KafkaError, KafkaException
-from kafka.config import config_reader
-
+import kafka.config
 import models
 
 
-@dataclass
+@dataclasses.dataclass
 class Struct:
     code: int
     errors: list[str]
 
 
 class Reader:
-    def __init__(self, topic: str, group: str, handler: typing.Callable):
+    def __init__(self, topic: str, group: str, handler: kafka.Handler):
         self._topic = topic
         self._group = group
         self._handler = handler
 
-        config_reader["group.id"] = self._group
+        kafka.config.config_reader["group.id"] = self._group
 
-        self._consumer = Consumer(config_reader)
+        self._consumer = confluent_kafka.Consumer(kafka.config.config_reader)
         self._timeout = 1.0
-        self._topics = []
+        self._topics = [self._topic]
         self._logger = logging.getLogger("service")
-        self._task = asyncio.current_task()
-
-        self._topics.append(self._topic)
-
-        if self._task:
-            self._log_subject = f"actor '{self._task.get_name()}' {__name__}"
-            self._actor_name = self._task.get_name()
-        else:
-            self._log_subject = f"{__name__}"
-            self._actor_name = "kafka"
-
-        # create default actor used for callback during message processing
-        self._actor = models.Actor(name=self._actor_name, handler=self)
 
     async def call(self):
         struct = Struct(0, [])
+
+        self._task = asyncio.current_task()
+        self._log_subject = f"actor '{self._task.get_name()}' {__name__}"
+
+        # create default actor used for callback during message processing
+        self._actor = models.Actor(name=self._task.get_name(), handler=self)
 
         self._logger.info(f"{self._log_subject} reading topics {self._topics}")
 
@@ -61,32 +51,31 @@ class Reader:
 
                 if msg.error():
                     # whoops, some type of read error
-                    if msg.error().code() == KafkaError._PARTITION_EOF:
+                    if msg.error().code() == confluent_kafka.KafkaError._PARTITION_EOF:
                         self._logger.info(f"{self._log_subject} partition eof")
                         # todo:
                         continue
                     elif msg.error():
-                        raise KafkaException(msg.error())
+                        raise confluent_kafka.KafkaException(msg.error())
 
                 # call handler to process message
-                handler_struct = self._handler.call(
-                    actor=self._actor,
-                    msg=models.ActorMessage(msg),
+                struct_handler = await self._handler.call(
+                    msg=models.KafkaMessage(msg),
                 )
 
                 # check return code and ack
-                if handler_struct.code == 0:
+                if struct_handler.code == 0:
                     self._logger.info(f"{self._log_subject} ack")
                     self._consumer.commit(asynchronous=False)
 
                 await self._asyncio_yield()
-        except KafkaException as e:
+        except confluent_kafka.KafkaException as e:
             self._logger.error(f"{self._log_subject} exception {e}")
         except asyncio.exceptions.CancelledError:
             self._logger.error(f"{self._log_subject} cancelled exception")
         except Exception as e:
             self._logger.error(f"{self._log_subject} exception {e}")
-        except:  # e.g. keyboard interrupt
+        except KeyboardInterrupt:  # e.g. keyboard interrupt like ctrl^c
             self._logger.error(f"{self._log_subject} exception {sys.exc_info()[0]}")
             raise
         finally:

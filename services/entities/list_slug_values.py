@@ -1,7 +1,7 @@
 import logging
 from dataclasses import dataclass
 
-from sqlmodel import Session, select
+import sqlmodel
 
 import models
 
@@ -15,12 +15,12 @@ class Struct:
 
 
 class ListSlugValues:
-    def __init__(self, db: Session, slug: str):
+    def __init__(self, db: sqlmodel.Session, slug: str):
         self._db = db
         self._slug = slug
 
         self._dataset = (
-            select(
+            sqlmodel.select(
                 models.Entity.entity_id,
                 models.Entity.type_value,
             )

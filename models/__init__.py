@@ -1,10 +1,12 @@
-from .actor import Actor
-from .actor_log import ActorLog
-from .actor_message import ActorMessage
-from .data_link import DataLink
-from .data_model import DataModel
-from .data_node import DataNode
-from .entity import Entity
-from .entity_watch import EntityWatch
-from .memgraph_connection import MemgraphConnection
-from .user import User
+from .actor import Actor  # noqa: F401
+from .actor_log import ActorLog  # noqa: F401
+from .actor_message import ActorMessage  # noqa: F401
+from .data_link import DataLink  # noqa: F401
+from .data_model import DataModel  # noqa: F401
+from .data_node import DataNode  # noqa: F401
+from .entity import Entity  # noqa: F401
+from .entity_match import EntityMatch  # noqa: F401
+from .entity_watch import EntityWatch  # noqa: F401
+from .kafka_message import KafkaMessage  # noqa: F401
+from .memgraph_connection import MemgraphConnection  # noqa: F401
+from .user import User  # noqa: F401

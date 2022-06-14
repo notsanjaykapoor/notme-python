@@ -1,30 +1,31 @@
+import dataclasses
 import json
 import logging
 
-from dataclasses import dataclass
-from typing import Any
+import kafka
+import models
 
 
-@dataclass
+@dataclasses.dataclass
 class Struct:
     code: int
     errors: list[str]
 
 
-class Generic:
+class Generic(kafka.Handler):
     def __init__(self):
-        self.logger = logging.getLogger("console")
+        self._logger = logging.getLogger("console")
 
-    def call(self, msg: Any):
+    async def call(self, msg: models.KafkaMessage):
         struct = Struct(0, [])
 
         try:
             message = json.loads(msg.value())
 
-            self.logger.info(f"{__name__} message {message}")
+            self._logger.info(f"{__name__} message {message}")
         except Exception as e:
             struct.code = 500
 
-            self.logger.error(f"{__name__} exception {e}")
+            self._logger.error(f"{__name__} exception {e}")
 
         return struct

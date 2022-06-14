@@ -1,8 +1,6 @@
-import pytest
-
 import random
-import ulid
 
+import ulid
 from sqlmodel import Session
 
 import services.entities
@@ -33,16 +31,6 @@ def test_entity_create(session: Session):
         entity_objects=entity_params,
     ).call()
 
-    print(struct_create)
-
     assert struct_create.code == 0
-    assert len(struct_create.entity_ids) == 2
-
-    # unique on entity_id and entity_name
-
-    # struct_create = services.entities.Create(
-    #     db=session,
-    #     entity_params=entity_params,
-    # ).call()
-
-    # assert struct_create.code == 409
+    assert len(struct_create.ids) == 2
+    assert struct_create.count == 2

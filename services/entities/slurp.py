@@ -25,13 +25,11 @@ class Slurp:
             entity_objects = self._object_to_entities(object)
 
             # check if entity(s) exist
-            if count := self._get_entities_count(entity_objects):
+            if self._get_entities_count(entity_objects) == 0:
                 continue
 
             # persist to database
-            struct_create = services.entities.Create(
-                self._db, entity_objects=entity_objects
-            ).call()
+            struct_create = services.entities.Create(self._db, entity_objects=entity_objects).call()
 
             if struct_create.code == 0:
                 struct.count += struct_create.count
@@ -44,9 +42,7 @@ class Slurp:
 
         entity_id = entity_objects[0]["entity_id"]
 
-        struct_list = services.entities.List(
-            self._db, query=f"entity_id:{entity_id}", offset=0, limit=100
-        ).call()
+        struct_list = services.entities.List(self._db, query=f"entity_id:{entity_id}", offset=0, limit=100).call()
 
         return struct_list.count
 

@@ -1,11 +1,9 @@
-import pytest
+import sqlmodel
 
 import services.users
 
-from sqlmodel import Session
 
-
-def test_user_list(session: Session):  #
+def test_user_list(session: sqlmodel.Session):  #
     struct_create = services.users.Create(db=session, user_id="user-1").call()
     assert struct_create.code == 0
 

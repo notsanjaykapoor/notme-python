@@ -1,9 +1,8 @@
-import pytest
 import random
+
+import pytest
+import sqlmodel
 import strawberry
-
-from sqlmodel import Session
-
 from strawberry.schema.config import StrawberryConfig
 
 import gql
@@ -16,7 +15,7 @@ gql_schema = strawberry.Schema(
 
 
 @pytest.fixture()
-def user_id(session: Session):
+def user_id(session: sqlmodel.Session):
     user_id = f"user-{random.randint(1,100)}"
     struct_create = services.users.Create(db=session, user_id=user_id).call()
     assert struct_create.code == 0
@@ -24,7 +23,7 @@ def user_id(session: Session):
     yield user_id
 
 
-def test_gql_user_list(session: Session, user_id: str):
+def test_gql_user_list(session: sqlmodel.Session, user_id: str):
     query = """
         query TestQuery($query: String, $offset: Int, $limit: Int) {
             users_list(query: $query, offset: $offset, limit: $limit) {

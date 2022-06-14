@@ -90,10 +90,8 @@ class Actor:
             await self._reader.call()
         except asyncio.exceptions.CancelledError:
             self._logger.error(f"actor '{self._name}' kafka cancelled exception")
-        except:  # e.g. keyboard interrupt
-            self._logger.error(
-                f"actor '{self._name}' kafka exception {sys.exc_info()[0]}"
-            )
+        except KeyboardInterrupt:  # e.g. keyboard interrupt
+            self._logger.error(f"actor '{self._name}' kafka exception {sys.exc_info()[0]}")
         finally:
             self._logger.info(f"actor '{self._name}' exiting")
 
@@ -105,15 +103,13 @@ class Actor:
                 # block on queue until message is available
                 message = await self._queue.get()
 
-                struct = self._handler.call(actor=self, message=message)
+                self._handler.call(actor=self, message=message)
 
                 # ack message
                 self._queue.task_done()
         except asyncio.exceptions.CancelledError:
             self._logger.error(f"actor '{self._name}' task cancelled exception")
-        except:  # e.g. keyboard interrupt
-            self._logger.error(
-                f"actor '{self._name}' task exception {sys.exc_info()[0]}"
-            )
+        except KeyboardInterrupt:  # e.g. keyboard interrupt
+            self._logger.error(f"actor '{self._name}' task exception {sys.exc_info()[0]}")
         finally:
             self._logger.info(f"actor '{self._name}' exiting")

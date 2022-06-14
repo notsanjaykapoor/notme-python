@@ -1,7 +1,6 @@
-import pytest
-
 import asyncio
-import logging
+
+import pytest
 
 from models import Actor
 

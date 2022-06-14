@@ -1,15 +1,12 @@
 import pytest
-
-import random
-
-from sqlmodel import Session
+import sqlmodel
 
 import services.data_links
 import services.data_nodes
 
 
 @pytest.fixture()
-def data_nodes(session: Session):
+def data_nodes(session: sqlmodel.Session):
     """create base data nodes used to validate data links"""
     objects = [
         {
@@ -30,7 +27,7 @@ def data_nodes(session: Session):
     yield struct_create.object_ids
 
 
-def test_data_link_create(session: Session, data_nodes: list[int]):
+def test_data_link_create(session: sqlmodel.Session, data_nodes: list[int]):
     objects = [
         {
             "src_name": "case",
@@ -49,9 +46,7 @@ def test_data_link_create(session: Session, data_nodes: list[int]):
     assert struct_create.object_count == 2
 
 
-def test_data_link_create__with_invalid_slug_name_eq(
-    session: Session, data_nodes: list[int]
-):
+def test_data_link_create__with_invalid_slug_name_eq(session: sqlmodel.Session, data_nodes: list[int]):
     objects = [
         {
             "src_name": "case",
@@ -70,9 +65,7 @@ def test_data_link_create__with_invalid_slug_name_eq(
     assert struct_create.object_count == 0
 
 
-def test_data_link_create__with_missing_data_node(
-    session: Session, data_nodes: list[int]
-):
+def test_data_link_create__with_missing_data_node(session: sqlmodel.Session, data_nodes: list[int]):
     objects = [
         {
             "src_name": "case",

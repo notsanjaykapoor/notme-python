@@ -1,11 +1,9 @@
-import pytest
+import sqlmodel
 
 import services.users
 
-from sqlmodel import Session
 
-
-def test_user_create(session: Session):  #
+def test_user_create(session: sqlmodel.Session):  #
     # app.dependency_overrides[get_db] = get_session_override
 
     struct_create = services.users.Create(db=session, user_id="user-1").call()

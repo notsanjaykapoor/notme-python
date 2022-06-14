@@ -1,13 +1,13 @@
+import dataclasses
 import logging
-from dataclasses import dataclass
 
+import sqlalchemy
 import sqlmodel
-from sqlalchemy import exc
 
 import models
 
 
-@dataclass
+@dataclasses.dataclass
 class Struct:
     code: int
     ids: list[int]
@@ -38,7 +38,7 @@ class Create:
                 if db_object.id:
                     struct.ids.append(db_object.id)
                     struct.count += 1
-        except exc.IntegrityError:
+        except sqlalchemy.exc.IntegrityError:
             self._db.rollback()
             struct.code = 409
 

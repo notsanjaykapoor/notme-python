@@ -1,28 +1,17 @@
 #!/usr/bin/env python
 
-from dotenv import load_dotenv
-
-load_dotenv()
-
-import os
-import sys
-import typer
-
-sys.path.insert(1, os.path.join(sys.path[0], ".."))
-
-import database
-import log
-import services.db
-import services.entities
-import services.graph
-import services.graph.commands
-import services.graph.driver
-import services.graph.stream
-
+import dotenv
 import graph_cli_boot
 import graph_cli_constraints
 import graph_cli_indexes
 import graph_cli_match
+import typer
+
+import database
+import log
+import services.graph.query
+
+dotenv.load_dotenv()
 
 logger = log.logging_init("cli")
 

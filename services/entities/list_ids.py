@@ -1,14 +1,13 @@
+import dataclasses
 import logging
-import re
 import typing
-from dataclasses import dataclass
 
-from sqlmodel import Session, select
+import sqlmodel
 
 import models
 
 
-@dataclass
+@dataclasses.dataclass
 class Struct:
     code: int
     ids: typing.List[str]
@@ -17,10 +16,10 @@ class Struct:
 
 
 class ListIds:
-    def __init__(self, db: Session):
+    def __init__(self, db: sqlmodel.Session):
         self._db = db
 
-        self._dataset = select(models.Entity.entity_id).distinct()
+        self._dataset = sqlmodel.select(models.Entity.entity_id).distinct()
         self._logger = logging.getLogger("api")
 
     def call(self) -> Struct:

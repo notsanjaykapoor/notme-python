@@ -1,12 +1,10 @@
-import asyncio
 import logging
-import toml
-
 from dataclasses import dataclass
+
+import toml
 
 import actors.chess.workers.map
 import actors.chess.workers.source
-
 from models.actor import Actor
 
 
