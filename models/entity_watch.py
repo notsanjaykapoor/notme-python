@@ -9,7 +9,7 @@ class EntityWatch(sqlmodel.SQLModel, table=True):  # type: ignore
     __table_args__ = (sqlalchemy.UniqueConstraint("query", "topic", name="_query_topic_unique"),)
 
     id: typing.Optional[int] = sqlmodel.Field(default=None, primary_key=True)
-    output: typing.Optional[str] = sqlmodel.Field(index=True)
+    output: str = sqlmodel.Field(index=True)
     query: str = sqlmodel.Field(index=True)
     topic: str = sqlmodel.Field(index=True)
 

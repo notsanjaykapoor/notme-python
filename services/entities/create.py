@@ -11,7 +11,7 @@ import models
 @dataclasses.dataclass
 class Struct:
     code: int
-    ids: list[str]
+    ids: list[int]
     count: int
     errors: list[str]
 

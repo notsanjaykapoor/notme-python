@@ -37,17 +37,18 @@ class CreateNodeEntity:
         return struct
 
     def _create(self) -> int:
-        entity_id = self._entity.entity_id
-        name = self._entity.entity_name
+        id = self._entity.entity_id
+        label = self._entity.entity_name
+        name = self._entity.name
 
         if self._entity.type_value is None:
             return 0
 
         query_exists = f"""
-            match(n:{name} {{id: $entity_id}}) return count(n) as count
+            match(n:{label} {{id: $id}}) return count(n) as count
         """
 
-        params = {"entity_id": entity_id}
+        params = {"id": id, "name": name}
 
         node_count = self._node_count(query_exists, params)
 
@@ -56,9 +57,9 @@ class CreateNodeEntity:
             return 0
 
         # note that node label can not be set with '$' format
-        query_create = f"create (p:{name} {{id: $entity_id}}) return p"
+        query_create = f"create (p:{label} {{id: $id, name: $name}}) return p"
 
-        self._logger.info(f"{__name__} slug {name} props {params}")
+        self._logger.info(f"{__name__} label {label} props {params}")
 
         with self._driver.session() as session:
             session.write_transaction(services.graph.tx.write, query_create, params)

@@ -29,29 +29,40 @@ database.migrate()
 
 
 @app.command()
-def call(
+def reset(
     data_file: str = typer.Option(..., "--file", "-f", help="toml data file"),
-    truncate: bool = typer.Option(...),
-    path: str = typer.Option("./data/notme/config", "--config-path", help="config path"),
+    config_path: str = typer.Option("./data/notme/config", "--config-path", help="config path"),
 ):
     with sqlmodel.Session(database.engine) as db:
-        if truncate:
-            services.graph.commands.truncate()
+        services.graph.commands.truncate()
 
-            services.db.truncate_table(db=db, table_name="entities")
-            services.db.truncate_table(db=db, table_name="data_links")
-            services.db.truncate_table(db=db, table_name="data_nodes")
-            services.db.truncate_table(db=db, table_name="data_models")
+        services.db.truncate_table(db=db, table_name="entities")
+        services.db.truncate_table(db=db, table_name="data_links")
+        services.db.truncate_table(db=db, table_name="data_nodes")
+        services.db.truncate_table(db=db, table_name="data_models")
 
-            logger.info("[db-cli] db and graph truncated")
+        logger.info("[db-cli] db and graph truncated")
 
-        struct_models = services.data_models.Slurp(db=db, toml_file=f"{path}/data_models.toml").call()
+    slurp(data_file=data_file, config_path=config_path)
 
-        struct_nodes = services.data_nodes.Slurp(db=db, toml_file=f"{path}/data_nodes.toml").call()
 
-        struct_links = services.data_links.Slurp(db=db, toml_file=f"{path}/data_links.toml").call()
+@app.command()
+def sync(
+    data_file: str = typer.Option(..., "--file", "-f", help="toml data file"),
+    config_path: str = typer.Option("./data/notme/config", "--config-path", help="config path"),
+):
+    slurp(data_file=data_file, config_path=config_path)
 
-        struct_watches = services.entities.watches.Slurp(db=db, toml_file=f"{path}/entity_watches.toml").call()
+
+def slurp(data_file: str, config_path: str):
+    with sqlmodel.Session(database.engine) as db:
+        struct_models = services.data_models.Slurp(db=db, toml_file=f"{config_path}/data_models.toml").call()
+
+        struct_nodes = services.data_nodes.Slurp(db=db, toml_file=f"{config_path}/data_nodes.toml").call()
+
+        struct_links = services.data_links.Slurp(db=db, toml_file=f"{config_path}/data_links.toml").call()
+
+        struct_watches = services.entities.watches.Slurp(db=db, toml_file=f"{config_path}/entity_watches.toml").call()
 
         struct_entities = services.entities.Slurp(db=db, json_file=data_file).call()
 

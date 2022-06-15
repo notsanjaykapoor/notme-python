@@ -59,7 +59,7 @@ def publish_change(
 
     logger.info("[db-cli] publish try")
 
-    services.entities.messages.Publish(message=message, topic=kafka_topic).call()
+    services.entities.Publish(message=message, topic=kafka_topic).call()
 
     logger.info("[db-cli] publish completed")
 
