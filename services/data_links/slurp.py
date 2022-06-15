@@ -1,8 +1,8 @@
 import logging
 from dataclasses import dataclass
 
+import sqlmodel
 import toml
-from sqlmodel import Session
 
 import services.data_links
 
@@ -10,12 +10,12 @@ import services.data_links
 @dataclass
 class Struct:
     code: int
-    created: int
+    count: int
     errors: list[str]
 
 
 class Slurp:
-    def __init__(self, db: Session, toml_file: str):
+    def __init__(self, db: sqlmodel.Session, toml_file: str):
         self._db = db
         self._toml_file = toml_file
 
@@ -31,6 +31,6 @@ class Slurp:
                 objects=[object],
             ).call()
 
-            struct.created += struct_create.object_count
+            struct.count += struct_create.object_count
 
         return struct

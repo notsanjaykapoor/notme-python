@@ -43,17 +43,17 @@ class List:
             field = token["field"]
             value = token["value"]
 
-            if field == "name":
+            if field == "topic":
                 if re.match(r"^~", value):
                     # like query
                     value_normal = re.sub(r"~", "", value)
-                    self._dataset = self._dataset.where(self._model.name.like("%" + value_normal + "%"))  # type: ignore
+                    self._dataset = self._dataset.where(self._model.topic.like("%" + value_normal + "%"))  # type: ignore
                 elif re.match(r"\S+\|\S+", value):
                     values = value.split("|")
-                    self._dataset = self._dataset.where(self._model.name.in_(values))  # type: ignore
+                    self._dataset = self._dataset.where(self._model.topic.in_(values))  # type: ignore
                 else:
                     # match query
-                    self._dataset = self._dataset.where(self._model.name == value)
+                    self._dataset = self._dataset.where(self._model.topic == value)
 
         struct.objects = self._db.exec(self._dataset.offset(self._offset).limit(self._limit)).all()
 

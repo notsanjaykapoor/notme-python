@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import json
 import os
 import sys
 
@@ -18,6 +17,7 @@ import services.data_models  # noqa: E402
 import services.data_nodes  # noqa: E402
 import services.db  # noqa: E402
 import services.entities  # noqa: E402
+import services.entities.watches  # noqa: E402
 import services.graph.commands  # noqa: E402
 
 logger = log.init("cli")
@@ -30,18 +30,15 @@ database.migrate()
 
 @app.command()
 def call(
-    json_file: str = typer.Option(..., "--file", "-f", help="json data file"),
+    data_file: str = typer.Option(..., "--file", "-f", help="toml data file"),
     truncate: bool = typer.Option(...),
-    path: str = typer.Option("./data/slurp", "--path", "-p", help="config path"),
+    path: str = typer.Option("./data/notme/config", "--config-path", help="config path"),
 ):
-    objects = json.load(open(json_file))
-
     with sqlmodel.Session(database.engine) as db:
         if truncate:
             services.graph.commands.truncate()
 
             services.db.truncate_table(db=db, table_name="entities")
-
             services.db.truncate_table(db=db, table_name="data_links")
             services.db.truncate_table(db=db, table_name="data_nodes")
             services.db.truncate_table(db=db, table_name="data_models")
@@ -54,11 +51,15 @@ def call(
 
         struct_links = services.data_links.Slurp(db=db, toml_file=f"{path}/data_links.toml").call()
 
-        struct_entity_slurp = services.entities.Slurp(db=db, objects=objects).call()
+        struct_watches = services.entities.watches.Slurp(db=db, toml_file=f"{path}/entity_watches.toml").call()
 
-        logger.info(f"[db-cli] imported data config, models {struct_models.created} nodes {struct_nodes.created} links {struct_links.created}")
+        struct_entities = services.entities.Slurp(db=db, json_file=data_file).call()
 
-        logger.info(f"[db-cli] entities imported {struct_entity_slurp.count}")
+        logger.info(f"[db-cli] imported data models {struct_models.count}")
+        logger.info(f"[db-cli] imported data nodes {struct_nodes.count}")
+        logger.info(f"[db-cli] imported data links {struct_links.count}")
+        logger.info(f"[db-cli] imported entity watches {struct_watches.count}")
+        logger.info(f"[db-cli] imported entities {struct_entities.count}")
 
 
 if __name__ == "__main__":

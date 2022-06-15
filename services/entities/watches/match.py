@@ -2,6 +2,7 @@ import dataclasses
 import logging
 import re
 import sys
+import typing
 
 import sqlalchemy
 import sqlmodel
@@ -14,15 +15,23 @@ import services.mql
 @dataclasses.dataclass
 class Struct:
     code: int
-    ids: list[int]
+    watches: list[models.EntityWatch]
     count: int
     errors: list[str]
 
 
-class Create:
-    def __init__(self, db: sqlmodel.Session, entity: models.Entity):
+class Match:
+    """find all matching watches for the specified entity"""
+
+    def __init__(self, db: sqlmodel.Session, entity: models.Entity, topic: typing.Optional[str] = None):
         self._db = db
         self._entity = entity
+        self._topic = topic
+
+        if self._topic:
+            self._query = f"topic:{self._topic}"
+        else:
+            self._query = ""
 
         self._logger = logging.getLogger("service")
 
@@ -30,34 +39,15 @@ class Create:
         struct = Struct(0, [], 0, [])
 
         # get watches
-        struct_watches = services.entities.watches.List(self._db, "", 0, 100).call()
+        struct_watches = services.entities.watches.List(self._db, self._query, 0, 100).call()
 
         for watch in struct_watches.objects:
             if self._watch_eval(watch) > 0:
                 # watch is not a match
                 continue
 
-            try:
-                # found a match, create db object
-                db_object = models.EntityMatch(
-                    entity_id=self._entity.entity_id,
-                    watch_id=watch.id,
-                )
-
-                self._db.add(db_object)
-                self._db.commit()
-
-                if db_object.id:
-                    struct.ids.append(db_object.id)
-                    struct.count += 1
-            except sqlalchemy.exc.IntegrityError:
-                self._db.rollback()
-                struct.code = 409
-                self._logger.error(f"{__name__} {sys.exc_info()[0]} error")
-            except Exception:
-                self._db.rollback()
-                struct.code = 500
-                self._logger.error(f"{__name__} {sys.exc_info()[0]} exception")
+            struct.watches.append(watch)
+            struct.count += 1
 
         return struct
 

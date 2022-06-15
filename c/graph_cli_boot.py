@@ -4,18 +4,19 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-import os
-import sys
-import typer
+import os  # noqa: E402
+import sys  # noqa: E402
+
+import typer  # noqa: E402
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
-import database
-import log
-import services.entities
-import services.graph.commands
-import services.graph.driver
-import services.graph.stream
+import database  # noqa: E402
+import log  # noqa: E402
+import services.entities  # noqa: E402
+import services.graph.commands  # noqa: E402
+import services.graph.driver  # noqa: E402
+import services.graph.stream  # noqa: E402
 
 logger = log.logging_init("cli")
 
@@ -38,17 +39,13 @@ def call(truncate: bool = typer.Option(...)):
             db_limit = 1000
 
             while True:
-                struct_list = services.entities.List(
-                    db=db, query="", offset=db_offset, limit=db_limit
-                ).call()
+                struct_list = services.entities.List(db=db, query="", offset=db_offset, limit=db_limit).call()
 
                 if not struct_list.objects:
                     break
 
                 for entity in struct_list.objects:
-                    services.graph.stream.Process(
-                        db=db, driver=driver, entity=entity
-                    ).call()
+                    services.graph.stream.Process(db=db, driver=driver, entity=entity).call()
 
                 db_offset += db_limit
 

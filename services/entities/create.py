@@ -17,22 +17,23 @@ class Struct:
 
 
 class Create:
-    def __init__(self, db: sqlmodel.Session, entity_objects: list[dict]):
+    def __init__(self, db: sqlmodel.Session, objects: list[dict]):
         self._db = db
-        self._entity_objects = entity_objects
+        self._objects = objects
 
         self._logger = logging.getLogger("service")
 
     def call(self) -> Struct:
         struct = Struct(0, [], 0, [])
 
-        self._logger.info(f"{__name__} {self._entity_objects}")
+        self._logger.info(f"{__name__} {self._objects}")
 
         try:
-            for entity_object in self._entity_objects:
+            for entity_object in self._objects:
                 db_object = models.Entity(
                     entity_id=entity_object["entity_id"],
                     entity_name=entity_object["entity_name"],
+                    name=entity_object.get("name", None),
                     slug=entity_object["slug"],
                     type_name=entity_object["type_name"],
                     type_value=entity_object["type_value"],
@@ -40,8 +41,9 @@ class Create:
                 self._db.add(db_object)
                 self._db.commit()
 
-                struct.ids.append(db_object.entity_id)
-                struct.count += 1
+                if db_object.id:
+                    struct.ids.append(db_object.id)
+                    struct.count += 1
         except sqlalchemy.exc.IntegrityError:
             self._db.rollback()
             struct.code = 409

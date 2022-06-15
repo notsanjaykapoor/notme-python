@@ -1,8 +1,8 @@
 import logging
 from dataclasses import dataclass
 
+import sqlmodel
 import toml
-from sqlmodel import Session, select
 
 import services.data_models
 
@@ -10,12 +10,12 @@ import services.data_models
 @dataclass
 class Struct:
     code: int
-    created: int
+    count: int
     errors: list[str]
 
 
 class Slurp:
-    def __init__(self, db: Session, toml_file: str):
+    def __init__(self, db: sqlmodel.Session, toml_file: str):
         self._db = db
         self._toml_file = toml_file
 
@@ -29,7 +29,7 @@ class Slurp:
         data_model_names = self._toml_dict.keys()
 
         for name in data_model_names:
-            objects: list[dict] = []
+            objects = []
 
             for dict in self._toml_dict[name].values():
                 object = {
@@ -46,6 +46,6 @@ class Slurp:
             ).call()
 
             if struct_create.code == 0:
-                struct.created += struct_create.object_count
+                struct.count += struct_create.object_count
 
         return struct

@@ -2,6 +2,7 @@ import asyncio
 import dataclasses
 import json
 import logging
+import typing
 
 import attrs
 import sqlmodel
@@ -10,19 +11,21 @@ import database
 import kafka
 import models
 import services.entities
-import services.entities.watches
+import services.graph.driver
+import services.graph.stream
 import services.kafka.topics
 
 
 @dataclasses.dataclass
 class Struct:
     code: int
+    task: typing.Optional[asyncio.Task]
     errors: list[str]
 
 
 @attrs.define
-class EntityChanges(kafka.Handler):
-    _topic: str = services.kafka.topics.TOPIC_ENTITY_CHANGES
+class GraphSync(kafka.Handler):
+    _topic: str = services.kafka.topics.TOPIC_GRAPH_SYNC
     _logger: logging.Logger = logging.getLogger("actor")
 
     async def call(self, msg: models.KafkaMessage) -> kafka.KafkaResult:
@@ -45,18 +48,9 @@ class EntityChanges(kafka.Handler):
                     if not entity:
                         return struct
 
-                    # find all matching watches
-                    struct_matches = services.entities.watches.Match(
-                        db=db,
-                        entity=entity,
-                        topic=self._topic,
-                    ).call()
-
-                    for watch in struct_matches.watches:
-                        if watch.output:
-                            self._message_publish(entity=entity, topic=watch.output)
-            else:
-                self._logger.error(f"actor '{task_name}' invalid message {message_object}")
+                    with services.graph.driver.get() as driver:
+                        # process message
+                        services.graph.stream.Process(db=db, driver=driver, entity=entity).call()
 
         except Exception as e:
             struct.code = 500
@@ -64,11 +58,3 @@ class EntityChanges(kafka.Handler):
             self._logger.error(f"actor '{task_name}' exception {e}")
 
         return struct
-
-    def _message_publish(self, entity: models.Entity, topic: str) -> int:
-        services.entities.Publish(
-            message=entity.message_changed(),
-            topic=topic,
-        ).call()
-
-        return 0

@@ -28,9 +28,9 @@ class Create:
         try:
             for object in self._objects:
                 db_object = models.EntityWatch(
-                    name=object["name"],
+                    output=object.get("output", None),
                     query=object["query"],
-                    route=object["route"],
+                    topic=object["topic"],
                 )
                 self._db.add(db_object)
                 self._db.commit()

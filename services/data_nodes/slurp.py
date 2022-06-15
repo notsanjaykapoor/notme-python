@@ -10,7 +10,7 @@ import services.data_nodes
 @dataclass
 class Struct:
     code: int
-    created: int
+    count: int
     errors: list[str]
 
 
@@ -31,6 +31,6 @@ class Slurp:
                 objects=[object],
             ).call()
 
-            struct.created += struct_create.object_count
+            struct.count += struct_create.object_count
 
         return struct

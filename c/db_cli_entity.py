@@ -20,7 +20,7 @@ import kafka  # noqa: E402
 import log  # noqa: E402
 import models  # noqa: E402
 import services.entities  # noqa: E402
-import services.entities.messages  # noqa: E402
+import services.kafka.topics  # noqa: E402
 import services.kafka.workers  # noqa: E402
 
 logger = log.init("cli")
@@ -52,10 +52,10 @@ def list(query: str = typer.Option("", "--query", "-q")):
 
 @app.command()
 def publish_change(
-    entity_id: int = typer.Option(..., "--id", help="entity id"),
-    kafka_topic: str = typer.Option("entity-changes", "--topic", help="kafka topic"),
+    entity_id: str = typer.Option(..., "--id", help="entity id"),
+    kafka_topic: str = typer.Option(services.kafka.topics.TOPIC_ENTITY_CHANGES, "--topic", help="kafka topic"),
 ):
-    message = services.entities.messages.create(entity_id)
+    message = models.Entity.message_changed_cls(entity_id)
 
     logger.info("[db-cli] publish try")
 
@@ -66,8 +66,8 @@ def publish_change(
 
 @app.command()
 def publish_delete(
-    entity_id: int = typer.Option(..., "--id", help="entity id"),
-    kafka_topic: str = typer.Option("entity-changes", "--topic", help="kafka topic"),
+    entity_id: str = typer.Option(..., "--id", help="entity id"),
+    kafka_topic: str = typer.Option(services.kafka.topics.TOPIC_ENTITY_CHANGES, "--topic", help="kafka topic"),
 ):
     pass
 
@@ -79,16 +79,20 @@ def read_wait():
 
 
 async def read_wait_async():
-    # schedule tasks
-    struct_scheduler = kafka.Scheduler(
-        topic="entity-changes",
+    # schedule workers
+    struct_worker_1 = kafka.Scheduler(
+        topic=services.kafka.topics.TOPIC_ENTITY_CHANGES,
         group="group-1",
         handler=services.kafka.workers.EntityChanges(),
     ).call()
 
-    tasks = []
+    struct_worker_2 = kafka.Scheduler(
+        topic=services.kafka.topics.TOPIC_GRAPH_SYNC,
+        group="group-1",
+        handler=services.kafka.workers.GraphSync(),
+    ).call()
 
-    # get tasks
-    tasks.append(struct_scheduler.task)
+    schedulers = [struct_worker_1, struct_worker_2]
+    tasks = [s.task for s in schedulers]
 
     await asyncio.gather(*tasks)

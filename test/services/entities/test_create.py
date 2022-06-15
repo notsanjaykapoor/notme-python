@@ -13,6 +13,7 @@ def test_entity_create(session: Session):
         {
             "entity_id": entity_id,
             "entity_name": "person",
+            "name": "person 1",
             "slug": "first_name",
             "type_name": "string",
             "type_value": random.sample(["First", None], 1)[0],
@@ -20,6 +21,7 @@ def test_entity_create(session: Session):
         {
             "entity_id": entity_id,
             "entity_name": "person",
+            "name": "person 2",
             "slug": "last_name",
             "type_name": "string",
             "type_value": random.sample(["Last", None], 1)[0],
@@ -28,7 +30,7 @@ def test_entity_create(session: Session):
 
     struct_create = services.entities.Create(
         db=session,
-        entity_objects=entity_params,
+        objects=entity_params,
     ).call()
 
     assert struct_create.code == 0

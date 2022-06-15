@@ -1,22 +1,22 @@
 import typing
 
-from sqlalchemy import UniqueConstraint
-from sqlmodel import Field, SQLModel
+import sqlalchemy
+import sqlmodel
 
 
-class EntityWatch(SQLModel, table=True):  # type: ignore
+class EntityWatch(sqlmodel.SQLModel, table=True):  # type: ignore
     __tablename__ = "entity_watches"
-    __table_args__ = (UniqueConstraint("name", "query", name="_name_query_unique"),)
+    __table_args__ = (sqlalchemy.UniqueConstraint("query", "topic", name="_query_topic_unique"),)
 
-    id: typing.Optional[int] = Field(default=None, primary_key=True)
-    name: str = Field(index=True)
-    query: str = Field(index=True)
-    route: str = Field(index=True)
+    id: typing.Optional[int] = sqlmodel.Field(default=None, primary_key=True)
+    output: typing.Optional[str] = sqlmodel.Field(index=True)
+    query: str = sqlmodel.Field(index=True)
+    topic: str = sqlmodel.Field(index=True)
 
-    def pack(self):
+    def pack(self) -> dict:
         return {
             "id": self.id,
-            "name": self.name,
+            "output": self.output,
             "query": self.query,
-            "route": self.route,
+            "topic": self.topic,
         }

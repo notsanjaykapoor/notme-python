@@ -37,7 +37,7 @@ class Reader:
         # create default actor used for callback during message processing
         self._actor = models.Actor(name=self._task.get_name(), handler=self)
 
-        self._logger.info(f"{self._log_subject} reading topics {self._topics}")
+        self._logger.info(f"{self._log_subject} listening topics {self._topics}")
 
         try:
             self._consumer.subscribe(self._topics)

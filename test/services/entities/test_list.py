@@ -12,6 +12,7 @@ def entity_id(session: sqlmodel.Session):
     entity_params = {
         "entity_id": entity_id,
         "entity_name": "person",
+        "name": "person 1",
         "slug": "first_name",
         "type_name": "string",
         "type_value": "First",
@@ -19,7 +20,7 @@ def entity_id(session: sqlmodel.Session):
 
     services.entities.Create(
         db=session,
-        entity_objects=[entity_params],
+        objects=[entity_params],
     ).call()
 
     yield entity_id

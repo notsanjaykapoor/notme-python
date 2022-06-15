@@ -3,13 +3,13 @@ import sqlmodel
 import services.data_nodes
 
 
-def test_data_models_slurp(session: sqlmodel.Session):
-    file = "./data/slurp/data_nodes.toml"
+def test_data_nodes_slurp(session: sqlmodel.Session):
+    file = "./data/notme/config/data_nodes.toml"
 
     struct_slurp = services.data_nodes.Slurp(db=session, toml_file=file).call()
 
     assert struct_slurp.code == 0
-    assert struct_slurp.created == 3
+    assert struct_slurp.count == 3
 
     struct_list = services.data_nodes.List(db=session, query="", offset=0, limit=100).call()
 
@@ -21,4 +21,4 @@ def test_data_models_slurp(session: sqlmodel.Session):
     struct_slurp = services.data_nodes.Slurp(db=session, toml_file=file).call()
 
     assert struct_slurp.code == 0
-    assert struct_slurp.created == 0
+    assert struct_slurp.count == 0
