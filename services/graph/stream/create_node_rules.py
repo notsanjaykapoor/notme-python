@@ -2,7 +2,7 @@ import logging
 from dataclasses import dataclass
 
 import neo4j
-from sqlmodel import Session
+import sqlmodel
 
 import models
 import services.data_nodes
@@ -23,18 +23,16 @@ class CreateNodeRules:
     """
     create graph node from data node rules
 
-    example: data node has [name,slug] == [person,record_id], then all matching 'person' entities with slug 'record_id'
-    will result in graph nodes with label 'name' and id property 'slug'
+    example: given a data node with value [person,record_id], all matching 'person' entities with slug 'record_id'
+    will create graph nodes with label 'person' and id property eq to 'record_id' value
     """
 
-    def __init__(self, db: Session, driver: neo4j.Driver, entity: models.Entity):
+    def __init__(self, db: sqlmodel.Session, driver: neo4j.Driver, entity: models.Entity):
         self._db = db
         self._driver = driver
         self._entity = entity
 
-        self._data_link_query = (
-            f"src_name:{self._entity.entity_name} src_slug:{self._entity.slug}"
-        )
+        self._data_link_query = f"src_name:{self._entity.entity_name} src_slug:{self._entity.slug}"
         self._logger = logging.getLogger("service")
 
     def call(self) -> Struct:
@@ -59,9 +57,7 @@ class CreateNodeRules:
     def _create(self) -> int:
         slug = self._entity.slug
 
-        value = services.entities.graph_value_store(
-            self._entity.type_name, str(self._entity.type_value)
-        )
+        value = services.entities.graph_value_store(self._entity.type_name, str(self._entity.type_value))
 
         query_exists = f"""
             match(n:{slug} {{id: $id}}) return count(n) as count

@@ -5,12 +5,12 @@ from dataclasses import dataclass
 import sqlmodel
 from sqlmodel.sql.expression import Select, SelectOfScalar
 
-SelectOfScalar.inherit_cache = True  # type: ignore
-Select.inherit_cache = True  # type: ignore
-
 import models
 import services.mql
 from context import request_id
+
+SelectOfScalar.inherit_cache = True  # type: ignore
+Select.inherit_cache = True  # type: ignore
 
 
 @dataclass
@@ -29,9 +29,7 @@ class StructToken:
 
 
 class List:
-    def __init__(
-        self, db: sqlmodel.Session, query: str = "", offset: int = 0, limit: int = 20
-    ):
+    def __init__(self, db: sqlmodel.Session, query: str = "", offset: int = 0, limit: int = 20):
         self._db = db
         self._query = query
         self._offset = offset
@@ -50,9 +48,7 @@ class List:
 
         struct_tokens = services.mql.Parse(self._query).call()
 
-        self._logger.info(
-            f"{request_id.get()} {__name__} tokens {struct_tokens.tokens}"
-        )
+        self._logger.info(f"{request_id.get()} {__name__} tokens {struct_tokens.tokens}")
 
         for token in struct_tokens.tokens:
             value = token["value"]
@@ -66,9 +62,7 @@ class List:
                 if match:
                     # like query
                     value_normal = re.sub(r"~", "", value)
-                    self._dataset = self._dataset.where(
-                        self._model.src_name.like("%" + value_normal + "%")  # type: ignore
-                    )
+                    self._dataset = self._dataset.where(self._model.src_name.like("%" + value_normal + "%"))  # type: ignore
                 else:
                     # match query
                     self._dataset = self._dataset.where(self._model.src_name == value)
@@ -78,16 +72,12 @@ class List:
                 if match:
                     # like query
                     value_normal = re.sub(r"~", "", value)
-                    self._dataset = self._dataset.where(
-                        self._model.src_slug.like("%" + value_normal + "%")  # type: ignore
-                    )
+                    self._dataset = self._dataset.where(self._model.src_slug.like("%" + value_normal + "%"))  # type: ignore
                 else:
                     # match query
                     self._dataset = self._dataset.where(self._model.src_slug == value)
 
-        struct.objects = self._db.exec(
-            self._dataset.offset(self._offset).limit(self._limit)
-        ).all()
+        struct.objects = self._db.exec(self._dataset.offset(self._offset).limit(self._limit)).all()
 
         struct.count = len(struct.objects)
 

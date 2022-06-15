@@ -20,7 +20,7 @@ class CreateNodeEntity:
     """
     create graph node from entity object
 
-    example: entity with name 'person' will result in graph node with label 'person' and id property
+    example: entity with name 'person' will result in graph node with label 'person', and id and name properties
     """
 
     def __init__(self, driver: neo4j.Driver, entity: models.Entity):
@@ -45,7 +45,7 @@ class CreateNodeEntity:
             return 0
 
         query_exists = f"""
-            match(n:{label} {{id: $id}}) return count(n) as count
+        match(n:{label} {{id: $id}}) return count(n) as count
         """
 
         params = {"id": id, "name": name}

@@ -3,7 +3,6 @@ import typing
 
 import neo4j
 
-import models
 import services.entities
 import services.graph
 import services.graph.tx
@@ -54,9 +53,7 @@ class CreateRelationships:
         create (a)-[r:{self._rel_name}]->(b)
         """
 
-        self._logger.info(
-            f"{__name__} src {self._src_name}:{self._src_id} dst {self._dst_name}:{self._dst_id}"
-        )
+        self._logger.info(f"{__name__} src {self._src_name}:{self._src_id} dst {self._dst_name}:{self._dst_id}")
 
         with self._driver.session() as session:
             session.write_transaction(services.graph.tx.write, query_create, params)
