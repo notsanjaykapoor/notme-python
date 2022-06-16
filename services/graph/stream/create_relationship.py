@@ -8,7 +8,7 @@ import services.graph
 import services.graph.tx
 
 
-class CreateRelationships:
+class CreateRelationship:
     """create graph relationship"""
 
     def __init__(

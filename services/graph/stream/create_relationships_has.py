@@ -7,10 +7,7 @@ import sqlmodel
 import models
 import services.data_models
 import services.entities
-import services.graph
-import services.graph.query
 import services.graph.stream
-import services.graph.tx
 
 
 @dataclass
@@ -55,7 +52,7 @@ class CreateRelationshipsHas:
             for entity in entities:
                 dst_id = services.entities.graph_value_store(entity.type_name, str(entity.type_value))
 
-                struct.relationships_created += services.graph.stream.CreateRelationships(
+                struct.relationships_created += services.graph.stream.CreateRelationship(
                     src_id=self._entity.entity_id,
                     src_name=self._entity.entity_name,
                     dst_id=dst_id,
