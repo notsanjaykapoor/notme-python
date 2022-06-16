@@ -53,13 +53,22 @@ def list(query: str = typer.Option("", "--query", "-q")):
 @app.command()
 def publish_change(
     entity_id: str = typer.Option(..., "--id", help="entity id"),
-    kafka_topic: str = typer.Option(services.kafka.topics.TOPIC_ENTITY_CHANGES, "--topic", help="kafka topic"),
+    topic_name: str = typer.Option(services.kafka.topics.TOPIC_ENTITY_CHANGES, "--topic", help="kafka topic"),
 ):
-    message = models.Entity.message_changed_cls(entity_id)
-
     logger.info("[db-cli] publish try")
 
-    services.entities.Publish(message=message, topic=kafka_topic).call()
+    with database.session() as db:
+        entity = services.entities.get_by_id(db, entity_id)
+
+    if not entity:
+        logger.info(f"[db-cli] publish error entity {entity_id} not found")
+        return
+
+    assert entity.id
+
+    message = models.Entity.message_changed_cls(entity.id)
+
+    services.entities.Publish(message=message, topic=topic_name).call()
 
     logger.info("[db-cli] publish completed")
 
@@ -67,7 +76,7 @@ def publish_change(
 @app.command()
 def publish_delete(
     entity_id: str = typer.Option(..., "--id", help="entity id"),
-    kafka_topic: str = typer.Option(services.kafka.topics.TOPIC_ENTITY_CHANGES, "--topic", help="kafka topic"),
+    topic_name: str = typer.Option(services.kafka.topics.TOPIC_ENTITY_CHANGES, "--topic", help="kafka topic"),
 ):
     pass
 

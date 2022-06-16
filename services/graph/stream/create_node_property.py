@@ -5,7 +5,7 @@ import neo4j
 import sqlmodel
 
 import models
-import services.data_nodes
+import services.data_models
 import services.entities
 import services.graph
 import services.graph.query
@@ -19,12 +19,15 @@ class Struct:
     errors: list[str]
 
 
-class CreateNodeRules:
+class CreateNodeProperty:
     """
-    create graph node from data node rules
+    create graph node using data model rules
 
-    example: given a data node with value [person,record_id], all matching 'person' entities with slug 'record_id'
-    will create graph nodes with label 'person' and id property eq to 'record_id' value
+    if data model [entity name, entity slug] has object_node == 1, then create a graph node with:
+        - label eq slug
+        - id property eq entity value
+
+    e.g. given entity ['person', 'record_id', '1'], create node with label 'record_id' and id property '1'
     """
 
     def __init__(self, db: sqlmodel.Session, driver: neo4j.Driver, entity: models.Entity):
@@ -32,24 +35,24 @@ class CreateNodeRules:
         self._driver = driver
         self._entity = entity
 
-        self._data_link_query = f"src_name:{self._entity.entity_name} src_slug:{self._entity.slug}"
+        self._data_model_query = f"object_name:{self._entity.entity_name} object_slug:{self._entity.slug} object_node:1"
         self._logger = logging.getLogger("service")
 
     def call(self) -> Struct:
         struct = Struct(0, 0, [])
 
-        # find matching data nodes
-        struct_data_nodes = services.data_nodes.List(
+        # find any matching data models
+        struct_data_models = services.data_models.List(
             db=self._db,
-            query=self._data_link_query,
+            query=self._data_model_query,
             offset=0,
             limit=1000,
         ).call()
 
-        if not struct_data_nodes.objects:
+        if not struct_data_models.objects:
             return struct
 
-        # entity matched at least 1 rule, create the rule object for this entity
+        # entity matched data model, create the graph node for this entity
         struct.nodes_created += self._create()
 
         return struct

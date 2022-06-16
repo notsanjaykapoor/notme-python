@@ -5,12 +5,13 @@ from dataclasses import dataclass
 import sqlmodel
 from sqlmodel.sql.expression import Select, SelectOfScalar
 
-SelectOfScalar.inherit_cache = True  # type: ignore
-Select.inherit_cache = True  # type: ignore
-
 import models
 import services.mql
 from context import request_id
+
+# this disables the warning: SAWarning: Class SelectOfScalar will not make use of SQL compilation caching
+SelectOfScalar.inherit_cache = True  # type: ignore
+Select.inherit_cache = True  # type: ignore
 
 
 @dataclass
@@ -29,9 +30,7 @@ class StructToken:
 
 
 class List:
-    def __init__(
-        self, db: sqlmodel.Session, query: str = "", offset: int = 0, limit: int = 20
-    ):
+    def __init__(self, db: sqlmodel.Session, query: str = "", offset: int = 0, limit: int = 20):
         self._db = db
         self._query = query
         self._offset = offset
@@ -50,9 +49,7 @@ class List:
 
         struct_tokens = services.mql.Parse(self._query).call()
 
-        self._logger.info(
-            f"{request_id.get()} {__name__} tokens {struct_tokens.tokens}"
-        )
+        self._logger.info(f"{request_id.get()} {__name__} tokens {struct_tokens.tokens}")
 
         for token in struct_tokens.tokens:
             value = token["value"]
@@ -66,46 +63,35 @@ class List:
                 if match:
                     # like query
                     value_normal = re.sub(r"~", "", value)
-                    self._dataset = self._dataset.where(
-                        self._model.object_name.like("%" + value_normal + "%")  # type: ignore
-                    )
+                    self._dataset = self._dataset.where(self._model.object_name.like("%" + value_normal + "%"))  # type: ignore
                 else:
                     # match query
-                    self._dataset = self._dataset.where(
-                        self._model.object_name == value
-                    )
-            elif token["field"] == "slug":
+                    self._dataset = self._dataset.where(self._model.object_name == value)
+            elif token["field"] in ["object_node", "node"]:
+                # match query
+                self._dataset = self._dataset.where(self._model.object_node == value)
+            elif token["field"] in ["object_slug", "slug"]:
                 match = re.match(r"^~", value)
 
                 if match:
                     # like query
                     value_normal = re.sub(r"~", "", value)
-                    self._dataset = self._dataset.where(
-                        self._model.object_slug.like("%" + value_normal + "%")  # type: ignore
-                    )
+                    self._dataset = self._dataset.where(self._model.object_slug.like("%" + value_normal + "%"))  # type: ignore
                 else:
                     # match query
-                    self._dataset = self._dataset.where(
-                        self._model.object_slug == value
-                    )
-            elif token["field"] == "type":
+                    self._dataset = self._dataset.where(self._model.object_slug == value)
+            elif token["field"] in ["object_type", "type"]:
                 match = re.match(r"^~", value)
 
                 if match:
                     # like query
                     value_normal = re.sub(r"~", "", value)
-                    self._dataset = self._dataset.where(
-                        self._model.object_type.like("%" + value_normal + "%")  # type: ignore
-                    )
+                    self._dataset = self._dataset.where(self._model.object_type.like("%" + value_normal + "%"))  # type: ignore
                 else:
                     # match query
-                    self._dataset = self._dataset.where(
-                        self._model.object_type == value
-                    )
+                    self._dataset = self._dataset.where(self._model.object_type == value)
 
-        struct.objects = self._db.exec(
-            self._dataset.offset(self._offset).limit(self._limit)
-        ).all()
+        struct.objects = self._db.exec(self._dataset.offset(self._offset).limit(self._limit)).all()
 
         struct.count = len(struct.objects)
 

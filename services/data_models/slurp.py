@@ -34,6 +34,7 @@ class Slurp:
             for dict in self._toml_dict[name].values():
                 object = {
                     "object_name": name,
+                    "object_node": dict["node"],
                     "object_slug": dict["slug"],
                     "object_type": dict["type"],
                 }

@@ -1,8 +1,8 @@
 import logging
 from dataclasses import dataclass
 
-from sqlalchemy import exc
-from sqlmodel import Session
+import sqlalchemy
+import sqlmodel
 
 import models
 
@@ -16,7 +16,7 @@ class Struct:
 
 
 class Create:
-    def __init__(self, db: Session, objects: list[dict]):
+    def __init__(self, db: sqlmodel.Session, objects: list[dict]):
         self._db = db
         self._objects = objects
 
@@ -31,6 +31,7 @@ class Create:
             for object in self._objects:
                 db_object = models.DataModel(
                     object_name=object["object_name"],
+                    object_node=object["object_node"],
                     object_slug=object["object_slug"],
                     object_type=object["object_type"],
                 )
@@ -41,7 +42,7 @@ class Create:
                 if db_object.id:
                     struct.object_ids.append(db_object.id)
                     struct.object_count += 1
-        except exc.IntegrityError:
+        except sqlalchemy.exc.IntegrityError:
             self._db.rollback()
             struct.code = 409
 

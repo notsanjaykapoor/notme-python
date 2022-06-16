@@ -2,11 +2,11 @@ import logging
 import sys
 from dataclasses import dataclass
 
-from sqlalchemy import exc
-from sqlmodel import Session
+import sqlalchemy
+import sqlmodel
 
 import models
-import services.data_nodes
+import services.data_models
 
 
 @dataclass
@@ -18,7 +18,7 @@ class Struct:
 
 
 class Create:
-    def __init__(self, db: Session, objects: list[dict]):
+    def __init__(self, db: sqlmodel.Session, objects: list[dict]):
         self._db = db
         self._objects = objects
 
@@ -46,11 +46,11 @@ class Create:
                     if db_object.id:
                         struct.object_ids.append(db_object.id)
                         struct.object_count += 1
-                except exc.IntegrityError as e:
+                except sqlalchemy.exc.IntegrityError:
                     self._db.rollback()
                     struct.code = 409
                     self._logger.error(f"{__name__} {sys.exc_info()[0]} error")
-                except Exception as e:
+                except Exception:
                     self._db.rollback()
                     struct.code = 500
                     self._logger.error(f"{__name__} {sys.exc_info()[0]} exception")
@@ -78,24 +78,26 @@ class Create:
         return objects
 
     def _data_link_validate(self, object: dict) -> int:
-        if not all(
-            key in object for key in ("dst_name", "dst_slug", "src_name", "src_slug")
-        ):
+        if not all(key in object for key in ("dst_name", "dst_slug", "src_name", "src_slug")):
             return 422
 
         # slugs should be different
         if object["dst_slug"] == object["src_slug"]:
             return 422
 
-        code = self._data_link_validate_data_node(
-            name=object["src_name"], slug=object["src_slug"]
+        # data model should have object_node eq 1
+
+        code = self._data_link_validate_data_model(
+            name=object["src_name"],
+            slug=object["src_slug"],
         )
 
         if code != 0:
             return code
 
-        code = self._data_link_validate_data_node(
-            name=object["dst_name"], slug=object["dst_slug"]
+        code = self._data_link_validate_data_model(
+            name=object["dst_name"],
+            slug=object["dst_slug"],
         )
 
         if code != 0:
@@ -103,10 +105,10 @@ class Create:
 
         return 0
 
-    def _data_link_validate_data_node(self, name: str, slug: str) -> int:
-        query = f"src_name:{name} src_slug:{slug}"
+    def _data_link_validate_data_model(self, name: str, slug: str) -> int:
+        query = f"object_name:{name} object_slug:{slug} object_node:1"
 
-        struct_list = services.data_nodes.List(
+        struct_list = services.data_models.List(
             db=self._db,
             query=query,
             offset=0,

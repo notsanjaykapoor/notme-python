@@ -3,7 +3,6 @@ from .actor_log import ActorLog  # noqa: F401
 from .actor_message import ActorMessage  # noqa: F401
 from .data_link import DataLink  # noqa: F401
 from .data_model import DataModel  # noqa: F401
-from .data_node import DataNode  # noqa: F401
 from .entity import Entity  # noqa: F401
 from .entity_watch import EntityWatch  # noqa: F401
 from .kafka_message import KafkaMessage  # noqa: F401

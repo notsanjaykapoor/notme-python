@@ -3,10 +3,6 @@ import typing
 from dataclasses import dataclass
 
 import sqlmodel
-from sqlmodel.sql.expression import Select, SelectOfScalar
-
-SelectOfScalar.inherit_cache = True  # type: ignore
-Select.inherit_cache = True  # type: ignore
 
 import models
 from context import request_id
@@ -32,9 +28,7 @@ class Get:
 
         self._logger.info(f"{request_id.get()} {__name__} {self._user_id}")
 
-        struct.user = self._db.exec(
-            sqlmodel.select(self._model).where(self._model.user_id == self._user_id)
-        ).first()
+        struct.user = self._db.exec(sqlmodel.select(self._model).where(self._model.user_id == self._user_id)).first()
 
         if struct.user is None:
             struct.code = 404

@@ -9,6 +9,7 @@ import models
 import services.mql
 from context import request_id
 
+# this disables the warning: SAWarning: Class SelectOfScalar will not make use of SQL compilation caching
 SelectOfScalar.inherit_cache = True  # type: ignore
 Select.inherit_cache = True  # type: ignore
 

@@ -5,7 +5,7 @@ import neo4j
 import sqlmodel
 
 import models
-import services.data_nodes
+import services.data_models
 import services.entities
 import services.graph
 import services.graph.query
@@ -34,25 +34,23 @@ class CreateRelationshipsHas:
         self._driver = driver
         self._entity = entity
 
-        self._data_link_query = f"src_name:{self._entity.entity_name} src_slug:{self._entity.slug}"
+        self._data_model_query = f"object_name:{self._entity.entity_name} object_slug:{self._entity.slug} object_node:1"
         self._logger = logging.getLogger("service")
 
     def call(self) -> Struct:
         struct = Struct(0, 0, [])
 
-        # find matching data nodes
-        struct_data_nodes = services.data_nodes.List(
+        # find matching data models with object_node eq 1
+        struct_data_models = services.data_models.List(
             db=self._db,
-            query=self._data_link_query,
+            query=self._data_model_query,
             offset=0,
             limit=1000,
         ).call()
 
-        if not struct_data_nodes.objects:
-            return struct
-
-        for data_link in struct_data_nodes.objects:
-            entities = self._entity_matches(data_link)
+        for data_model in struct_data_models.objects:
+            # find entities that match this data model
+            entities = self._entity_matches(data_model)
 
             for entity in entities:
                 dst_id = services.entities.graph_value_store(entity.type_name, str(entity.type_value))
@@ -68,10 +66,15 @@ class CreateRelationshipsHas:
 
         return struct
 
-    def _entity_matches(self, data_link: models.DataLink) -> list[models.Entity]:
-        # find matching entities based on this entity id and matching slug of data link rule
-        entity_query = f"entity_id:{self._entity.entity_id} slug:{data_link.src_slug}"
+    def _entity_matches(self, data_model: models.DataModel) -> list[models.Entity]:
+        # find matching entities based on this entity id and matching slug of data model rule
+        entity_query = f"entity_id:{self._entity.entity_id} slug:{data_model.object_slug}"
 
-        struct_entities = services.entities.List(db=self._db, query=entity_query, offset=0, limit=1000).call()
+        struct_entities = services.entities.List(
+            db=self._db,
+            query=entity_query,
+            offset=0,
+            limit=1000,
+        ).call()
 
         return struct_entities.objects
