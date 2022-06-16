@@ -1,0 +1,6 @@
+[[links]]
+
+src_name = "person"
+src_slug = "record_id"
+dst_name = "case"
+dst_slug = "jacket_id"

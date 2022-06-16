@@ -1,0 +1,88 @@
+[alpr]
+
+[alpr.0]
+
+node = 1
+slug = "license"
+type = "string"
+
+[case]
+
+[case.0]
+node = 0
+slug = "city"
+type = "string"
+
+[case.1]
+node = 0
+slug = "incident_type"
+type = "string"
+
+[case.2]
+node = 1
+slug = "jacket_id"
+type = "string"
+
+[case.3]
+node = 0
+slug = "status"
+type = "string"
+
+[case.4]
+node = 0
+slug = "year"
+type = "integer"
+
+[case.5]
+node = 1
+slug = "record_id"
+type = "string"
+
+[person]
+
+[person.0]
+node = 0
+slug = "age"
+type = "integer"
+
+[person.1]
+node = 0
+slug = "eye_color"
+type = "string"
+
+[person.2]
+node = 0
+slug = "hair_color"
+type = "string"
+
+[person.3]
+node = 1
+slug = "record_id"
+type = "string"
+
+[vehicle]
+
+[vehicle.0]
+node = 0
+slug = "impounded"
+type = "boolean"
+
+[vehicle.1]
+node = 1
+slug = "license"
+type = "string"
+
+[vehicle.2]
+node = 0
+slug = "make"
+type = "string"
+
+[vehicle.3]
+node = 0
+slug = "stolen"
+type = "boolean"
+
+[vehicle.4]
+node = 0
+slug = "year"
+type = "integer"

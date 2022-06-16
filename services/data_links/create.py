@@ -81,11 +81,11 @@ class Create:
         if not all(key in object for key in ("dst_name", "dst_slug", "src_name", "src_slug")):
             return 422
 
-        # slugs should be different
-        if object["dst_slug"] == object["src_slug"]:
+        # slugs must be different
+        if object["src_slug"] == object["dst_slug"]:
             return 422
 
-        # data model should have object_node eq 1
+        # data model properties must have object_node eq 1
 
         code = self._data_link_validate_data_model(
             name=object["src_name"],
