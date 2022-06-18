@@ -39,3 +39,10 @@ class Entity(SQLModel, table=True):  # type: ignore
             "id": id,
             "name": "entity.changed",
         }
+
+    @classmethod
+    def message_geo_changed_cls(cls, id: str) -> dict:
+        return {
+            "id": id,
+            "name": "entity.geo.changed",
+        }

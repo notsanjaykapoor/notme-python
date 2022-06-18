@@ -2,10 +2,4 @@
 
 output = "graph-sync"
 query = ""
-topic = "entity-changes"
-
-[[watches]]
-
-output = "null"
-query = ""
-topic = "graph-sync"
+topic = "source"

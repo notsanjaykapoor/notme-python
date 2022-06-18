@@ -89,16 +89,15 @@ class EntityGeo:
     def _node_update(self, point: Point) -> int:
         assert point.entity
 
-        id = point.entity.entity_id
-        label = point.entity.entity_name
+        entity = point.entity
 
         query_update = f"""
-        match(n:{label} {{id: $id}}) set n.location = point({{latitude: $lat, longitude: $lon, crs: "WGS-84"}})
+        match(n:{entity.entity_name} {{id: $id}}) set n.location = point({{latitude: $lat, longitude: $lon}})
         """
 
-        params = {"id": id, "lat": point.lat, "lon": point.lon}
+        params = {"id": entity.entity_id, "lat": point.lat, "lon": point.lon}
 
-        self._logger.info(f"{__name__} label {label} props {params}")
+        self._logger.info(f"{__name__} label {entity.entity_name} props {params}")
 
         with self._driver.session() as session:
             session.write_transaction(services.graph.tx.write, query_update, params)

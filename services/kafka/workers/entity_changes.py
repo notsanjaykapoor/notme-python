@@ -71,9 +71,9 @@ class EntityChanges(kafka.Handler):
 
         for watch in struct_matches.watches:
             if watch.output:
-                self._message_publish(entity=entity, topic=watch.output)
+                self._entity_publish(entity=entity, topic=watch.output)
 
-    def _message_publish(self, entity: models.Entity, topic: str) -> int:
+    def _entity_publish(self, entity: models.Entity, topic: str) -> int:
         services.entities.Publish(
             message=entity.message_changed(),
             topic=topic,

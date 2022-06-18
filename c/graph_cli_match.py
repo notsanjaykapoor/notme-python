@@ -24,6 +24,40 @@ app = typer.Typer()
 
 
 @app.command()
+def geo(
+    node: str = typer.Option(...),
+    miles: float = typer.Option(1),
+):
+    """find all neighbors filtered geo distance"""
+
+    name, id = node.split(":", 1)
+    meters = miles * 1609.34
+
+    query = (
+        f"match (a:{name} {{id: $id}}), (b)"
+        + f" where point.distance(a.location, b.location) < {meters} and b.id <> a.id"
+        + " return b.id, b.location, point.distance(a.location, b.location)"
+    )
+
+    params = {
+        "id": id,
+    }
+
+    logger.info(f"[graph-cli] {query} {params}")
+
+    with services.graph.driver.get().session() as session:
+        records = session.read_transaction(services.graph.tx.read, query, params)
+
+    if not records:
+        logger.info("[graph-cli] no records found")
+
+    for i, record in enumerate(records):
+        logger.info("")
+
+        logger.info(f"[graph-cli] record {i+1} {record}")
+
+
+@app.command()
 def neighbors(
     node: str = typer.Option(...),
     max_hops: int = typer.Option(1),

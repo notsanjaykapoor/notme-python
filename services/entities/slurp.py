@@ -3,7 +3,6 @@ import json
 
 import sqlmodel
 
-import models
 import services.entities
 import services.kafka.topics
 
@@ -11,6 +10,7 @@ import services.kafka.topics
 @dataclasses.dataclass
 class Struct:
     code: int
+    ids: list[int]
     count: int
     errors: list[str]
 
@@ -23,7 +23,7 @@ class Slurp:
         self._objects = json.load(open(self._json_file))
 
     def call(self) -> Struct:
-        struct = Struct(0, 0, [])
+        struct = Struct(0, [], 0, [])
 
         for object in self._objects:
             # format object into proper entity objects
@@ -38,8 +38,7 @@ class Slurp:
 
             if struct_create.code == 0:
                 struct.count += struct_create.count
-
-                self._message_publish(entity_ids=struct_create.ids)
+                struct.ids += struct_create.ids
 
         return struct
 
@@ -77,11 +76,11 @@ class Slurp:
             "type_value": properties["value"],
         }
 
-    def _message_publish(self, entity_ids: list[int]):
-        for entity_id in entity_ids:
-            message = models.Entity.message_changed_cls(int(entity_id))
+    # def _message_publish(self, entity_ids: list[int]):
+    #     for entity_id in entity_ids:
+    #         message = models.Entity.message_changed_cls(int(entity_id))
 
-            services.entities.Publish(
-                message=message,
-                topic=services.kafka.topics.TOPIC_ENTITY_CHANGES,
-            ).call()
+    #         services.entities.Publish(
+    #             message=message,
+    #             topic=services.kafka.topics.TOPIC_ENTITY_CHANGES,
+    #         ).call()

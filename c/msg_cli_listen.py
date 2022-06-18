@@ -35,27 +35,20 @@ app = typer.Typer()
 
 
 @app.command()
-def general():
-    """listen on general topics for entity changes and graph sync"""
+def graph():
+    """listen on graph sync topics"""
     uvloop.install()
-    asyncio.run(general_async())
+    asyncio.run(graph_async())
 
 
-async def general_async():
-    # schedule workers
-    struct_worker_1 = kafka.Scheduler(
-        topic=services.kafka.topics.TOPIC_ENTITY_CHANGES,
-        group="group-1",
-        handler=services.kafka.workers.EntityChanges(),
-    ).call()
-
-    struct_worker_2 = kafka.Scheduler(
+async def graph_async():
+    struct_worker = kafka.Scheduler(
         topic=services.kafka.topics.TOPIC_GRAPH_SYNC,
         group="group-1",
         handler=services.kafka.workers.GraphSync(),
     ).call()
 
-    workers = [struct_worker_1, struct_worker_2]
+    workers = [struct_worker]
     tasks = [s.task for s in workers]
 
     await asyncio.gather(*tasks)

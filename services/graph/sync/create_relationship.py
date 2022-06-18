@@ -1,6 +1,7 @@
 import logging
 import typing
 
+import datadog
 import neo4j
 
 import services.entities
@@ -55,9 +56,10 @@ class CreateRelationship:
 
         self._logger.info(f"{__name__} src {self._src_name}:{self._src_id} dst {self._dst_name}:{self._dst_id}")
 
-        with self._driver.session() as session:
-            session.write_transaction(services.graph.tx.write, query_create, params)
-            return 1
+        with datadog.statsd.timed(f"{__name__}.timer", tags=["env:dev", "neo"]):
+            with self._driver.session() as session:
+                session.write_transaction(services.graph.tx.write, query_create, params)
+                return 1
 
     def _node_count(self, query: str, params: dict) -> int:
         result = services.graph.query.execute(query, params, self._driver)

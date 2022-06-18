@@ -78,6 +78,33 @@ node = 1
 slug = "record_id"
 type = "string"
 
+[place]
+
+[place.0]
+node = 0
+slug = "city"
+type = "string"
+
+[place.1]
+node = 0
+slug = "lat"
+type = "string"
+
+[place.2]
+node = 0
+slug = "lon"
+type = "string"
+
+[place.3]
+node = 0
+slug = "street"
+type = "string"
+
+[place.4]
+node = 0
+slug = "zip"
+type = "string"
+
 [vehicle]
 
 [vehicle.0]

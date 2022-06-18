@@ -49,6 +49,13 @@ class GraphSync(kafka.Handler):
                         services.graph.sync.Entity(db=db, driver=driver, entity_id=message_object["id"]).call()
 
                 self._logger.info(f"actor '{task_name}' processed {message_object}")
+            elif message_object["name"] == "entity.geo.changed":
+                with sqlmodel.Session(database.engine) as db:
+                    with services.graph.driver.get() as driver:
+                        # process message
+                        services.graph.sync.EntityGeo(db=db, driver=driver, entity_id=message_object["id"]).call()
+
+                self._logger.info(f"actor '{task_name}' processed {message_object}")
             else:
                 struct.code = 422
                 self._logger.error(f"actor '{task_name}' invalid message {message_object}")
@@ -57,7 +64,7 @@ class GraphSync(kafka.Handler):
 
             self._logger.error(f"actor '{task_name}' exception {e}")
 
-        datadog.statsd.increment("f{__name__}.results.increment", tags=["env:dev", f"code:{struct.code}"])
+        datadog.statsd.increment(f"{__name__}.results.increment", tags=["env:dev", f"code:{struct.code}"])
         datadog.statsd.flush()
 
         return struct

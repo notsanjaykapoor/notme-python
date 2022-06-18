@@ -11,7 +11,7 @@ import models
 class Struct:
     code: int
     ids: typing.List[str]
-    ids_count: int
+    count: int
     errors: typing.List[str]
 
 
@@ -20,12 +20,12 @@ class ListIds:
         self._db = db
 
         self._dataset = sqlmodel.select(models.Entity.entity_id).distinct()
-        self._logger = logging.getLogger("api")
+        self._logger = logging.getLogger("service")
 
     def call(self) -> Struct:
         struct = Struct(0, [], 0, [])
 
         struct.ids = self._db.exec(self._dataset).all()
-        struct.ids_count = len(struct.ids)
+        struct.count = len(struct.ids)
 
         return struct

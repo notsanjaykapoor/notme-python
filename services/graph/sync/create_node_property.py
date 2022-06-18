@@ -1,6 +1,7 @@
 import logging
 from dataclasses import dataclass
 
+import datadog
 import neo4j
 import sqlmodel
 
@@ -76,9 +77,10 @@ class CreateNodeProperty:
 
         self._logger.info(f"{__name__} slug {slug} props {params}")
 
-        with self._driver.session() as session:
-            summary = session.write_transaction(services.graph.tx.write, query_create, params)
-            return summary.counters.nodes_created
+        with datadog.statsd.timed(f"{__name__}.timer", tags=["env:dev", "neo"]):
+            with self._driver.session() as session:
+                summary = session.write_transaction(services.graph.tx.write, query_create, params)
+                return summary.counters.nodes_created
 
         return 1
 
