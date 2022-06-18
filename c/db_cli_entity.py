@@ -1,11 +1,9 @@
 #!/usr/bin/env python
 
-import asyncio
 import os
 import sys
 
 import dotenv
-import uvloop
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
@@ -16,19 +14,20 @@ import sqlmodel  # noqa: E402
 import typer  # noqa: E402
 
 import database  # noqa: E402
-import kafka  # noqa: E402
+import dog  # noqa: E402
 import log  # noqa: E402
 import models  # noqa: E402
 import services.entities  # noqa: E402
-import services.kafka.topics  # noqa: E402
-import services.kafka.workers  # noqa: E402
 
 logger = log.init("cli")
 
-app = typer.Typer()
-
 # initialize database
 database.migrate()
+
+# initialize datadog
+dog.init()
+
+app = typer.Typer()
 
 
 @app.command("count")
@@ -48,60 +47,3 @@ def list(query: str = typer.Option("", "--query", "-q")):
 
         for entity in struct_list.objects:
             logger.info(f"[db-cli] {entity.pack()}")
-
-
-@app.command()
-def publish_change(
-    entity_id: str = typer.Option(..., "--id", help="entity id"),
-    topic_name: str = typer.Option(services.kafka.topics.TOPIC_ENTITY_CHANGES, "--topic", help="kafka topic"),
-):
-    logger.info("[db-cli] publish try")
-
-    with database.session() as db:
-        entity = services.entities.get_by_id(db, entity_id)
-
-    if not entity:
-        logger.info(f"[db-cli] publish error entity {entity_id} not found")
-        return
-
-    assert entity.id
-
-    message = models.Entity.message_changed_cls(entity.id)
-
-    services.entities.Publish(message=message, topic=topic_name).call()
-
-    logger.info("[db-cli] publish completed")
-
-
-@app.command()
-def publish_delete(
-    entity_id: str = typer.Option(..., "--id", help="entity id"),
-    topic_name: str = typer.Option(services.kafka.topics.TOPIC_ENTITY_CHANGES, "--topic", help="kafka topic"),
-):
-    pass
-
-
-@app.command()
-def read_wait():
-    uvloop.install()
-    asyncio.run(read_wait_async())
-
-
-async def read_wait_async():
-    # schedule workers
-    struct_worker_1 = kafka.Scheduler(
-        topic=services.kafka.topics.TOPIC_ENTITY_CHANGES,
-        group="group-1",
-        handler=services.kafka.workers.EntityChanges(),
-    ).call()
-
-    struct_worker_2 = kafka.Scheduler(
-        topic=services.kafka.topics.TOPIC_GRAPH_SYNC,
-        group="group-1",
-        handler=services.kafka.workers.GraphSync(),
-    ).call()
-
-    schedulers = [struct_worker_1, struct_worker_2]
-    tasks = [s.task for s in schedulers]
-
-    await asyncio.gather(*tasks)

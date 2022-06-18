@@ -1,3 +1,4 @@
+import urllib
 from dataclasses import dataclass
 
 
@@ -24,11 +25,14 @@ class Parse:
 
             field, value = token.split(":")
 
+            # url unparse value, e.g' 'foo+1' => 'foo 1'
+            value_parsed = urllib.parse.unquote_plus(value)
+
             # append to list
             struct.tokens.append(
                 {
                     "field": field,
-                    "value": value,
+                    "value": value_parsed,
                 }
             )
 

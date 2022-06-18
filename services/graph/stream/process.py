@@ -1,6 +1,7 @@
 import logging
 from dataclasses import dataclass
 
+import datadog
 import neo4j
 from sqlmodel import Session
 
@@ -25,6 +26,7 @@ class Process:
 
         self._logger = logging.getLogger("service")
 
+    @datadog.statsd.timed(f"{__name__}.timer", tags=["env:dev"])
     def call(self) -> Struct:
         struct = Struct(0, 0, 0, [])
 

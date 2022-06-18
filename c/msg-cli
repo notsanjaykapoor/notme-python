@@ -1,0 +1,26 @@
+#!/usr/bin/env python
+
+import os
+import sys
+
+import dotenv
+
+sys.path.insert(1, os.path.join(sys.path[0], ".."))
+
+dotenv.load_dotenv()
+
+import msg_cli_listen  # noqa: E402
+import msg_cli_publish  # noqa: E402
+import typer  # noqa: E402
+
+import log  # noqa: E402
+
+logger = log.init("cli")
+
+app = typer.Typer()
+app.add_typer(msg_cli_publish.app, name="publish")
+app.add_typer(msg_cli_listen.app, name="listen")
+
+
+if __name__ == "__main__":
+    app()

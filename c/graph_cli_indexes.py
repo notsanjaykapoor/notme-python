@@ -4,17 +4,18 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-import os
-import sys
-import typer
+import os  # noqa: E402
+import sys  # noqa: E402
+
+import typer  # noqa: E402
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
-import database
-import log
-import services.entities
-import services.graph.driver
-import services.graph.query
+import database  # noqa: E402
+import log  # noqa: E402
+import services.entities  # noqa: E402
+import services.graph.driver  # noqa: E402
+import services.graph.query  # noqa: E402
 
 logger = log.logging_init("cli")
 

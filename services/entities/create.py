@@ -35,6 +35,7 @@ class Create:
                     entity_name=entity_object["entity_name"],
                     name=entity_object.get("name", None),
                     slug=entity_object["slug"],
+                    tags=entity_object.get("tags", None),
                     type_name=entity_object["type_name"],
                     type_value=entity_object["type_value"],
                 )

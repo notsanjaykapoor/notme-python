@@ -2,8 +2,26 @@
 
 [alpr.0]
 
+node = 0
+slug = "city"
+type = "string"
+
+[alpr.1]
+
 node = 1
 slug = "license"
+type = "string"
+
+[alpr.2]
+
+node = 0
+slug = "lat"
+type = "string"
+
+[alpr.3]
+
+node = 0
+slug = "lon"
 type = "string"
 
 [case]

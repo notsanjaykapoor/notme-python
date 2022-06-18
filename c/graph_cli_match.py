@@ -4,18 +4,19 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-import os
-import sys
-import typer
+import os  # noqa: E402
+import sys  # noqa: E402
+
+import typer  # noqa: E402
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
-import database
-import log
-import services.entities
-import services.graph.tx
-import services.graph.driver
-import services.graph.query
+import database  # noqa: E402
+import log  # noqa: E402
+import services.entities  # noqa: E402
+import services.graph.driver  # noqa: E402
+import services.graph.query  # noqa: E402
+import services.graph.tx  # noqa: E402
 
 logger = log.logging_init("cli")
 
@@ -27,18 +28,16 @@ def neighbors(
     node: str = typer.Option(...),
     max_hops: int = typer.Option(1),
 ):
-    """find all neighbors filted by label and constrained by hops"""
+    """find all neighbors filtered by label and constrained by hops"""
+
     name, id = node.split(":", 1)
 
     with database.session() as db:
         struct_list = services.entities.ListEntityNames(db).call()
         # map to list of list values, e.g. [['case'], ['person']]
-        node_labels = [[name] for name in struct_list.values]
+        node_labels = [[s] for s in struct_list.values]
 
-    query = (
-        f"match p = (a:{name} {{id: $id_1}})-[*1.." + str(max_hops) + "]-(b) "
-        f"where labels(b) in {node_labels} " + "return distinct(b) as n"
-    )
+    query = f"match p = (a:{name} {{id: $id_1}})-[*1.." + str(max_hops) + "]-(b) " f"where labels(b) in {node_labels} " + "return distinct(b) as n"
 
     # query = (
     #     f"match p = (s:{name} {{id: $id_1}})-[*1.."
@@ -58,7 +57,7 @@ def neighbors(
         records = session.read_transaction(services.graph.tx.read, query, params)
 
     if not records:
-        logger.info(f"[graph-cli] no records found")
+        logger.info("[graph-cli] no records found")
 
     for i, record in enumerate(records):
         logger.info("")
@@ -102,7 +101,7 @@ def shortest_path(
         records = session.read_transaction(services.graph.tx.read, query, params)
 
     if not records:
-        logger.info(f"[graph-cli] no path found")
+        logger.info("[graph-cli] no path found")
 
     for i, record in enumerate(records):
         logger.info("")

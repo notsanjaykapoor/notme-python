@@ -72,6 +72,7 @@ class Slurp:
             "entity_name": object["model"],
             "name": object["name"],
             "slug": properties["slug"],
+            "tags": object.get("tags", None),
             "type_name": properties["type"],
             "type_value": properties["value"],
         }

@@ -15,6 +15,7 @@ def test_entity_create(session: Session):
             "entity_name": "person",
             "name": "person 1",
             "slug": "first_name",
+            "tags": "|person|",
             "type_name": "string",
             "type_value": random.sample(["First", None], 1)[0],
         },
@@ -23,6 +24,7 @@ def test_entity_create(session: Session):
             "entity_name": "person",
             "name": "person 2",
             "slug": "last_name",
+            "tags": "|random|",
             "type_name": "string",
             "type_value": random.sample(["Last", None], 1)[0],
         },
@@ -36,3 +38,7 @@ def test_entity_create(session: Session):
     assert struct_create.code == 0
     assert len(struct_create.ids) == 2
     assert struct_create.count == 2
+
+    struct_list = services.entities.List(db=session, query="", offset=0, limit=100).call()
+
+    print(struct_list)

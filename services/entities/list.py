@@ -77,6 +77,16 @@ class List:
                 else:
                     # match query
                     self._dataset = self._dataset.where(self._model.entity_name == value)
+            elif token["field"] == "name":
+                match = re.match(r"^~", value)
+
+                if match:
+                    # like query
+                    value_normal = re.sub(r"~", "", value)
+                    self._dataset = self._dataset.where(self._model.name.like("%" + value_normal + "%"))  # type: ignore
+                else:
+                    # match query
+                    self._dataset = self._dataset.where(self._model.name == value)
             elif token["field"] == "slug":
                 match = re.match(r"^~", value)
 
@@ -87,6 +97,10 @@ class List:
                 else:
                     # match query
                     self._dataset = self._dataset.where(models.Entity.slug == value)
+            elif token["field"] == "tags":
+                # like query
+                value_format = f"|{value}|"
+                self._dataset = self._dataset.where(self._model.tags.like("%" + value_format + "%"))  # type: ignore
             elif token["field"] == "type_value":
                 match = re.match(r"^~", value)
 
