@@ -27,7 +27,7 @@ def create():
     """create graph indicies"""
 
     with database.session() as db:
-        struct_list = services.entities.ListEntityNames(db).call()
+        services.entities.ListEntityNames(db).call()
 
     # for name in struct_list.values:
     #     # create graph constraint on id property

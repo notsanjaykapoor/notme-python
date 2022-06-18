@@ -13,7 +13,7 @@ import kafka
 import models
 import services.entities
 import services.graph.driver
-import services.graph.stream
+import services.graph.sync
 import services.kafka.topics
 
 
@@ -44,13 +44,9 @@ class GraphSync(kafka.Handler):
 
             if message_object["name"] == "entity.changed":
                 with sqlmodel.Session(database.engine) as db:
-                    # get entity object
-                    entity = services.entities.get_by_id(db=db, id=message_object["id"])
-
-                    if entity:
-                        with services.graph.driver.get() as driver:
-                            # process message
-                            services.graph.stream.Process(db=db, driver=driver, entity=entity).call()
+                    with services.graph.driver.get() as driver:
+                        # process message
+                        services.graph.sync.Entity(db=db, driver=driver, entity_id=message_object["id"]).call()
 
                 self._logger.info(f"actor '{task_name}' processed {message_object}")
             else:

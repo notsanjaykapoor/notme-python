@@ -3,11 +3,10 @@ from dataclasses import dataclass
 
 import datadog
 import neo4j
-from sqlmodel import Session
+import sqlmodel
 
-import models
 import services.graph
-import services.graph.stream
+import services.graph.sync
 
 
 @dataclass
@@ -18,11 +17,15 @@ class Struct:
     errors: list[str]
 
 
-class Process:
-    def __init__(self, db: Session, driver: neo4j.Driver, entity: models.Entity):
+class Entity:
+    """
+    sync entity to graph database
+    """
+
+    def __init__(self, db: sqlmodel.Session, driver: neo4j.Driver, entity_id: str):
         self._db = db
         self._driver = driver
-        self._entity = entity
+        self._entity_id = entity_id
 
         self._logger = logging.getLogger("service")
 
@@ -30,33 +33,39 @@ class Process:
     def call(self) -> Struct:
         struct = Struct(0, 0, 0, [])
 
-        struct_node_entity = services.graph.stream.CreateNodeEntity(
+        entity = services.entities.get_by_id(db=self._db, id=self._entity_id)
+
+        if not entity:
+            struct.code = 404
+            return struct
+
+        struct_node_entity = services.graph.sync.CreateNodeEntity(
             driver=self._driver,
-            entity=self._entity,
+            entity=entity,
         ).call()
 
         struct.nodes_created += struct_node_entity.nodes_created
 
-        struct_node_property = services.graph.stream.CreateNodeProperty(
+        struct_node_property = services.graph.sync.CreateNodeProperty(
             db=self._db,
             driver=self._driver,
-            entity=self._entity,
+            entity=entity,
         ).call()
 
         struct.nodes_created += struct_node_property.nodes_created
 
-        struct_relationships_has = services.graph.stream.CreateRelationshipsHas(
+        struct_relationships_has = services.graph.sync.CreateRelationshipsHas(
             db=self._db,
             driver=self._driver,
-            entity=self._entity,
+            entity=entity,
         ).call()
 
         struct.relationships_created += struct_relationships_has.relationships_created
 
-        struct_relationships_linked = services.graph.stream.CreateRelationshipsLinked(
+        struct_relationships_linked = services.graph.sync.CreateRelationshipsLinked(
             db=self._db,
             driver=self._driver,
-            entity=self._entity,
+            entity=entity,
         ).call()
 
         struct.relationships_created += struct_relationships_linked.relationships_created

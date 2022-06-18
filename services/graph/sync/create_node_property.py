@@ -77,7 +77,8 @@ class CreateNodeProperty:
         self._logger.info(f"{__name__} slug {slug} props {params}")
 
         with self._driver.session() as session:
-            session.write_transaction(services.graph.tx.write, query_create, params)
+            summary = session.write_transaction(services.graph.tx.write, query_create, params)
+            return summary.counters.nodes_created
 
         return 1
 
