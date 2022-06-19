@@ -1,0 +1,122 @@
+#!/usr/bin/env python
+
+import os
+import sys
+
+import dotenv
+
+sys.path.insert(1, os.path.join(sys.path[0], ".."))
+
+dotenv.load_dotenv()
+
+import typer  # noqa: E402
+
+import database  # noqa: E402
+import log  # noqa: E402
+import services.entities  # noqa: E402
+import services.entities.watches  # noqa: E402
+import tomtom.geocode  # noqa: E402
+import tomtom.places  # noqa: E402
+import tomtom.search  # noqa: E402
+
+logger = log.init("cli")
+
+app = typer.Typer()
+
+
+@app.command()
+def geocode(
+    city: str = typer.Option("", "--city", help="city name"),
+):
+    struct_geocode = tomtom.geocode.City(name=city).call()
+
+    logger.info(f"[places-cli] total {struct_geocode.total}")
+
+    for object in struct_geocode.objects:
+        print(object)
+
+
+@app.command()
+def search_city(
+    category: str = typer.Option("", "--category", "-c", help="category name, e.g. food, drinks"),
+    city: str = typer.Option("", "--city", help="city name"),
+    miles: float = typer.Option(...),
+    offset: int = typer.Option(0, "--offset", "-o"),
+    limit: int = typer.Option(10, "--limit", "-l"),
+):
+    # map city to lat, lon
+    struct_geocode = tomtom.geocode.City(name=city).call()
+
+    position = struct_geocode.objects[0]["position"]
+    lat = position["lat"]
+    lon = position["lon"]
+
+    struct_search = tomtom.search.Category(
+        category=category,
+        lat=lat,
+        lon=lon,
+        radius=int(miles * 1609.34),
+        offset=offset,
+        limit=limit,
+    ).call()
+
+    logger.info(f"[places-cli] total {struct_search.total}")
+
+    for object in struct_search.objects:
+        print(object)
+        with database.session() as db:
+            struct_entities = tomtom.places.MapEntity(db=db, place=object).call()
+
+            struct_create = services.entities.Create(db=db, objects=struct_entities.entities).call()
+
+            if struct_create.count > 0:
+                struct_watches = services.entities.watches.Match(
+                    db=db,
+                    entity_ids=struct_create.ids,
+                    topic="source",
+                ).call()
+
+                logger.info(f"[places-cli] places created {struct_create.count} watches {struct_watches.count}")
+
+                if struct_watches.count > 0:
+                    struct_publish_changed = services.entities.watches.PublishChanged(
+                        watches=struct_watches.watches,
+                        entity_ids=struct_create.ids,
+                    ).call()
+
+                    logger.info(f"[places-cli] published messages {struct_publish_changed.count}")
+
+                    struct_publish_geo_changed = services.entities.watches.PublishGeoChanged(
+                        watches=struct_watches.watches,
+                        entity_ids=struct_create.ids,
+                    ).call()
+
+                    logger.info(f"[places-cli] published messages {struct_publish_geo_changed.count}")
+
+
+@app.command()
+def search_geo(
+    category: str = typer.Option("", "--category", "-c", help="category name, e.g. food, drinks"),
+    lat: float = typer.Option(...),
+    lon: float = typer.Option(...),
+    miles: float = typer.Option(...),
+    offset: int = typer.Option(0, "--offset", "-o"),
+    limit: int = typer.Option(10, "--limit", "-l"),
+):
+    struct_search = tomtom.search.Category(
+        category=category,
+        lat=lat,
+        lon=lon,
+        radius=int(miles * 1609.34),
+        offset=offset,
+        limit=limit,
+    ).call()
+
+    logger.info(f"[places-cli] total {struct_search.total}")
+
+    for object in struct_search.objects:
+        print(object)
+
+
+if __name__ == "__main__":
+    app()

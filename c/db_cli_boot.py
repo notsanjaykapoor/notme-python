@@ -12,7 +12,6 @@ dotenv.load_dotenv()
 
 import database  # noqa: E402
 import log  # noqa: E402
-import models  # noqa: E402
 import services.data_links  # noqa: E402
 import services.data_models  # noqa: E402
 import services.db  # noqa: E402
@@ -60,19 +59,19 @@ def _db_sync(data_file: str, config_path: str):
         # db entities
         struct_entities = services.entities.Slurp(db=db, json_file=data_file).call()
 
-        # publish 'entity.changed' messages for each entity
-        for entity_id in struct_entities.ids:
-            message = models.Entity.message_changed_cls(int(entity_id))
+        struct_watches_match = services.entities.watches.Match(db=db, entity_ids=struct_entities.ids, topic="source").call()
 
-            services.entities.Publish(message=message, topic=services.kafka.topics.TOPIC_GRAPH_SYNC).call()
+        # publish 'entity.changed' messages
+        services.entities.watches.PublishChanged(
+            watches=struct_watches_match.watches,
+            entity_ids=struct_entities.ids,
+        ).call()
 
         # publish 'entity.geo.changed' messages for each unique entity
-        struct_ids = services.entities.ListIds(db=db).call()
-
-        for entity_geo_id in struct_ids.ids:
-            message = models.Entity.message_geo_changed_cls(entity_geo_id)
-
-            services.entities.Publish(message=message, topic=services.kafka.topics.TOPIC_GRAPH_SYNC).call()
+        services.entities.watches.PublishGeoChanged(
+            watches=struct_watches_match.watches,
+            entity_ids=list(struct_entities.entity_ids),
+        ).call()
 
         logger.info(f"[db-cli] imported data models {struct_models.count}")
         logger.info(f"[db-cli] imported data links {struct_links.count}")

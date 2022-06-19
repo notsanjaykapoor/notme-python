@@ -11,6 +11,7 @@ import services.kafka.topics
 class Struct:
     code: int
     ids: list[int]
+    entity_ids: set[str]
     count: int
     errors: list[str]
 
@@ -23,7 +24,7 @@ class Slurp:
         self._objects = json.load(open(self._json_file))
 
     def call(self) -> Struct:
-        struct = Struct(0, [], 0, [])
+        struct = Struct(0, [], set(), 0, [])
 
         for object in self._objects:
             # format object into proper entity objects
@@ -39,6 +40,7 @@ class Slurp:
             if struct_create.code == 0:
                 struct.count += struct_create.count
                 struct.ids += struct_create.ids
+                struct.entity_ids |= struct_create.entity_ids
 
         return struct
 

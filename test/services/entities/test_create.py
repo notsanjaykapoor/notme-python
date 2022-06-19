@@ -37,6 +37,7 @@ def test_entity_create(session: Session):
 
     assert struct_create.code == 0
     assert len(struct_create.ids) == 2
+    assert len(struct_create.entity_ids) == 1
     assert struct_create.count == 2
 
     struct_list = services.entities.List(db=session, query="", offset=0, limit=100).call()

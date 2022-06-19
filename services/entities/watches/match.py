@@ -19,11 +19,11 @@ class Struct:
 
 
 class Match:
-    """find all matching watches for the specified entity"""
+    """find all matching watches for the specified entity list"""
 
-    def __init__(self, db: sqlmodel.Session, entity: models.Entity, topic: typing.Optional[str] = None):
+    def __init__(self, db: sqlmodel.Session, entity_ids: typing.Sequence[typing.Union[int, str]], topic: typing.Optional[str] = None):
         self._db = db
-        self._entity = entity
+        self._entity_ids = entity_ids
         self._topic = topic
 
         if self._topic:
@@ -36,11 +36,18 @@ class Match:
     def call(self) -> Struct:
         struct = Struct(0, [], 0, [])
 
+        # get entity objects
+        entities_maybe = [services.entities.get_by_id(db=self._db, id=id) for id in self._entity_ids]
+        entities: list[models.Entity] = list(filter(lambda x: x is not None, entities_maybe))  # type: ignore
+
+        if not entities:
+            return struct
+
         # get watches
         struct_watches = services.entities.watches.List(self._db, self._query, 0, 100).call()
 
         for watch in struct_watches.objects:
-            if self._watch_eval(watch) > 0:
+            if self._watch_entities_eval(watch, entities) > 0:
                 # watch is not a match
                 continue
 
@@ -49,7 +56,15 @@ class Match:
 
         return struct
 
-    def _watch_eval(self, watch: models.EntityWatch) -> int:
+    def _watch_entities_eval(self, watch: models.EntityWatch, entities: list[models.Entity]) -> int:
+        count = 0
+
+        for entity in entities:
+            count += self._watch_entity_eval(watch, entity)
+
+        return count
+
+    def _watch_entity_eval(self, watch: models.EntityWatch, entity: models.Entity) -> int:
         """check if watch matches entity"""
 
         struct_tokens = services.mql.Parse(watch.query).call()
@@ -59,7 +74,7 @@ class Match:
             value = token["value"]
 
             # check if watch query field matches
-            object_value = self._entity.__dict__[field]
+            object_value = entity.__dict__[field]
 
             if not object_value:
                 return 1

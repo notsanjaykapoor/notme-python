@@ -2,19 +2,40 @@ import pytest
 import sqlmodel
 import ulid
 
-import models
 import services.entities.watches
 
 
-class TestWatchContext:
+class TestWatchTopic:
+    @pytest.fixture()
+    def entity_ids(self, session: sqlmodel.Session):
+        objects = [
+            {
+                "entity_id": ulid.new().str,
+                "entity_name": "any",
+                "name": "person 1",
+                "slug": "first_name",
+                "type_name": "string",
+                "type_value": "first",
+            },
+        ]
+
+        struct_create = services.entities.Create(
+            db=session,
+            objects=objects,
+        ).call()
+
+        assert struct_create.code == 0
+
+        yield struct_create.ids
+
     @pytest.fixture()
     def watch_ids(self, session: sqlmodel.Session):
         # create watch
         objects = [
             {
-                "output": "output",
+                "output": "anything",
                 "query": "",
-                "topic": "test",
+                "topic": "topic",
             }
         ]
 
@@ -25,23 +46,15 @@ class TestWatchContext:
 
         yield struct_watches.ids
 
-    def test_context_match(self, session: sqlmodel.Session, watch_ids: list[int]):
-        entity = models.Entity(
-            entity_id=ulid.new().str,
-            entity_name="any",
-            slug="first_name",
-            type_name="string",
-            type_value="first",
-        )
-
-        # with context match
-        struct_matches = services.entities.watches.Match(db=session, entity=entity, topic="test").call()
+    def test_topic_match(self, session: sqlmodel.Session, watch_ids: list[int], entity_ids: list[int]):
+        # with topic match
+        struct_matches = services.entities.watches.Match(db=session, entity_ids=entity_ids, topic="topic").call()
 
         assert struct_matches.code == 0
         assert struct_matches.count == 1
 
-        # with context nomatch
-        struct_matches = services.entities.watches.Match(db=session, entity=entity, topic="bogus").call()
+        # with topic nomatch
+        struct_matches = services.entities.watches.Match(db=session, entity_ids=entity_ids, topic="bogus").call()
 
         assert struct_matches.code == 0
         assert struct_matches.count == 0
@@ -49,11 +62,33 @@ class TestWatchContext:
 
 class TestWatchQueryAll:
     @pytest.fixture()
+    def entity_ids(self, session: sqlmodel.Session):
+        objects = [
+            {
+                "entity_id": ulid.new().str,
+                "entity_name": "any",
+                "name": "person 1",
+                "slug": "first_name",
+                "type_name": "string",
+                "type_value": "first",
+            },
+        ]
+
+        struct_create = services.entities.Create(
+            db=session,
+            objects=objects,
+        ).call()
+
+        assert struct_create.code == 0
+
+        yield struct_create.ids
+
+    @pytest.fixture()
     def watch_ids(self, session: sqlmodel.Session):
         # create watch
         objects = [
             {
-                "output": "output",
+                "output": "anything",
                 "query": "",
                 "topic": "test",
             }
@@ -66,16 +101,8 @@ class TestWatchQueryAll:
 
         yield struct_watches.ids
 
-    def test_entity_match(self, session: sqlmodel.Session, watch_ids: list[int]):
-        entity = models.Entity(
-            entity_id=ulid.new().str,
-            entity_name="person",
-            slug="first_name",
-            type_name="string",
-            type_value="first",
-        )
-
-        struct_matches = services.entities.watches.Match(db=session, entity=entity).call()
+    def test_entity_match(self, session: sqlmodel.Session, watch_ids: list[int], entity_ids: list[int]):
+        struct_matches = services.entities.watches.Match(db=session, entity_ids=entity_ids).call()
 
         assert struct_matches.code == 0
         assert struct_matches.count == 1
@@ -87,11 +114,55 @@ class TestWatchQueryAll:
 
 class TestWatchQueryEntityName:
     @pytest.fixture()
+    def entity_person_ids(self, session: sqlmodel.Session):
+        objects = [
+            {
+                "entity_id": ulid.new().str,
+                "entity_name": "person",
+                "name": "person 1",
+                "slug": "first_name",
+                "type_name": "string",
+                "type_value": "first",
+            },
+        ]
+
+        struct_create = services.entities.Create(
+            db=session,
+            objects=objects,
+        ).call()
+
+        assert struct_create.code == 0
+
+        yield struct_create.ids
+
+    @pytest.fixture()
+    def entity_case_ids(self, session: sqlmodel.Session):
+        objects = [
+            {
+                "entity_id": ulid.new().str,
+                "entity_name": "case",
+                "name": "case 1",
+                "slug": "jacket_id",
+                "type_name": "string",
+                "type_value": "1",
+            },
+        ]
+
+        struct_create = services.entities.Create(
+            db=session,
+            objects=objects,
+        ).call()
+
+        assert struct_create.code == 0
+
+        yield struct_create.ids
+
+    @pytest.fixture()
     def watch_ids(self, session: sqlmodel.Session):
         # create watch
         objects = [
             {
-                "output": "test",
+                "output": "anything",
                 "query": "entity_name:person",
                 "topic": "test",
             }
@@ -104,16 +175,8 @@ class TestWatchQueryEntityName:
 
         yield struct_watches.ids
 
-    def test_entity_match(self, session: sqlmodel.Session, watch_ids: list[int]):
-        entity = models.Entity(
-            entity_id=ulid.new().str,
-            entity_name="person",
-            slug="first_name",
-            type_name="string",
-            type_value="first",
-        )
-
-        struct_matches = services.entities.watches.Match(db=session, entity=entity).call()
+    def test_entity_match(self, session: sqlmodel.Session, watch_ids: list[int], entity_person_ids: list[int]):
+        struct_matches = services.entities.watches.Match(db=session, entity_ids=entity_person_ids).call()
 
         assert struct_matches.code == 0
         assert struct_matches.count == 1
@@ -122,16 +185,8 @@ class TestWatchQueryEntityName:
 
         assert [watch.id] == watch_ids
 
-    def test_entity_nomatch(self, session: sqlmodel.Session, watch_ids: list[int]):
-        entity = models.Entity(
-            entity_id=ulid.new().str,
-            entity_name="case",
-            slug="first_name",
-            type_name="string",
-            type_value="first",
-        )
-
-        struct_matches = services.entities.watches.Match(db=session, entity=entity).call()
+    def test_entity_nomatch(self, session: sqlmodel.Session, watch_ids: list[int], entity_case_ids: list[int]):
+        struct_matches = services.entities.watches.Match(db=session, entity_ids=entity_case_ids).call()
 
         assert struct_matches.code == 0
         assert struct_matches.count == 0

@@ -29,7 +29,7 @@ class GraphSync(kafka.Handler):
     _topic: str = services.kafka.topics.TOPIC_GRAPH_SYNC
     _logger: logging.Logger = logging.getLogger("actor")
 
-    @datadog.statsd.timed(f"{__name__}.timer", tags=["env:dev"])
+    @datadog.statsd.timed(f"{__name__}.timer", tags=["env:dev", "neo:service"])
     async def call(self, msg: models.KafkaMessage) -> kafka.KafkaResult:
         struct = kafka.KafkaResult(0, [])
 

@@ -3,3 +3,9 @@
 output = "graph-sync"
 query = ""
 topic = "source"
+
+[[watches]]
+
+output = "geo-alerts"
+query = "geo:41.8911752,-87.6321491 radius:2m"
+topic = "graph-sync"

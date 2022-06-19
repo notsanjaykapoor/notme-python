@@ -62,7 +62,7 @@ class CreateNodeEntity:
 
         self._logger.info(f"{__name__} label {label} props {params}")
 
-        with datadog.statsd.timed(f"{__name__}.timer", tags=["env:dev", "neo"]):
+        with datadog.statsd.timed(f"{__name__}.timer", tags=["env:dev", "neo:write"]):
             with self._driver.session() as session:
                 summary = session.write_transaction(services.graph.tx.write, query_create, params)
                 return summary.counters.nodes_created

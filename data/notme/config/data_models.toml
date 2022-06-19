@@ -97,12 +97,12 @@ type = "string"
 
 [place.3]
 node = 0
-slug = "street"
+slug = "postal_code"
 type = "string"
 
 [place.4]
 node = 0
-slug = "zip"
+slug = "street"
 type = "string"
 
 [vehicle]

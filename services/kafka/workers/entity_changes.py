@@ -41,11 +41,8 @@ class EntityChanges(kafka.Handler):
 
             if message_object["name"] == "entity.changed":
                 with sqlmodel.Session(database.engine) as db:
-                    # get entity object
-                    entity = services.entities.get_by_id(db=db, id=message_object["id"])
-
-                    if entity:
-                        self._entity_match_publish(db, entity)
+                    # check for matches and publish message if found
+                    self._entity_match_publish(db=db, entity_id=message_object["id"])
 
                 self._logger.error(f"actor '{task_name}' processed {message_object}")
             else:
@@ -61,22 +58,13 @@ class EntityChanges(kafka.Handler):
 
         return struct
 
-    def _entity_match_publish(self, db: sqlmodel.Session, entity: models.Entity):
+    def _entity_match_publish(self, db: sqlmodel.Session, entity_id: str):
         # find all matching watches
-        struct_matches = services.entities.watches.Match(
+        struct_watches = services.entities.watches.Match(
             db=db,
-            entity=entity,
+            entity_ids=[entity_id],
             topic=self._topic,
         ).call()
 
-        for watch in struct_matches.watches:
-            if watch.output:
-                self._entity_publish(entity=entity, topic=watch.output)
-
-    def _entity_publish(self, entity: models.Entity, topic: str) -> int:
-        services.entities.Publish(
-            message=entity.message_changed(),
-            topic=topic,
-        ).call()
-
-        return 0
+        if struct_watches.count > 0:
+            services.entities.watches.PublishChanged(watches=struct_watches.watches, entity_ids=[entity_id]).call()

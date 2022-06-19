@@ -67,6 +67,16 @@ class List:
                 else:
                     # match query
                     self._dataset = self._dataset.where(self._model.entity_id == value)
+            elif token["field"] == "entity_key":
+                match = re.match(r"^~", value)
+
+                if match:
+                    # like query
+                    value_normal = re.sub(r"~", "", value)
+                    self._dataset = self._dataset.where(self._model.entity_key.like("%" + value_normal + "%"))  # type: ignore
+                else:
+                    # match query
+                    self._dataset = self._dataset.where(self._model.entity_key == value)
             elif token["field"] == "entity_name":
                 match = re.match(r"^~", value)
 

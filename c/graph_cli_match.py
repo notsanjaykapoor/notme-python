@@ -7,6 +7,7 @@ load_dotenv()
 import os  # noqa: E402
 import sys  # noqa: E402
 
+import datadog  # noqa: E402
 import typer  # noqa: E402
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
@@ -28,7 +29,7 @@ def geo(
     node: str = typer.Option(...),
     miles: float = typer.Option(1),
 ):
-    """find all neighbors filtered geo distance"""
+    """find neighbors filtered by distance"""
 
     name, id = node.split(":", 1)
     meters = miles * 1609.34
@@ -45,8 +46,9 @@ def geo(
 
     logger.info(f"[graph-cli] {query} {params}")
 
-    with services.graph.driver.get().session() as session:
-        records = session.read_transaction(services.graph.tx.read, query, params)
+    with datadog.statsd.timed(f"{__name__}.timer", tags=["env:dev", "neo:read"]):
+        with services.graph.driver.get().session() as session:
+            records = session.read_transaction(services.graph.tx.read, query, params)
 
     if not records:
         logger.info("[graph-cli] no records found")
@@ -88,7 +90,8 @@ def neighbors(
     logger.info(f"[graph-cli] {query} {params}")
 
     with services.graph.driver.get().session() as session:
-        records = session.read_transaction(services.graph.tx.read, query, params)
+        with services.graph.driver.get().session() as session:
+            records = session.read_transaction(services.graph.tx.read, query, params)
 
     if not records:
         logger.info("[graph-cli] no records found")
@@ -132,7 +135,8 @@ def shortest_path(
     logger.info(f"[graph-cli] {query} {params}")
 
     with services.graph.driver.get().session() as session:
-        records = session.read_transaction(services.graph.tx.read, query, params)
+        with services.graph.driver.get().session() as session:
+            records = session.read_transaction(services.graph.tx.read, query, params)
 
     if not records:
         logger.info("[graph-cli] no path found")
