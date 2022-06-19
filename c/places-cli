@@ -70,28 +70,24 @@ def search_city(
             struct_create = services.entities.Create(db=db, objects=struct_entities.entities).call()
 
             if struct_create.count > 0:
-                struct_watches = services.entities.watches.Match(
-                    db=db,
-                    entity_ids=struct_create.ids,
-                    topic="source",
-                ).call()
+                logger.info(f"[places-cli] places created {struct_create.entity_count}")
 
-                logger.info(f"[places-cli] places created {struct_create.count} watches {struct_watches.count}")
-
-                if struct_watches.count > 0:
-                    struct_publish_changed = services.entities.watches.PublishChanged(
-                        watches=struct_watches.watches,
-                        entity_ids=struct_create.ids,
+                for entity_id in list(struct_create.entity_ids):
+                    struct_watches = services.entities.watches.Match(
+                        db=db,
+                        entity_ids=[entity_id],
+                        topic="source",
                     ).call()
 
-                    logger.info(f"[places-cli] published messages {struct_publish_changed.count}")
+                    logger.info(f"[places-cli]  watches {struct_watches.count}")
 
-                    struct_publish_geo_changed = services.entities.watches.PublishGeoChanged(
-                        watches=struct_watches.watches,
-                        entity_ids=struct_create.ids,
-                    ).call()
+                    if struct_watches.count > 0:
+                        struct_publish_changed = services.entities.watches.Publish(
+                            watches=struct_watches.watches,
+                            entity_ids=[entity_id],
+                        ).call()
 
-                    logger.info(f"[places-cli] published messages {struct_publish_geo_changed.count}")
+                        logger.info(f"[places-cli] published messages {struct_publish_changed.count}")
 
 
 @app.command()

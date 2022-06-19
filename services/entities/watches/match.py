@@ -36,9 +36,8 @@ class Match:
     def call(self) -> Struct:
         struct = Struct(0, [], 0, [])
 
-        # get entity objects
-        entities_maybe = [services.entities.get_by_id(db=self._db, id=id) for id in self._entity_ids]
-        entities: list[models.Entity] = list(filter(lambda x: x is not None, entities_maybe))  # type: ignore
+        # get all entity objects
+        entities = self._get_all_entities()
 
         if not entities:
             return struct
@@ -56,13 +55,21 @@ class Match:
 
         return struct
 
+    def _get_all_entities(self) -> list[models.Entity]:
+        entities = []
+
+        for id in self._entity_ids:
+            entities += services.entities.get_all_by_id(db=self._db, id=id)
+
+        return entities
+
     def _watch_entities_eval(self, watch: models.EntityWatch, entities: list[models.Entity]) -> int:
-        count = 0
-
         for entity in entities:
-            count += self._watch_entity_eval(watch, entity)
+            # find at least one that matches
+            if self._watch_entity_eval(watch, entity) == 0:
+                return 0
 
-        return count
+        return 1
 
     def _watch_entity_eval(self, watch: models.EntityWatch, entity: models.Entity) -> int:
         """check if watch matches entity"""
@@ -74,7 +81,7 @@ class Match:
             value = token["value"]
 
             # check if watch query field matches
-            object_value = entity.__dict__[field]
+            object_value = entity.__dict__.get(field, None)
 
             if not object_value:
                 return 1

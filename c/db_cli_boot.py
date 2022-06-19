@@ -59,19 +59,18 @@ def _db_sync(data_file: str, config_path: str):
         # db entities
         struct_entities = services.entities.Slurp(db=db, json_file=data_file).call()
 
-        struct_watches_match = services.entities.watches.Match(db=db, entity_ids=struct_entities.ids, topic="source").call()
+        for entity_id in list(struct_entities.entity_ids):
+            struct_watches_match = services.entities.watches.Match(
+                db=db,
+                entity_ids=[entity_id],
+                topic="source",
+            ).call()
 
-        # publish 'entity.changed' messages
-        services.entities.watches.PublishChanged(
-            watches=struct_watches_match.watches,
-            entity_ids=struct_entities.ids,
-        ).call()
-
-        # publish 'entity.geo.changed' messages for each unique entity
-        services.entities.watches.PublishGeoChanged(
-            watches=struct_watches_match.watches,
-            entity_ids=list(struct_entities.entity_ids),
-        ).call()
+            # publish entity messages
+            services.entities.watches.Publish(
+                watches=struct_watches_match.watches,
+                entity_ids=[entity_id],
+            ).call()
 
         logger.info(f"[db-cli] imported data models {struct_models.count}")
         logger.info(f"[db-cli] imported data links {struct_links.count}")

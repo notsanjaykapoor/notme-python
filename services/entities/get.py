@@ -7,7 +7,7 @@ import sqlmodel
 import models
 
 
-def get_by_id(db: sqlmodel.Session, id: typing.Union[int, str]) -> typing.Optional[models.Entity]:
+def get_all_by_id(db: sqlmodel.Session, id: typing.Union[int, str]) -> list[models.Entity]:
     model = models.Entity
     dataset = sqlmodel.select(model)
 
@@ -18,12 +18,7 @@ def get_by_id(db: sqlmodel.Session, id: typing.Union[int, str]) -> typing.Option
     else:
         dataset = dataset.where(model.entity_id == id)
 
-    objects = db.exec(dataset).all()
-
-    if not objects:
-        return None
-
-    return objects[0]
+    return db.exec(dataset).all()
 
 
 def get_random(db: sqlmodel.Session) -> typing.Optional[models.Entity]:

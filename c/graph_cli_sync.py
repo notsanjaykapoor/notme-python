@@ -55,13 +55,13 @@ def sync_entities():
             db_limit = 100
 
             while True:
-                struct_list = services.entities.List(db=db, query="", offset=db_offset, limit=db_limit).call()
+                struct_list = services.entities.ListIds(db=db, query="", offset=db_offset, limit=db_limit).call()
 
-                if not struct_list.objects:
+                if struct_list.count == 0:
                     break
 
-                for entity in struct_list.objects:
-                    services.graph.sync.Entity(db=db, driver=driver, entity_id=entity.id).call()
+                for entity_id in struct_list.ids:
+                    services.graph.sync.Entity(db=db, driver=driver, entity_id=entity_id).call()
 
                 db_offset += db_limit
 

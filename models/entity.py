@@ -36,15 +36,22 @@ class Entity(SQLModel, table=True):  # type: ignore
         }
 
     @classmethod
-    def message_changed_cls(cls, id: int) -> dict:
+    def message_cls(cls, id: typing.Union[int, str], message: str) -> dict:
         return {
             "id": id,
-            "name": "entity.changed",
+            "name": message,
         }
 
-    @classmethod
-    def message_geo_changed_cls(cls, id: str) -> dict:
-        return {
-            "id": id,
-            "name": "entity.geo.changed",
-        }
+    # @classmethod
+    # def message_changed_cls(cls, id: int) -> dict:
+    #     return {
+    #         "id": id,
+    #         "name": "entity.changed",
+    #     }
+
+    # @classmethod
+    # def message_geo_changed_cls(cls, id: str) -> dict:
+    #     return {
+    #         "id": id,
+    #         "name": "entity.geo.changed",
+    #     }

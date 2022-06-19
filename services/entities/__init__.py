@@ -1,5 +1,5 @@
 from .create import Create  # noqa: F401
-from .get import get_by_id, get_random  # noqa: F401
+from .get import get_all_by_id, get_random  # noqa: F401
 from .graph_value_query import graph_value_query  # noqa: F401
 from .graph_value_store import graph_value_store  # noqa: F401
 from .list import List  # noqa: F401

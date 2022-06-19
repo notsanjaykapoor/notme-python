@@ -13,8 +13,8 @@ class Struct:
     errors: list[str]
 
 
-class PublishChanged:
-    """publish entity changed messages for the specified watch and entity list"""
+class Publish:
+    """publish entity messages for the specified watch and entity list"""
 
     def __init__(self, watches: list[models.EntityWatch], entity_ids: typing.Sequence[typing.Union[int, str]]):
         self._watches = watches
@@ -25,7 +25,7 @@ class PublishChanged:
 
         for watch in self._watches:
             for entity_id in self._entity_ids:
-                message = models.Entity.message_changed_cls(int(entity_id))
+                message = models.Entity.message_cls(id=entity_id, message=watch.message)
 
                 struct_publish = services.entities.Publish(message=message, topic=watch.output).call()
 

@@ -1,11 +1,27 @@
 [[watches]]
 
-output = "graph-sync"
+message = "entity.changed"
 query = ""
 topic = "source"
+output = "graph-sync"
 
 [[watches]]
 
-output = "geo-alerts"
-query = "geo:41.8911752,-87.6321491 radius:2m"
+message = "entity.geo.changed"
+query = "entity_name:alpr"
+topic = "source"
+output = "graph-sync"
+
+[[watches]]
+
+message = "entity.geo.changed"
+query = "entity_name:place"
+topic = "source"
+output = "graph-sync"
+
+[[watches]]
+
+message = "geo.alert"
+query = "entity_name:place geo:41.8911752,-87.6321491 radius:2m"
 topic = "graph-sync"
+output = "geo-alerts"

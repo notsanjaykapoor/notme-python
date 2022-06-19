@@ -12,8 +12,9 @@ import models
 class Struct:
     code: int
     ids: list[int]
-    entity_ids: set[str]
     count: int
+    entity_ids: set[str]
+    entity_count: int
     errors: list[str]
 
 
@@ -27,7 +28,7 @@ class Create:
         self._logger = logging.getLogger("service")
 
     def call(self) -> Struct:
-        struct = Struct(0, [], set(), 0, [])
+        struct = Struct(0, [], 0, set(), 0, [])
 
         self._logger.info(f"{__name__} {self._objects}")
 
@@ -42,8 +43,9 @@ class Create:
             for db_object in db_objects:
                 if db_object.id:
                     struct.ids.append(db_object.id)
-                    struct.entity_ids.add(db_object.entity_id)
                     struct.count += 1
+                    struct.entity_ids.add(db_object.entity_id)
+                    struct.entity_count = len(struct.entity_ids)
 
         except sqlalchemy.exc.IntegrityError:
             self._db.rollback()

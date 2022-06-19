@@ -67,4 +67,4 @@ class EntityChanges(kafka.Handler):
         ).call()
 
         if struct_watches.count > 0:
-            services.entities.watches.PublishChanged(watches=struct_watches.watches, entity_ids=[entity_id]).call()
+            services.entities.watches.Publish(watches=struct_watches.watches, entity_ids=[entity_id]).call()

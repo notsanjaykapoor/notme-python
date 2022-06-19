@@ -13,7 +13,7 @@ import services.graph.sync
 
 
 @dataclass
-class Point:
+class EntityPoint:
     code: int
     entity: typing.Optional[models.Entity]
     lat: float
@@ -29,7 +29,7 @@ class Struct:
 
 class EntityGeo:
     """
-    sync entity geo data to graph database
+    sync entity geo data with graph database
     """
 
     def __init__(self, db: sqlmodel.Session, driver: neo4j.Driver, entity_id: str):
@@ -43,35 +43,27 @@ class EntityGeo:
     def call(self) -> Struct:
         struct = Struct(0, 0, [])
 
-        entity = services.entities.get_by_id(db=self._db, id=self._entity_id)
+        entity_point = self._entity_geo()
 
-        if not entity:
-            struct.code = 404
+        if entity_point.code != 0:
+            struct.code = entity_point.code
             return struct
 
-        point = self._entity_geo(entity.entity_id)
-
-        if point.code != 0:
-            struct.code = point.code
-            return struct
-
-        struct.nodes_updated += self._node_update(point)
+        struct.nodes_updated += self._node_update(entity_point)
 
         return struct
 
-    def _entity_geo(self, entity_id: str) -> Point:
+    def _entity_geo(self) -> EntityPoint:
         """find entity and map to geo coords"""
-        point = Point(1, None, 0, 0)
+        point = EntityPoint(1, None, 0, 0)
 
-        struct_list = services.entities.List(
-            db=self._db,
-            query=f"entity_id:{entity_id}",
-            offset=0,
-            limit=100,
-        ).call()
+        entities = services.entities.get_all_by_id(db=self._db, id=self._entity_id)
 
-        entity_lat = [object.type_value for object in struct_list.objects if object.slug == "lat"]
-        entity_lon = [object.type_value for object in struct_list.objects if object.slug == "lon"]
+        if not entities:
+            return point
+
+        entity_lat = [entity.type_value for entity in entities if entity.slug == "lat"]
+        entity_lon = [entity.type_value for entity in entities if entity.slug == "lon"]
 
         if not entity_lat or not entity_lon:
             return point
@@ -79,14 +71,15 @@ class EntityGeo:
         assert entity_lat[0]
         assert entity_lon[0]
 
-        point.entity = struct_list.objects[0]
         point.lat = float(entity_lat[0])
         point.lon = float(entity_lon[0])
+
+        point.entity = entities[0]
         point.code = 0
 
         return point
 
-    def _node_update(self, point: Point) -> int:
+    def _node_update(self, point: EntityPoint) -> int:
         assert point.entity
 
         entity = point.entity
@@ -97,7 +90,7 @@ class EntityGeo:
 
         params = {"id": entity.entity_id, "lat": point.lat, "lon": point.lon}
 
-        self._logger.info(f"{__name__} label {entity.entity_name} props {params}")
+        self._logger.info(f"{__name__} label '{entity.entity_name}' props {params}")
 
         with self._driver.session() as session:
             session.write_transaction(services.graph.tx.write, query_update, params)

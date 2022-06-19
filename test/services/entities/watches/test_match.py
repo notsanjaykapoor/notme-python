@@ -33,7 +33,8 @@ class TestWatchTopic:
         # create watch
         objects = [
             {
-                "output": "anything",
+                "message": "any",
+                "output": "any",
                 "query": "",
                 "topic": "topic",
             }
@@ -88,7 +89,8 @@ class TestWatchQueryAll:
         # create watch
         objects = [
             {
-                "output": "anything",
+                "message": "any",
+                "output": "any",
                 "query": "",
                 "topic": "test",
             }
@@ -162,7 +164,8 @@ class TestWatchQueryEntityName:
         # create watch
         objects = [
             {
-                "output": "anything",
+                "message": "any",
+                "output": "any",
                 "query": "entity_name:person",
                 "topic": "test",
             }

@@ -28,7 +28,8 @@ class Create:
         try:
             for object in self._objects:
                 db_object = models.EntityWatch(
-                    output=object.get("output", None),
+                    message=object["message"],
+                    output=object.get("output", ""),
                     query=object["query"],
                     topic=object["topic"],
                 )

@@ -33,41 +33,42 @@ class Entity:
     def call(self) -> Struct:
         struct = Struct(0, 0, 0, [])
 
-        entity = services.entities.get_by_id(db=self._db, id=self._entity_id)
+        entities = services.entities.get_all_by_id(db=self._db, id=self._entity_id)
 
-        if not entity:
+        if not entities:
             struct.code = 404
             return struct
 
-        struct_node_entity = services.graph.sync.CreateNodeEntity(
-            driver=self._driver,
-            entity=entity,
-        ).call()
+        for entity in entities:
+            struct_node_entity = services.graph.sync.CreateNodeEntity(
+                driver=self._driver,
+                entity=entity,
+            ).call()
 
-        struct.nodes_created += struct_node_entity.nodes_created
+            struct.nodes_created += struct_node_entity.nodes_created
 
-        struct_node_property = services.graph.sync.CreateNodeProperty(
-            db=self._db,
-            driver=self._driver,
-            entity=entity,
-        ).call()
+            struct_node_property = services.graph.sync.CreateNodeProperty(
+                db=self._db,
+                driver=self._driver,
+                entity=entity,
+            ).call()
 
-        struct.nodes_created += struct_node_property.nodes_created
+            struct.nodes_created += struct_node_property.nodes_created
 
-        struct_relationships_has = services.graph.sync.CreateRelationshipsHas(
-            db=self._db,
-            driver=self._driver,
-            entity=entity,
-        ).call()
+            struct_relationships_has = services.graph.sync.CreateRelationshipsHas(
+                db=self._db,
+                driver=self._driver,
+                entity=entity,
+            ).call()
 
-        struct.relationships_created += struct_relationships_has.relationships_created
+            struct.relationships_created += struct_relationships_has.relationships_created
 
-        struct_relationships_linked = services.graph.sync.CreateRelationshipsLinked(
-            db=self._db,
-            driver=self._driver,
-            entity=entity,
-        ).call()
+            struct_relationships_linked = services.graph.sync.CreateRelationshipsLinked(
+                db=self._db,
+                driver=self._driver,
+                entity=entity,
+            ).call()
 
-        struct.relationships_created += struct_relationships_linked.relationships_created
+            struct.relationships_created += struct_relationships_linked.relationships_created
 
         return struct

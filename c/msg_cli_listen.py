@@ -18,6 +18,7 @@ import log  # noqa: E402
 import services.db  # noqa: E402
 import services.entities  # noqa: E402
 import services.entities.watches  # noqa: E402
+import services.kafka.topics  # noqa: E402
 import services.kafka.workers  # noqa: E402
 
 logger = log.init("cli")
@@ -42,13 +43,16 @@ def graph():
 
 
 async def graph_async():
-    struct_worker = kafka.Scheduler(
-        topic=services.kafka.topics.TOPIC_GRAPH_SYNC,
-        group="group-1",
-        handler=services.kafka.workers.GraphSync(),
-    ).call()
+    workers = []
 
-    workers = [struct_worker]
+    workers.append(
+        kafka.Scheduler(
+            topic=services.kafka.topics.TOPIC_GRAPH_SYNC,
+            group="group-1",
+            handler=services.kafka.workers.GraphSync(),
+        ).call()
+    )
+
     tasks = [s.task for s in workers]
 
     await asyncio.gather(*tasks)
