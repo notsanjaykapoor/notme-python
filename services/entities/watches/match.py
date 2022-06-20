@@ -168,10 +168,15 @@ class Match:
 
                 if not (re.match(rf"{value_normal}", object_value)):
                     return 1
-
-            elif re.match(r"\S+\|\S+", value):
+            elif re.match(r"\S+\|\S+", value):  # or version 1
                 # in match
                 values = value.split("|")
+
+                if object_value not in values:
+                    return 1
+            elif re.match(r"\S+\,\S+", value):  # or version 2
+                # in match
+                values = value.split(",")
 
                 if object_value not in values:
                     return 1

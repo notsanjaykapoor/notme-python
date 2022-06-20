@@ -28,7 +28,7 @@ class GeofenceHandler(kafka.Handler):
     _topic: str = services.kafka.topics.TOPIC_GEOFENCE_ALERTS
     _logger: logging.Logger = logging.getLogger("actor")
 
-    @datadog.statsd.timed(f"{__name__}.timer", tags=["env:dev", "queue:reader"])
+    @datadog.statsd.timed(f"{__name__}.timer", tags=["env:dev", "kafka:reader"])
     async def call(self, msg: models.KafkaMessage) -> kafka.KafkaResult:
         struct = kafka.KafkaResult(0, [])
 

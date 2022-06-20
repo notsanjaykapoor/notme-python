@@ -8,14 +8,7 @@ output = "graph-sync"
 [[watches]]
 
 message = "entity.geo.changed"
-query = "entity_name:alpr"
-topic = "source"
-output = "graph-sync"
-
-[[watches]]
-
-message = "entity.geo.changed"
-query = "entity_name:place"
+query = "entity_name:alpr,place"
 topic = "source"
 output = "graph-sync"
 

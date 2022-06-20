@@ -35,6 +35,7 @@ def service_check() -> int:
         check_name=CHECK_NAME,
         status=status,
         message=message,
+        tags=["check:kafka"],
     )
 
     datadog.statsd.flush()

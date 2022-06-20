@@ -9,12 +9,12 @@ def test_entity_watches_slurp(session: sqlmodel.Session):
     struct_slurp = services.entities.watches.Slurp(db=session, toml_file=file).call()
 
     assert struct_slurp.code == 0
-    assert struct_slurp.count == 4
+    assert struct_slurp.count == 3
 
     struct_list = services.entities.watches.List(db=session, query="", offset=0, limit=100).call()
 
     assert struct_list.code == 0
-    assert struct_list.count == 4
+    assert struct_list.count == 3
 
     # should be idempotent
 
