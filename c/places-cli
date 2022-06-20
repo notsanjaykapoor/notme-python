@@ -38,7 +38,7 @@ def geocode(
 
 @app.command()
 def search_city(
-    category: str = typer.Option("", "--category", "-c", help="category name, e.g. food, drinks"),
+    query: str = typer.Option("", "--query", "-q", help="query name, e.g. food, drinks"),
     city: str = typer.Option("", "--city", help="city name"),
     miles: float = typer.Option(...),
     offset: int = typer.Option(0, "--offset", "-o"),
@@ -51,8 +51,8 @@ def search_city(
     lat = position["lat"]
     lon = position["lon"]
 
-    struct_search = tomtom.search.Category(
-        category=category,
+    struct_search = tomtom.search.Poi(
+        query=query,
         lat=lat,
         lon=lon,
         radius=int(miles * 1609.34),
@@ -92,15 +92,15 @@ def search_city(
 
 @app.command()
 def search_geo(
-    category: str = typer.Option("", "--category", "-c", help="category name, e.g. food, drinks"),
+    query: str = typer.Option("", "--query", "-q", help="query name, e.g. food, drinks"),
     lat: float = typer.Option(...),
     lon: float = typer.Option(...),
     miles: float = typer.Option(...),
     offset: int = typer.Option(0, "--offset", "-o"),
     limit: int = typer.Option(10, "--limit", "-l"),
 ):
-    struct_search = tomtom.search.Category(
-        category=category,
+    struct_search = tomtom.search.Poi(
+        query=query,
         lat=lat,
         lon=lon,
         radius=int(miles * 1609.34),
