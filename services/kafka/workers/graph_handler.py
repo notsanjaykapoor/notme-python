@@ -26,11 +26,11 @@ class Struct:
 
 
 @attrs.define
-class GraphSync(kafka.Handler):
+class GraphHandler(kafka.Handler):
     _topic: str = services.kafka.topics.TOPIC_GRAPH_SYNC
     _logger: logging.Logger = logging.getLogger("actor")
 
-    @datadog.statsd.timed(f"{__name__}.timer", tags=["env:dev", "neo:service"])
+    @datadog.statsd.timed(f"{__name__}.timer", tags=["env:dev", "neo:service", "queue:reader"])
     async def call(self, msg: models.KafkaMessage) -> kafka.KafkaResult:
         struct = kafka.KafkaResult(0, [])
 
@@ -61,6 +61,12 @@ class GraphSync(kafka.Handler):
                             db=db,
                             entity_ids=[message_object["id"]],
                             topic=self._topic,
+                        ).call()
+
+                        # publish entity messages
+                        services.entities.watches.Publish(
+                            watches=struct_watches.watches,
+                            entity_ids=[message_object["id"]],
                         ).call()
 
                 self._logger.info(f"actor '{task_name}' processed {message_object}")

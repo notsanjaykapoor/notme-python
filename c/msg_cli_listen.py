@@ -49,7 +49,15 @@ async def graph_async():
         kafka.Scheduler(
             topic=services.kafka.topics.TOPIC_GRAPH_SYNC,
             group="group-1",
-            handler=services.kafka.workers.GraphSync(),
+            handler=services.kafka.workers.GraphHandler(),
+        ).call()
+    )
+
+    workers.append(
+        kafka.Scheduler(
+            topic=services.kafka.topics.TOPIC_GEOFENCE_ALERTS,
+            group="group-1",
+            handler=services.kafka.workers.GeofenceHandler(),
         ).call()
     )
 

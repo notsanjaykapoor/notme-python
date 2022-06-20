@@ -15,6 +15,7 @@ sys.path.insert(1, os.path.join(sys.path[0], ".."))
 import database  # noqa: E402
 import log  # noqa: E402
 import services.entities  # noqa: E402
+import services.graph.distance  # noqa: E402
 import services.graph.driver  # noqa: E402
 import services.graph.query  # noqa: E402
 import services.graph.tx  # noqa: E402
@@ -27,28 +28,33 @@ app = typer.Typer()
 @app.command()
 def geo(
     node: str = typer.Option(...),
-    miles: float = typer.Option(1),
+    radius: str = typer.Option(None, "--radius", "-r"),
 ):
     """find neighbors filtered by distance"""
 
     name, id = node.split(":", 1)
-    meters = miles * 1609.34
 
-    query = (
-        f"match (a:{name} {{id: $id}}), (b)"
-        + f" where point.distance(a.location, b.location) < {meters} and b.id <> a.id"
-        + " return b.id, b.location, point.distance(a.location, b.location)"
+    meters = services.graph.distance.meters(radius)
+
+    struct_graph = services.graph.query.match_geo_distance_from_node(
+        src_label=name,
+        src_id=id,
+        meters=meters,
     )
 
-    params = {
-        "id": id,
-    }
+    # struct_graph = services.graph.query.match_geo_distance_from_point(
+    #     lat=41.8911752,
+    #     lon=-87.6321491,
+    #     dst_label="place",
+    #     dst_id="01G5YPTKXDWA1DC19W2963SJZW",
+    #     meters=meters,
+    # )
 
-    logger.info(f"[graph-cli] {query} {params}")
+    logger.info(f"[graph-cli] query '{struct_graph.query}' params {struct_graph.params}")
 
     with datadog.statsd.timed(f"{__name__}.timer", tags=["env:dev", "neo:read"]):
         with services.graph.driver.get().session() as session:
-            records = session.read_transaction(services.graph.tx.read, query, params)
+            records = session.read_transaction(services.graph.tx.read, struct_graph.query, struct_graph.params)
 
     if not records:
         logger.info("[graph-cli] no records found")

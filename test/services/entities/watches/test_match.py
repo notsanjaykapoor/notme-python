@@ -193,3 +193,62 @@ class TestWatchQueryEntityName:
 
         assert struct_matches.code == 0
         assert struct_matches.count == 0
+
+
+class TestWatchQueryGeoFence:
+    @pytest.fixture()
+    def entity_place_ids(self, session: sqlmodel.Session):
+        objects = [
+            {
+                "entity_id": ulid.new().str,
+                "entity_name": "place",
+                "name": "place 1",
+                "slug": "city",
+                "type_name": "string",
+                "type_value": "chicago",
+            },
+        ]
+
+        struct_create = services.entities.Create(
+            db=session,
+            objects=objects,
+        ).call()
+
+        assert struct_create.code == 0
+
+        yield struct_create.ids
+
+    @pytest.fixture()
+    def watch_ids(self, session: sqlmodel.Session):
+        # create watch
+        objects = [
+            {
+                "message": "any",
+                "output": "any",
+                "query": "entity_name:place geofence:41.8911752,-87.6321491,2mi",
+                "topic": "test",
+            }
+        ]
+
+        struct_watches = services.entities.watches.Create(db=session, objects=objects).call()
+
+        assert struct_watches.code == 0
+        assert struct_watches.count == 1
+
+        yield struct_watches.ids
+
+    def test_entity_match(self, session: sqlmodel.Session, watch_ids: list[int], entity_place_ids: list[int], mocker):
+        service = services.entities.watches.Match(db=session, entity_ids=entity_place_ids)
+
+        m = mocker.patch.object(service, "_watch_entity_geo_query", return_value=["record"])
+
+        struct_matches = service.call()
+
+        m.assert_called_once()
+
+        assert struct_matches.code == 0
+        assert struct_matches.count == 1
+
+        watch = struct_matches.watches[0]
+
+        assert [watch.id] == watch_ids
