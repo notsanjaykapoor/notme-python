@@ -2,12 +2,9 @@ import os
 
 import datadog
 
-import dog
+import doginit  # noqa: F401
 import dotinit  # noqa: F401
 import network
-
-# initialize datadog
-dog.init()
 
 CHECK_NAME = "notme.service_check"
 CHECK_TAGS = ["check:neo"]

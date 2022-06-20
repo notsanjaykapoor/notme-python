@@ -4,12 +4,12 @@ import sys
 
 import typer
 
+import doginit  # noqa: F401
 import dotinit  # noqa: F401
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
 import database  # noqa: E402
-import dog  # noqa: E402
 import kafka  # noqa: E402
 import log  # noqa: E402
 import models  # noqa: E402
@@ -21,9 +21,6 @@ logger = log.init("cli")
 
 # initialize database
 database.migrate()
-
-# initialize datadog
-dog.init()
 
 # check kafka status
 kafka.service_check()

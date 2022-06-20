@@ -3,6 +3,7 @@
 import os
 import sys
 
+import doginit  # noqa: F401
 import dotinit  # noqa: F401
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
@@ -12,7 +13,6 @@ import sqlmodel  # noqa: E402
 import typer  # noqa: E402
 
 import database  # noqa: E402
-import dog  # noqa: E402
 import log  # noqa: E402
 import models  # noqa: E402
 import services.entities  # noqa: E402
@@ -21,9 +21,6 @@ logger = log.init("cli")
 
 # initialize database
 database.migrate()
-
-# initialize datadog
-dog.init()
 
 app = typer.Typer()
 
