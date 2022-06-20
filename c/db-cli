@@ -3,11 +3,9 @@
 import os
 import sys
 
-import dotenv
+import dotinit  # noqa: F401
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
-
-dotenv.load_dotenv()
 
 import db_cli_boot  # noqa: E402
 import db_cli_entity  # noqa: E402

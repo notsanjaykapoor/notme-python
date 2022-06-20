@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import dotenv
 import graph_cli_constraints
 import graph_cli_indexes
 import graph_cli_match
@@ -8,10 +7,9 @@ import graph_cli_sync
 import typer
 
 import database
+import dotinit  # noqa: F401
 import log
 import services.graph.query
-
-dotenv.load_dotenv()
 
 logger = log.logging_init("cli")
 
@@ -27,25 +25,23 @@ database.migrate()
 
 @app.command()
 def count():
-    query = "MATCH(n) return count(*) as count"
-    records, summary = services.graph.query.execute_with_summary(query, {})
+    struct_graph = services.graph.query.match_node_count()
+    records, summary = services.graph.query.execute_with_summary(struct_graph.query, struct_graph.params)
 
     for record in records:
-        logger.info(f"[graph-cli] total nodes {record['count']}")
+        logger.info(f"[graph-cli] nodes total {record['count']}")
 
-    query = "match(n)-[r]-(x) where (n:case or n:person or n:vehicle) return count(r) as count"
-    records, summary = services.graph.query.execute_with_summary(query, {})
-
-    records = services.graph.query.execute(query, {})
+    struct_graph = services.graph.query.match_relationship_count()
+    records, summary = services.graph.query.execute_with_summary(struct_graph.query, struct_graph.params)
 
     for record in sorted(records, key=lambda record: -1 * record["count"]):
-        logger.info(f"[graph-cli] total relationships {record['count']}")
+        logger.info(f"[graph-cli] relationships total {record['count']}")
 
-    query = "MATCH (n) RETURN distinct labels(n) as label, count(*) as count"
-    records = services.graph.query.execute(query, {})
+    struct_graph = services.graph.query.match_node_label_group_count()
+    records = services.graph.query.execute(struct_graph.query, struct_graph.params)
 
     for record in sorted(records, key=lambda record: -1 * record["count"]):
-        logger.info(f"[graph-cli] node {record['label'][0]} {record['count']}")
+        logger.info(f"[graph-cli] node label '{record['label'][0]}' count {record['count']}")
 
 
 # @app.command()
@@ -68,27 +64,6 @@ def count():
 
 #     for record in sorted(records, key=lambda record: record["age"]):
 #         logger.info(f"[graph-cli] {record['node']['id']} age {record['age']}")
-
-
-# @app.command()
-# def vehicle_make_eq(value: str = typer.Option(...)):
-#     query = "MATCH (v:vehicle)-[:has]-(n:make) WHERE n.value = $value RETURN v as node,n.value as value"
-#     params = {"value": value}
-
-#     records = services.graph.query.execute(query, params)
-
-#     for record in sorted(records, key=lambda record: record["value"]):
-#         logger.info(f"[graph-cli] {record['node']['id']} make {record['value']}")
-
-
-# @app.command()
-# def vehicle_makes():
-#     query = f"MATCH (s)-[:has]-(n:make) RETURN n.value as make, count(*) as count"
-
-#     records = services.graph.query.execute(query, {})
-
-#     for record in sorted(records, key=lambda record: -1 * record["count"]):
-#         logger.info(f"[graph-cli] {record['make']} {record['count']}")
 
 
 # @app.command()

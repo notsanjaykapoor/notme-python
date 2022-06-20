@@ -3,16 +3,15 @@
 import os
 import sys
 
-import dotenv
 import typer
 import ulid
+
+import dotinit  # noqa: F401
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
 import kafka  # noqa: E402
 import log  # noqa: E402
-
-dotenv.load_dotenv()
 
 app = typer.Typer()
 

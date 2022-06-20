@@ -10,16 +10,17 @@ import network
 dog.init()
 
 CHECK_NAME = "notme.service_check"
-CHECK_TAGS = ["check:kafka"]
+CHECK_TAGS = ["check:neo"]
 
 
 def service_check() -> int:
-    broker = os.environ.get("KAFKA_BROKERS")
+    neo_url = os.environ.get("NEO4J_BOLT_URL")
 
-    if not broker:
-        raise ValueError("kafka brokers not defined")
+    if not neo_url:
+        raise ValueError("neo4j url not defined")
 
-    host, port = broker.split(":")
+    _, host, port = neo_url.split(":")
+    host = host.replace("/", "")
 
     code = network.ping(host, int(port))
 
@@ -28,7 +29,7 @@ def service_check() -> int:
         message = "ok"
     else:
         status = 2
-        message = "kafka down"
+        message = "neo4j down"
 
     datadog.statsd.service_check(
         check_name=CHECK_NAME,

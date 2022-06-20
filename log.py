@@ -1,5 +1,4 @@
-import coloredlogs, logging
-
+import logging
 from logging.config import dictConfig
 
 LOG_LEVEL: str = "DEBUG"

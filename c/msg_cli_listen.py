@@ -3,13 +3,12 @@ import asyncio
 import os
 import sys
 
-import dotenv
 import typer
 import uvloop
 
-sys.path.insert(1, os.path.join(sys.path[0], ".."))
+import dotinit  # noqa: F401
 
-dotenv.load_dotenv()
+sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
 import database  # noqa: E402
 import dog  # noqa: E402
