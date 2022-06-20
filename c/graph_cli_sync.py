@@ -15,7 +15,7 @@ import database  # noqa: E402
 import log  # noqa: E402
 import services.entities  # noqa: E402
 import services.graph.commands  # noqa: E402
-import services.graph.driver  # noqa: E402
+import services.graph.session  # noqa: E402
 import services.graph.sync  # noqa: E402
 
 logger = log.logging_init("cli")
@@ -39,7 +39,9 @@ def geo():
 def reset():
     """truncate graph database, sync db to graph database"""
 
-    services.graph.commands.truncate()
+    with services.graph.session.get() as session:
+        services.graph.commands.truncate(session)
+
     logger.info("[graph-cli] truncated")
 
     sync_entities()
@@ -50,7 +52,7 @@ def reset():
 
 def sync_entities():
     with database.session() as db:
-        with services.graph.driver.get() as driver:
+        with services.graph.session.get() as neo:
             db_offset = 0
             db_limit = 100
 
@@ -61,21 +63,21 @@ def sync_entities():
                     break
 
                 for entity_id in struct_list.ids:
-                    services.graph.sync.Entity(db=db, driver=driver, entity_id=entity_id).call()
+                    services.graph.sync.Entity(db=db, neo=neo, entity_id=entity_id).call()
 
                 db_offset += db_limit
 
 
 def sync_geo():
     with database.session() as db:
-        with services.graph.driver.get() as driver:
+        with services.graph.session.get() as session:
             # find all geo entities
 
             query = "slug:lat"
             struct_list = services.entities.List(db=db, query=query, offset=0, limit=1000).call()
 
             for entity in struct_list.objects:
-                services.graph.sync.EntityGeo(db=db, driver=driver, entity_id=entity.entity_id).call()
+                services.graph.sync.EntityGeo(db=db, neo=session, entity_id=entity.entity_id).call()
 
 
 if __name__ == "__main__":

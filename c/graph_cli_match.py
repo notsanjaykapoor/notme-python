@@ -16,8 +16,8 @@ import database  # noqa: E402
 import log  # noqa: E402
 import services.entities  # noqa: E402
 import services.graph.distance  # noqa: E402
-import services.graph.driver  # noqa: E402
 import services.graph.query  # noqa: E402
+import services.graph.session  # noqa: E402
 import services.graph.tx  # noqa: E402
 
 logger = log.logging_init("cli")
@@ -53,7 +53,7 @@ def geo(
     logger.info(f"[graph-cli] query '{struct_graph.query}' params {struct_graph.params}")
 
     with datadog.statsd.timed(f"{__name__}.timer", tags=["env:dev", "neo:read"]):
-        with services.graph.driver.get().session() as session:
+        with services.graph.session.get() as session:
             records = session.read_transaction(services.graph.tx.read, struct_graph.query, struct_graph.params)
 
     if not records:
@@ -95,8 +95,8 @@ def neighbors(
 
     logger.info(f"[graph-cli] {query} {params}")
 
-    with services.graph.driver.get().session() as session:
-        with services.graph.driver.get().session() as session:
+    with services.graph.session.get() as session:
+        with services.graph.session.get() as session:
             records = session.read_transaction(services.graph.tx.read, query, params)
 
     if not records:
@@ -140,8 +140,8 @@ def shortest_path(
 
     logger.info(f"[graph-cli] {query} {params}")
 
-    with services.graph.driver.get().session() as session:
-        with services.graph.driver.get().session() as session:
+    with services.graph.session.get() as session:
+        with services.graph.session.get() as session:
             records = session.read_transaction(services.graph.tx.read, query, params)
 
     if not records:

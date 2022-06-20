@@ -17,6 +17,7 @@ import services.db  # noqa: E402
 import services.entities  # noqa: E402
 import services.entities.watches  # noqa: E402
 import services.graph.commands  # noqa: E402
+import services.graph.session  # noqa: E402
 import services.kafka.topics  # noqa: E402
 
 logger = log.init("cli")
@@ -49,7 +50,7 @@ def sync(
 
 
 def _db_sync(data_file: str, config_path: str):
-    with sqlmodel.Session(database.engine) as db:
+    with sqlmodel.Session(database.engine) as db, services.graph.session.get() as neo:
         # db config
         struct_models = services.data_models.Slurp(db=db, toml_file=f"{config_path}/data_models.toml").call()
         struct_links = services.data_links.Slurp(db=db, toml_file=f"{config_path}/data_links.toml").call()
@@ -61,6 +62,7 @@ def _db_sync(data_file: str, config_path: str):
         for entity_id in list(struct_entities.entity_ids):
             struct_watches_match = services.entities.watches.Match(
                 db=db,
+                neo=neo,
                 entity_ids=[entity_id],
                 topic="source",
             ).call()
@@ -79,7 +81,8 @@ def _db_sync(data_file: str, config_path: str):
 
 def _db_truncate():
     with sqlmodel.Session(database.engine) as db:
-        services.graph.commands.truncate()
+        with services.graph.session.get() as session:
+            services.graph.commands.truncate(session)
 
         services.db.truncate_table(db=db, table_name="entities")
         services.db.truncate_table(db=db, table_name="entity_watches")

@@ -77,12 +77,3 @@ class Slurp:
             "type_name": properties["type"],
             "type_value": properties["value"],
         }
-
-    # def _message_publish(self, entity_ids: list[int]):
-    #     for entity_id in entity_ids:
-    #         message = models.Entity.message_changed_cls(int(entity_id))
-
-    #         services.entities.Publish(
-    #             message=message,
-    #             topic=services.kafka.topics.TOPIC_ENTITY_CHANGES,
-    #         ).call()

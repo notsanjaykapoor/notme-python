@@ -3,14 +3,13 @@
 import os
 import sys
 
-import dotinit  # noqa: F401
-
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
 import db_cli_boot  # noqa: E402
 import db_cli_entity  # noqa: E402
 import typer  # noqa: E402
 
+import dotinit  # noqa: E402, F401
 import log  # noqa: E402
 
 logger = log.init("cli")

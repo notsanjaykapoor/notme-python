@@ -1,4 +1,6 @@
 import os
+
+import neo4j
 import pytest
 import sqlmodel
 import sqlmodel.pool
@@ -22,3 +24,15 @@ def session_fixture():  #
         yield session  #
 
     sqlmodel.SQLModel.metadata.drop_all(engine)
+
+
+@pytest.fixture(name="neo_session")
+def neo_session_fixture():
+    driver = neo4j.GraphDatabase.driver(
+        os.environ["NEO4J_BOLT_URL"],
+        auth=(os.environ["NEO4J_USER"], os.environ["NEO4J_PASSWORD"]),
+    )
+
+    session = driver.session(database=os.environ["NEO4J_DB_NAME"])  # todo
+
+    yield session

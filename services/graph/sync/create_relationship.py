@@ -19,14 +19,14 @@ class CreateRelationship:
         dst_id: typing.Union[int, str],
         dst_name: str,
         rel_name: str,
-        driver: neo4j.Driver,
+        neo: neo4j.Session,
     ):
         self._src_id = src_id
         self._src_name = src_name
         self._dst_id = dst_id
         self._dst_name = dst_name
         self._rel_name = rel_name
-        self._driver = driver
+        self._neo = neo
 
         self._logger = logging.getLogger("service")
 
@@ -57,10 +57,9 @@ class CreateRelationship:
         self._logger.info(f"{__name__} src {self._src_name}:{self._src_id} dst {self._dst_name}:{self._dst_id}")
 
         with datadog.statsd.timed(f"{__name__}.timer", tags=["env:dev", "neo:write"]):
-            with self._driver.session() as session:
-                session.write_transaction(services.graph.tx.write, query_create, params)
-                return 1
+            self._neo.write_transaction(services.graph.tx.write, query_create, params)
+            return 1
 
     def _node_count(self, query: str, params: dict) -> int:
-        result = services.graph.query.execute(query, params, self._driver)
+        result = services.graph.query.execute(query, params, self._neo)
         return result[0]["count"]

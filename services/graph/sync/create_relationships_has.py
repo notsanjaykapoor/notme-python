@@ -26,9 +26,9 @@ class CreateRelationshipsHas:
       -
     """
 
-    def __init__(self, db: sqlmodel.Session, driver: neo4j.Driver, entity: models.Entity):
+    def __init__(self, db: sqlmodel.Session, neo: neo4j.Session, entity: models.Entity):
         self._db = db
-        self._driver = driver
+        self._neo = neo
         self._entity = entity
 
         self._data_model_query = f"object_name:{self._entity.entity_name} object_slug:{self._entity.slug} object_node:1"
@@ -58,7 +58,7 @@ class CreateRelationshipsHas:
                     dst_id=dst_id,
                     dst_name=entity.slug,
                     rel_name=RELATIONSHIP_NAME,
-                    driver=self._driver,
+                    neo=self._neo,
                 ).call()
 
         return struct

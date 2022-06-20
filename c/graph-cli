@@ -11,6 +11,7 @@ import doginit  # noqa: F401
 import dotinit  # noqa: F401
 import log
 import services.graph.query
+import services.graph.session
 
 logger = log.logging_init("cli")
 
@@ -26,23 +27,24 @@ database.migrate()
 
 @app.command()
 def count():
-    struct_graph = services.graph.query.match_node_count()
-    records, summary = services.graph.query.execute_with_summary(struct_graph.query, struct_graph.params)
+    with services.graph.session.get() as session:
+        struct_graph = services.graph.query.match_node_count()
+        records, summary = services.graph.query.execute_with_summary(struct_graph.query, struct_graph.params, session)
 
-    for record in records:
-        logger.info(f"[graph-cli] nodes total {record['count']}")
+        for record in records:
+            logger.info(f"[graph-cli] nodes total {record['count']}")
 
-    struct_graph = services.graph.query.match_relationship_count()
-    records, summary = services.graph.query.execute_with_summary(struct_graph.query, struct_graph.params)
+        struct_graph = services.graph.query.match_relationship_count()
+        records, summary = services.graph.query.execute_with_summary(struct_graph.query, struct_graph.params, session)
 
-    for record in sorted(records, key=lambda record: -1 * record["count"]):
-        logger.info(f"[graph-cli] relationships total {record['count']}")
+        for record in sorted(records, key=lambda record: -1 * record["count"]):
+            logger.info(f"[graph-cli] relationships total {record['count']}")
 
-    struct_graph = services.graph.query.match_node_label_group_count()
-    records = services.graph.query.execute(struct_graph.query, struct_graph.params)
+        struct_graph = services.graph.query.match_node_label_group_count()
+        records = services.graph.query.execute(struct_graph.query, struct_graph.params, session)
 
-    for record in sorted(records, key=lambda record: -1 * record["count"]):
-        logger.info(f"[graph-cli] node label '{record['label'][0]}' count {record['count']}")
+        for record in sorted(records, key=lambda record: -1 * record["count"]):
+            logger.info(f"[graph-cli] node label '{record['label'][0]}' count {record['count']}")
 
 
 # @app.command()

@@ -10,8 +10,8 @@ import sqlmodel
 import models
 import services.entities.watches
 import services.graph.distance
-import services.graph.driver
 import services.graph.query
+import services.graph.session
 import services.graph.tx
 import services.mql
 
@@ -30,10 +30,12 @@ class Match:
     def __init__(
         self,
         db: sqlmodel.Session,
+        neo: neo4j.Session,
         entity_ids: typing.Sequence[int | str],
         topic: typing.Optional[str] = None,
     ):
         self._db = db
+        self._neo = neo
         self._entity_ids = entity_ids
         self._topic = topic
 
@@ -143,10 +145,9 @@ class Match:
 
     def _watch_entity_geo_query(self, query: str, params: dict) -> list[neo4j.Record]:
         with datadog.statsd.timed(f"{__name__}.timer", tags=["env:dev", "neo:read"]):
-            with services.graph.driver.get().session() as session:
-                records = session.read_transaction(services.graph.tx.read, query, params)
+            records = self._neo.read_transaction(services.graph.tx.read, query, params)
 
-                return records
+            return records
 
     def _watch_entity_normal_match(self, watch: models.EntityWatch, entity: models.Entity, tokens: list[dict]) -> int:
         """returns 0 if watch matches entity; 1 otherwise"""

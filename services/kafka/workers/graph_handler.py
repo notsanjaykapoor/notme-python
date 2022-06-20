@@ -13,7 +13,7 @@ import kafka
 import models
 import services.entities
 import services.entities.watches
-import services.graph.driver
+import services.graph.session
 import services.graph.sync
 import services.kafka.topics
 
@@ -45,20 +45,21 @@ class GraphHandler(kafka.Handler):
 
             if message_object["name"] == "entity.changed":
                 with sqlmodel.Session(database.engine) as db:
-                    with services.graph.driver.get() as driver:
+                    with services.graph.session.get() as neo:
                         # process message
-                        services.graph.sync.Entity(db=db, driver=driver, entity_id=message_object["id"]).call()
+                        services.graph.sync.Entity(db=db, neo=neo, entity_id=message_object["id"]).call()
 
                 self._logger.info(f"actor '{task_name}' processed {message_object}")
             elif message_object["name"] == "entity.geo.changed":
                 with sqlmodel.Session(database.engine) as db:
-                    with services.graph.driver.get() as driver:
+                    with services.graph.session.get() as neo:
                         # process message
-                        services.graph.sync.EntityGeo(db=db, driver=driver, entity_id=message_object["id"]).call()
+                        services.graph.sync.EntityGeo(db=db, neo=neo, entity_id=message_object["id"]).call()
 
                         # check watches
                         struct_watches = services.entities.watches.Match(
                             db=db,
+                            neo=neo,
                             entity_ids=[message_object["id"]],
                             topic=self._topic,
                         ).call()

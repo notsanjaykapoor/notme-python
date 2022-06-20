@@ -1,6 +1,6 @@
+import dataclasses
 import logging
 import typing
-from dataclasses import dataclass
 
 import datadog
 import neo4j
@@ -12,7 +12,7 @@ import services.graph
 import services.graph.sync
 
 
-@dataclass
+@dataclasses.dataclass
 class EntityPoint:
     code: int
     entity: typing.Optional[models.Entity]
@@ -20,7 +20,7 @@ class EntityPoint:
     lon: float
 
 
-@dataclass
+@dataclasses.dataclass
 class Struct:
     code: int
     nodes_updated: int
@@ -32,9 +32,9 @@ class EntityGeo:
     sync entity geo data with graph database
     """
 
-    def __init__(self, db: sqlmodel.Session, driver: neo4j.Driver, entity_id: str):
+    def __init__(self, db: sqlmodel.Session, neo: neo4j.Session, entity_id: str):
         self._db = db
-        self._driver = driver
+        self._neo = neo
         self._entity_id = entity_id
 
         self._logger = logging.getLogger("service")
@@ -92,7 +92,7 @@ class EntityGeo:
 
         self._logger.info(f"{__name__} label '{entity.entity_name}' props {params}")
 
-        with self._driver.session() as session:
-            session.write_transaction(services.graph.tx.write, query_update, params)
+        with datadog.statsd.timed(f"{__name__}.timer", tags=["env:dev", "neo:write"]):
+            self._neo.write_transaction(services.graph.tx.write, query_update, params)
 
         return 1

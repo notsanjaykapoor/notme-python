@@ -1,10 +1,7 @@
-import services.graph.driver
+import neo4j
 
 
-def truncate():
-    driver = services.graph.driver.get()
-
+def truncate(session: neo4j.Session):
     query = "MATCH(n) CALL { WITH n DETACH DELETE n } IN TRANSACTIONS OF 1000 ROWS"
 
-    with driver.session() as session:
-        session.run(query)  # run with implicit transaction
+    session.run(query)  # run with implicit transaction

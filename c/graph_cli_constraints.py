@@ -14,8 +14,8 @@ sys.path.insert(1, os.path.join(sys.path[0], ".."))
 import database  # noqa: E402
 import log  # noqa: E402
 import services.entities  # noqa: E402
-import services.graph.driver  # noqa: E402
 import services.graph.query  # noqa: E402
+import services.graph.session  # noqa: E402
 
 logger = log.logging_init("cli")
 
@@ -35,7 +35,8 @@ def create():
 
         logger.info(f"[graph-cli] {query}")
 
-        services.graph.query.execute(query, {})
+        with services.graph.session.get() as session:
+            services.graph.query.execute(query, {}, session)
 
 
 @app.command()
@@ -43,7 +44,8 @@ def show():
     """show all graph constraints"""
     query = "show all constraints"
 
-    records = services.graph.query.execute(query, {})
+    with services.graph.session.get() as session:
+        records = services.graph.query.execute(query, {}, session)
 
-    for record in records:
-        logger.info(f"[graph-cli] {record}")
+        for record in records:
+            logger.info(f"[graph-cli] {record}")

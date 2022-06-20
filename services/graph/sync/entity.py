@@ -22,9 +22,9 @@ class Entity:
     sync entity to graph database
     """
 
-    def __init__(self, db: sqlmodel.Session, driver: neo4j.Driver, entity_id: str):
+    def __init__(self, db: sqlmodel.Session, neo: neo4j.Session, entity_id: str):
         self._db = db
-        self._driver = driver
+        self._neo = neo
         self._entity_id = entity_id
 
         self._logger = logging.getLogger("service")
@@ -41,7 +41,7 @@ class Entity:
 
         for entity in entities:
             struct_node_entity = services.graph.sync.CreateNodeEntity(
-                driver=self._driver,
+                neo=self._neo,
                 entity=entity,
             ).call()
 
@@ -49,7 +49,7 @@ class Entity:
 
             struct_node_property = services.graph.sync.CreateNodeProperty(
                 db=self._db,
-                driver=self._driver,
+                neo=self._neo,
                 entity=entity,
             ).call()
 
@@ -57,7 +57,7 @@ class Entity:
 
             struct_relationships_has = services.graph.sync.CreateRelationshipsHas(
                 db=self._db,
-                driver=self._driver,
+                neo=self._neo,
                 entity=entity,
             ).call()
 
@@ -65,7 +65,7 @@ class Entity:
 
             struct_relationships_linked = services.graph.sync.CreateRelationshipsLinked(
                 db=self._db,
-                driver=self._driver,
+                neo=self._neo,
                 entity=entity,
             ).call()
 

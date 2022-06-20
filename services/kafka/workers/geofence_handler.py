@@ -11,7 +11,7 @@ import kafka
 import models
 import services.entities
 import services.entities.watches
-import services.graph.driver
+import services.graph.session
 import services.graph.sync
 import services.kafka.topics
 

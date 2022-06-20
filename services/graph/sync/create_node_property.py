@@ -1,5 +1,5 @@
+import dataclasses
 import logging
-from dataclasses import dataclass
 
 import datadog
 import neo4j
@@ -13,7 +13,7 @@ import services.graph.query
 import services.graph.tx
 
 
-@dataclass
+@dataclasses.dataclass
 class Struct:
     code: int
     nodes_created: int
@@ -31,9 +31,9 @@ class CreateNodeProperty:
     e.g. given entity ['person', 'record_id', '1'], create node with label 'record_id' and id property '1'
     """
 
-    def __init__(self, db: sqlmodel.Session, driver: neo4j.Driver, entity: models.Entity):
+    def __init__(self, db: sqlmodel.Session, neo: neo4j.Session, entity: models.Entity):
         self._db = db
-        self._driver = driver
+        self._neo = neo
         self._entity = entity
 
         self._data_model_query = f"object_name:{self._entity.entity_name} object_slug:{self._entity.slug} object_node:1"
@@ -78,12 +78,11 @@ class CreateNodeProperty:
         self._logger.info(f"{__name__} slug {slug} props {params}")
 
         with datadog.statsd.timed(f"{__name__}.timer", tags=["env:dev", "neo:write"]):
-            with self._driver.session() as session:
-                summary = session.write_transaction(services.graph.tx.write, query_create, params)
-                return summary.counters.nodes_created
+            summary = self._neo.write_transaction(services.graph.tx.write, query_create, params)
+            return summary.counters.nodes_created
 
         return 1
 
     def _node_count(self, query: str, params: dict) -> int:
-        result = services.graph.query.execute(query, params, self._driver)
+        result = services.graph.query.execute(query, params, self._neo)
         return result[0]["count"]
