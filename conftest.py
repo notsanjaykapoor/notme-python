@@ -33,6 +33,7 @@ def neo_session_fixture():
         auth=(os.environ["NEO4J_USER"], os.environ["NEO4J_PASSWORD"]),
     )
 
-    session = driver.session(database=os.environ["NEO4J_DB_NAME"])  # todo
+    # todo: setup test database
+    session = driver.session(database=os.environ["NEO4J_DB_TEST_NAME"])
 
     yield session

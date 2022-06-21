@@ -12,8 +12,8 @@ import services.data_models
 @dataclass
 class Struct:
     code: int
-    object_ids: list[int]
-    object_count: int
+    ids: list[int]
+    count: int
     errors: list[str]
 
 
@@ -34,26 +34,29 @@ class Create:
                 struct.code = code
                 return struct
 
-            data_link_objects = self._data_link_objects_swapped(object)
+            try:
+                data_link_objects = self._data_link_objects_swapped(object)
 
-            for object in data_link_objects:
-                try:
-                    db_object = models.DataLink(**object)
+                # map to db objects and add as a single tx
+                db_objects = [models.DataLink(**object) for object in data_link_objects]
 
+                for db_object in db_objects:
                     self._db.add(db_object)
-                    self._db.commit()
 
-                    if db_object.id:
-                        struct.object_ids.append(db_object.id)
-                        struct.object_count += 1
-                except sqlalchemy.exc.IntegrityError:
-                    self._db.rollback()
-                    struct.code = 409
-                    self._logger.error(f"{__name__} {sys.exc_info()[0]} error")
-                except Exception:
-                    self._db.rollback()
-                    struct.code = 500
-                    self._logger.error(f"{__name__} {sys.exc_info()[0]} exception")
+                self._db.commit()
+
+                for object in db_objects:
+                    assert object.id
+                    struct.ids.append(object.id)
+                    struct.count += 1
+            except sqlalchemy.exc.IntegrityError:
+                self._db.rollback()
+                struct.code = 409
+                self._logger.error(f"{__name__} {sys.exc_info()[0]} error")
+            except Exception:
+                self._db.rollback()
+                struct.code = 500
+                self._logger.error(f"{__name__} {sys.exc_info()[0]} exception")
 
         return struct
 

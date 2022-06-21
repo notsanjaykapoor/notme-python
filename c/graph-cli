@@ -6,7 +6,6 @@ import graph_cli_match
 import graph_cli_sync
 import typer
 
-import database
 import doginit  # noqa: F401
 import dotinit  # noqa: F401
 import log
@@ -20,6 +19,8 @@ app.add_typer(graph_cli_constraints.app, name="constraints")
 app.add_typer(graph_cli_indexes.app, name="indexes")
 app.add_typer(graph_cli_match.app, name="match")
 app.add_typer(graph_cli_sync.app, name="sync")
+
+import database  # noqa: E402
 
 # initialize database
 database.migrate()

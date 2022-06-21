@@ -31,6 +31,6 @@ class Slurp:
                 objects=[object],
             ).call()
 
-            struct.count += struct_create.object_count
+            struct.count += struct_create.count
 
         return struct

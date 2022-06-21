@@ -3,21 +3,26 @@
 import os
 import sys
 
-import dotinit  # noqa: F401
+import typer  # noqa: E402
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
-import typer  # noqa: E402
-
-import database  # noqa: E402
+import dotinit  # noqa: E402, F401
 import log  # noqa: E402
 import services.entities  # noqa: E402
 import services.entities.watches  # noqa: E402
+import services.graph.session  # noqa: E402
 import tomtom.geocode  # noqa: E402
 import tomtom.places  # noqa: E402
 import tomtom.search  # noqa: E402
 
 logger = log.init("cli")
+
+# load database after dotinit
+import database  # noqa: E402
+
+# initialize database
+database.migrate()
 
 app = typer.Typer()
 
@@ -62,7 +67,8 @@ def search_city(
 
     for object in struct_search.objects:
         print(object)
-        with database.session() as db:
+
+        with database.session() as db, services.graph.session.get() as neo:
             struct_entities = tomtom.places.MapEntity(db=db, place=object).call()
 
             struct_create = services.entities.Create(db=db, objects=struct_entities.entities).call()
@@ -73,6 +79,7 @@ def search_city(
                 for entity_id in list(struct_create.entity_ids):
                     struct_watches = services.entities.watches.Match(
                         db=db,
+                        neo=neo,
                         entity_ids=[entity_id],
                         topic="source",
                     ).call()

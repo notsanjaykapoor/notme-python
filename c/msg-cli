@@ -3,11 +3,12 @@
 import os
 import sys
 
+import typer
+
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
 import msg_cli_listen  # noqa: E402
 import msg_cli_publish  # noqa: E402
-import typer  # noqa: E402
 
 import dotinit  # noqa: E402, F401
 import log  # noqa: E402

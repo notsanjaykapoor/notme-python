@@ -6,11 +6,8 @@ from sqlmodel import Field, SQLModel
 
 class DataLink(SQLModel, table=True):  # type: ignore
     __tablename__ = "data_links"
-    __table_args__ = (
-        UniqueConstraint(
-            "src_name", "src_slug", "dst_name", "dst_slug", name="_src_dst_unique"
-        ),
-    )
+
+    __table_args__ = (UniqueConstraint("src_name", "src_slug", "dst_name", "dst_slug", name="_src_dst_unique"),)
 
     id: typing.Optional[int] = Field(default=None, primary_key=True)
 
