@@ -6,7 +6,7 @@ import sys
 import typer
 import ulid
 
-import dotinit  # noqa: F401
+import dot_init  # noqa: F401
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 

@@ -6,14 +6,14 @@ import sys
 import typer
 import uvloop
 
-import doginit  # noqa: F401
-import dotinit  # noqa: F401
+import dot_init  # noqa: F401
+import stats_init  # noqa: F401
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
-import database  # noqa: E402
 import kafka  # noqa: E402
 import log  # noqa: E402
+import services.database.session  # noqa: E402
 import services.db  # noqa: E402
 import services.entities  # noqa: E402
 import services.entities.watches  # noqa: E402
@@ -23,7 +23,7 @@ import services.kafka.workers  # noqa: E402
 logger = log.init("cli")
 
 # initialize database
-database.migrate()
+services.database.session.migrate()
 
 # check kafka status
 kafka.service_check()

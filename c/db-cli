@@ -10,17 +10,15 @@ sys.path.insert(1, os.path.join(sys.path[0], ".."))
 import db_cli_boot  # noqa: E402
 import db_cli_entity  # noqa: E402
 
-import dotinit  # noqa: E402, F401
+import dot_init  # noqa: E402, F401
+import services.database.session  # noqa: E402
+
+# initialize database
+services.database.session.migrate()
 
 app = typer.Typer()
 app.add_typer(db_cli_boot.app, name="boot")
 app.add_typer(db_cli_entity.app, name="entity")
-
-import database  # noqa: E402
-
-# initialize database
-database.migrate()
-
 
 if __name__ == "__main__":
     app()

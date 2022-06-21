@@ -2,8 +2,8 @@ import os
 
 import datadog
 
-import doginit  # noqa: F401
-import dotinit  # noqa: F401
+import stats_init  # noqa: F401
+import dot_init  # noqa: F401
 import network
 
 CHECK_NAME = "notme.service_check"

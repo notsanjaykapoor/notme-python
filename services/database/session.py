@@ -1,4 +1,5 @@
 import os
+
 import sqlalchemy
 import sqlmodel
 
@@ -6,17 +7,16 @@ connect_args = {
     "check_same_thread": False,
 }
 
-engine = sqlmodel.create_engine(
-    os.environ.get("DATABASE_URL"), echo=False, connect_args=connect_args
-)
+engine = sqlmodel.create_engine(os.environ.get("DATABASE_URL"), echo=False, connect_args=connect_args)
 
-# create/migrate db tables
+
+# create and migrate db tables
 def migrate():
     sqlmodel.SQLModel.metadata.create_all(engine)
 
 
 # get session object
-def session():
+def get() -> sqlmodel.Session:
     return sqlmodel.Session(engine)
 
 

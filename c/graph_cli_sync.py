@@ -11,8 +11,8 @@ import typer  # noqa: E402
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
-import database  # noqa: E402
 import log  # noqa: E402
+import services.database.session  # noqa: E402
 import services.entities  # noqa: E402
 import services.graph.commands  # noqa: E402
 import services.graph.session  # noqa: E402
@@ -23,7 +23,7 @@ logger = log.logging_init("cli")
 app = typer.Typer()
 
 # initialize database
-database.migrate()
+services.database.session.migrate()
 
 
 @app.command()
@@ -51,7 +51,7 @@ def reset():
 
 
 def sync_entities():
-    with database.session() as db:
+    with services.database.session.get() as db:
         with services.graph.session.get() as neo:
             db_offset = 0
             db_limit = 100
@@ -69,7 +69,7 @@ def sync_entities():
 
 
 def sync_geo():
-    with database.session() as db:
+    with services.database.session.get() as db:
         with services.graph.session.get() as session:
             # find all geo entities
 

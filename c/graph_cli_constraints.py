@@ -11,8 +11,8 @@ import typer  # noqa: E402
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
-import database  # noqa: E402
 import log  # noqa: E402
+import services.database.session  # noqa: E402
 import services.entities  # noqa: E402
 import services.graph.query  # noqa: E402
 import services.graph.session  # noqa: E402
@@ -26,7 +26,7 @@ app = typer.Typer()
 def create():
     """create graph constraints"""
 
-    with database.session() as db:
+    with services.database.session.get() as db:
         struct_list = services.entities.ListEntityNames(db).call()
 
     for name in struct_list.values:
@@ -35,8 +35,8 @@ def create():
 
         logger.info(f"[graph-cli] {query}")
 
-        with services.graph.session.get() as session:
-            services.graph.query.execute(query, {}, session)
+        with services.graph.session.get() as neo:
+            services.graph.query.execute(query, {}, neo)
 
 
 @app.command()

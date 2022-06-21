@@ -6,14 +6,16 @@ import time
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
-import doginit  # noqa: E402, F401
-import dotinit  # noqa: E402, F401
+import dot_init  # noqa: E402, F401
 import kafka  # noqa: E402
 import neo  # noqa: E402
+import services.graph  # noqa: E402
+import stats_init  # noqa: E402, F401
 
 while True:
     # check services
     kafka.service_check()
     neo.service_check()
+    services.graph.service_check()
 
     time.sleep(30)

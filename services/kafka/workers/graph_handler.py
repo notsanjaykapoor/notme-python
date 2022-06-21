@@ -6,11 +6,10 @@ import typing
 
 import attrs
 import datadog
-import sqlmodel
 
-import database
 import kafka
 import models
+import services.database.session
 import services.entities
 import services.entities.watches
 import services.graph.session
@@ -44,31 +43,29 @@ class GraphHandler(kafka.Handler):
             self._logger.info(f"actor '{task_name}' try {message_object}")
 
             if message_object["name"] == "entity.changed":
-                with sqlmodel.Session(database.engine) as db:
-                    with services.graph.session.get() as neo:
-                        # process message
-                        services.graph.sync.Entity(db=db, neo=neo, entity_id=message_object["id"]).call()
+                with services.database.session.get() as db, services.graph.session.get() as neo:
+                    # process message
+                    services.graph.sync.Entity(db=db, neo=neo, entity_id=message_object["id"]).call()
 
                 self._logger.info(f"actor '{task_name}' processed {message_object}")
             elif message_object["name"] == "entity.geo.changed":
-                with sqlmodel.Session(database.engine) as db:
-                    with services.graph.session.get() as neo:
-                        # process message
-                        services.graph.sync.EntityGeo(db=db, neo=neo, entity_id=message_object["id"]).call()
+                with services.database.session.get() as db, services.graph.session.get() as neo:
+                    # process message
+                    services.graph.sync.EntityGeo(db=db, neo=neo, entity_id=message_object["id"]).call()
 
-                        # check watches
-                        struct_watches = services.entities.watches.Match(
-                            db=db,
-                            neo=neo,
-                            entity_ids=[message_object["id"]],
-                            topic=self._topic,
-                        ).call()
+                    # check watches
+                    struct_watches = services.entities.watches.Match(
+                        db=db,
+                        neo=neo,
+                        entity_ids=[message_object["id"]],
+                        topic=self._topic,
+                    ).call()
 
-                        # publish entity messages
-                        services.entities.watches.Publish(
-                            watches=struct_watches.watches,
-                            entity_ids=[message_object["id"]],
-                        ).call()
+                    # publish entity messages
+                    services.entities.watches.Publish(
+                        watches=struct_watches.watches,
+                        entity_ids=[message_object["id"]],
+                    ).call()
 
                 self._logger.info(f"actor '{task_name}' processed {message_object}")
             else:

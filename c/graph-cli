@@ -6,11 +6,11 @@ import graph_cli_match
 import graph_cli_sync
 import typer
 
-import doginit  # noqa: F401
-import dotinit  # noqa: F401
+import dot_init  # noqa: F401
 import log
 import services.graph.query
 import services.graph.session
+import stats_init  # noqa: F401
 
 logger = log.logging_init("cli")
 
@@ -20,29 +20,29 @@ app.add_typer(graph_cli_indexes.app, name="indexes")
 app.add_typer(graph_cli_match.app, name="match")
 app.add_typer(graph_cli_sync.app, name="sync")
 
-import database  # noqa: E402
+import services.database.session  # noqa: E402
 
 # initialize database
-database.migrate()
+services.database.session.migrate()
 
 
 @app.command()
 def count():
-    with services.graph.session.get() as session:
+    with services.graph.session.get() as neo:
         struct_graph = services.graph.query.match_node_count()
-        records, summary = services.graph.query.execute_with_summary(struct_graph.query, struct_graph.params, session)
+        records, summary = services.graph.query.execute_with_summary(struct_graph.query, struct_graph.params, neo)
 
         for record in records:
             logger.info(f"[graph-cli] nodes total {record['count']}")
 
         struct_graph = services.graph.query.match_relationship_count()
-        records, summary = services.graph.query.execute_with_summary(struct_graph.query, struct_graph.params, session)
+        records, summary = services.graph.query.execute_with_summary(struct_graph.query, struct_graph.params, neo)
 
         for record in sorted(records, key=lambda record: -1 * record["count"]):
             logger.info(f"[graph-cli] relationships total {record['count']}")
 
         struct_graph = services.graph.query.match_node_label_group_count()
-        records = services.graph.query.execute(struct_graph.query, struct_graph.params, session)
+        records = services.graph.query.execute(struct_graph.query, struct_graph.params, neo)
 
         for record in sorted(records, key=lambda record: -1 * record["count"]):
             logger.info(f"[graph-cli] node label '{record['label'][0]}' count {record['count']}")

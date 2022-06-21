@@ -2,17 +2,15 @@
 import os
 import sys
 
-import sqlmodel
 import typer
-
-import dotinit  # noqa: F401
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
-import database  # noqa: E402
+import dot_init  # noqa: E402, F401
 import log  # noqa: E402
 import services.data_links  # noqa: E402
 import services.data_models  # noqa: E402
+import services.database.session  # noqa: E402
 import services.db  # noqa: E402
 import services.entities  # noqa: E402
 import services.entities.watches  # noqa: E402
@@ -25,7 +23,7 @@ logger = log.init("cli")
 app = typer.Typer()
 
 # initialize database
-database.migrate()
+services.database.session.migrate()
 
 
 @app.command()
@@ -50,7 +48,7 @@ def sync(
 
 
 def _db_sync(data_file: str, config_path: str):
-    with sqlmodel.Session(database.engine) as db, services.graph.session.get() as neo:
+    with services.database.session.get() as db, services.graph.session.get() as neo:
         # db config
         struct_models = services.data_models.Slurp(db=db, toml_file=f"{config_path}/data_models.toml").call()
         struct_links = services.data_links.Slurp(db=db, toml_file=f"{config_path}/data_links.toml").call()
@@ -80,9 +78,8 @@ def _db_sync(data_file: str, config_path: str):
 
 
 def _db_truncate():
-    with sqlmodel.Session(database.engine) as db:
-        with services.graph.session.get() as session:
-            services.graph.commands.truncate(session)
+    with services.database.session.get() as db, services.graph.session.get() as neo:
+        services.graph.commands.truncate(neo)
 
         services.db.truncate_table(db=db, table_name="entities")
         services.db.truncate_table(db=db, table_name="entity_watches")

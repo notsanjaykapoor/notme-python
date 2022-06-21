@@ -11,8 +11,8 @@ import typer  # noqa: E402
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
-import database  # noqa: E402
 import log  # noqa: E402
+import services.database.session  # noqa: E402
 import services.entities  # noqa: E402
 import services.graph.query  # noqa: E402
 import services.graph.session  # noqa: E402
@@ -26,7 +26,7 @@ app = typer.Typer()
 def create():
     """create graph indicies"""
 
-    with database.session() as db:
+    with services.database.session.get() as db:
         services.entities.ListEntityNames(db).call()
 
     # for name in struct_list.values:

@@ -12,8 +12,8 @@ import typer  # noqa: E402
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
-import database  # noqa: E402
 import log  # noqa: E402
+import services.database.session  # noqa: E402
 import services.entities  # noqa: E402
 import services.graph.distance  # noqa: E402
 import services.graph.query  # noqa: E402
@@ -53,8 +53,8 @@ def geo(
     logger.info(f"[graph-cli] query '{struct_graph.query}' params {struct_graph.params}")
 
     with datadog.statsd.timed(f"{__name__}.timer", tags=["env:dev", "neo:read"]):
-        with services.graph.session.get() as session:
-            records = session.read_transaction(services.graph.tx.read, struct_graph.query, struct_graph.params)
+        with services.graph.session.get() as neo:
+            records = neo.read_transaction(services.graph.tx.read, struct_graph.query, struct_graph.params)
 
     if not records:
         logger.info("[graph-cli] no records found")
@@ -74,7 +74,7 @@ def neighbors(
 
     name, id = node.split(":", 1)
 
-    with database.session() as db:
+    with services.database.session.get() as db:
         struct_list = services.entities.ListEntityNames(db).call()
         # map to list of list values, e.g. [['case'], ['person']]
         node_labels = [[s] for s in struct_list.values]
@@ -95,9 +95,8 @@ def neighbors(
 
     logger.info(f"[graph-cli] {query} {params}")
 
-    with services.graph.session.get() as session:
-        with services.graph.session.get() as session:
-            records = session.read_transaction(services.graph.tx.read, query, params)
+    with services.graph.session.get() as neo:
+        records = neo.read_transaction(services.graph.tx.read, query, params)
 
     if not records:
         logger.info("[graph-cli] no records found")
@@ -140,9 +139,8 @@ def shortest_path(
 
     logger.info(f"[graph-cli] {query} {params}")
 
-    with services.graph.session.get() as session:
-        with services.graph.session.get() as session:
-            records = session.read_transaction(services.graph.tx.read, query, params)
+    with services.graph.session.get() as neo:
+        records = neo.read_transaction(services.graph.tx.read, query, params)
 
     if not records:
         logger.info("[graph-cli] no path found")
