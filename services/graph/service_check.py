@@ -93,7 +93,7 @@ def _db_relationship_count(db: sqlmodel.Session) -> int:
 
 
 def _db_relationship_has_count(db: sqlmodel.Session) -> int:
-    """ " find entities that have slugs with node eq 1"""
+    """ " find entity slugs with node eq 1"""
     query = "node:1"
     struct_entities = services.entities.List(db=db, query=query, offset=0, limit=1024).call()
 
@@ -117,6 +117,6 @@ def _db_relationship_linked_count(db: sqlmodel.Session) -> int:
             for dst_object in struct_tuples.objects:
                 if dst_object.name == data_link.dst_name and dst_object.slug == data_link.dst_slug and dst_object.value == src_object.value:
                     # src_object should be linked to dst_object, and dst_object to src_object
-                    count += 2
+                    count += 1
 
     return count

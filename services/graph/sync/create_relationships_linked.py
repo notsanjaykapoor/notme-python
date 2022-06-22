@@ -1,5 +1,5 @@
+import dataclasses
 import logging
-from dataclasses import dataclass
 
 import neo4j
 import sqlmodel
@@ -10,7 +10,7 @@ import services.entities
 import services.graph.sync
 
 
-@dataclass
+@dataclasses.dataclass
 class Struct:
     code: int
     relationships_created: int
@@ -39,6 +39,9 @@ class CreateRelationshipsLinked:
     def call(self) -> Struct:
         struct = Struct(0, 0, [])
 
+        if self._entity.node == 0:
+            return struct
+
         # find matching data links
         struct_data_links = services.data_links.List(
             db=self._db,
@@ -47,34 +50,33 @@ class CreateRelationshipsLinked:
             limit=1024,
         ).call()
 
+        if not struct_data_links.objects:
+            return struct
+
         for data_link in struct_data_links.objects:
-            entities = self._entity_matches(data_link)
+            # create symmetric relationships between src and dst
 
-            for entity in entities:
-                dst_id = services.entities.graph_value_store(entity.type_name, str(entity.type_value))
+            struct.relationships_created += services.graph.sync.CreateRelationship(
+                src_id=str(self._entity.type_value),
+                src_name=self._entity.slug,
+                dst_id=str(self._entity.type_value),
+                dst_name=data_link.dst_slug,
+                rel_name=RELATIONSHIP_NAME,
+                neo=self._neo,
+            ).call()
 
-                struct.relationships_created += services.graph.sync.CreateRelationship(
-                    src_id=self._entity.entity_id,
-                    src_name=self._entity.entity_name,
-                    dst_id=dst_id,
-                    dst_name=entity.slug,
-                    rel_name=RELATIONSHIP_NAME,
-                    neo=self._neo,
-                ).call()
-
-                struct.relationships_created += services.graph.sync.CreateRelationship(
-                    src_id=str(dst_id),
-                    src_name=entity.slug,
-                    dst_id=self._entity.entity_id,
-                    dst_name=self._entity.entity_name,
-                    rel_name=RELATIONSHIP_NAME,
-                    neo=self._neo,
-                ).call()
+            struct.relationships_created += services.graph.sync.CreateRelationship(
+                src_id=str(self._entity.type_value),
+                src_name=data_link.dst_slug,
+                dst_id=str(self._entity.type_value),
+                dst_name=self._entity.slug,
+                rel_name=RELATIONSHIP_NAME,
+                neo=self._neo,
+            ).call()
 
         return struct
 
     def _entity_matches(self, data_link: models.DataLink) -> list[models.Entity]:
-        # find matching entities, filter out self object
         entity_query = self._entity_query(data_link)
 
         struct_entities = services.entities.List(db=self._db, query=entity_query, offset=0, limit=1000).call()

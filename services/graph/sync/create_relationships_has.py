@@ -1,5 +1,5 @@
+import dataclasses
 import logging
-from dataclasses import dataclass
 
 import neo4j
 import sqlmodel
@@ -10,7 +10,7 @@ import services.entities
 import services.graph.sync
 
 
-@dataclass
+@dataclasses.dataclass
 class Struct:
     code: int
     relationships_created: int
@@ -22,7 +22,7 @@ RELATIONSHIP_NAME = "has"
 
 class CreateRelationshipsHas:
     """
-    create graph 'has' relationship from entity object to ll of its properties with node eq 1
+    create graph 'has' relationship from entity object to all of its properties with node eq 1
     """
 
     def __init__(self, db: sqlmodel.Session, neo: neo4j.Session, entity: models.Entity):
