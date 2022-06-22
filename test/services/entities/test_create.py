@@ -1,12 +1,40 @@
 import random
 
+import pytest
+import sqlmodel
 import ulid
-from sqlmodel import Session
 
+import services.data_models
 import services.entities
 
 
-def test_entity_create(session: Session):
+@pytest.fixture()
+def data_models(session: sqlmodel.Session):
+    """create base data models used to validate data links"""
+    objects = [
+        {
+            "object_name": "person",
+            "object_node": 0,
+            "object_slug": "first_name",
+            "object_type": "string",
+        },
+        {
+            "object_name": "person",
+            "object_node": 0,
+            "object_slug": "last_name",
+            "object_type": "string",
+        },
+    ]
+
+    struct_create = services.data_models.Create(
+        db=session,
+        objects=objects,
+    ).call()
+
+    yield struct_create.object_ids
+
+
+def test_entity_create(session: sqlmodel.Session, data_models: list[int]):
     entity_id = ulid.new().str
 
     entity_params = [
@@ -30,9 +58,12 @@ def test_entity_create(session: Session):
         },
     ]
 
+    struct_dms = services.data_models.Hash(db=session, query="").call()
+
     struct_create = services.entities.Create(
         db=session,
         objects=entity_params,
+        data_models=struct_dms.object,
     ).call()
 
     assert struct_create.code == 0

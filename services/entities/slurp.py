@@ -3,6 +3,7 @@ import json
 
 import sqlmodel
 
+import services.data_models
 import services.entities
 import services.kafka.topics
 
@@ -26,6 +27,8 @@ class Slurp:
     def call(self) -> Struct:
         struct = Struct(0, [], set(), 0, [])
 
+        struct_dms = services.data_models.Hash(db=self._db, query="").call()
+
         for object in self._objects:
             # format object into proper entity objects
             entity_objects = self._object_to_entities(object)
@@ -35,7 +38,11 @@ class Slurp:
                 continue
 
             # persist to database
-            struct_create = services.entities.Create(self._db, objects=entity_objects).call()
+            struct_create = services.entities.Create(
+                self._db,
+                objects=entity_objects,
+                data_models=struct_dms.object,
+            ).call()
 
             if struct_create.code == 0:
                 struct.count += struct_create.count

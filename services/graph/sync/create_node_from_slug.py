@@ -20,15 +20,9 @@ class Struct:
     errors: list[str]
 
 
-class CreateNodeProperty:
+class CreateNodeFromSlug:
     """
-    create graph node using data model rules
-
-    if data model [entity name, entity slug] has object_node == 1, then create a graph node with:
-        - label eq slug
-        - id property eq entity value
-
-    e.g. given entity ['person', 'record_id', '1'], create node with label 'record_id' and id property '1'
+    create graph node if entity node value eq 1, with slug as label and type_value as id property
     """
 
     def __init__(self, db: sqlmodel.Session, neo: neo4j.Session, entity: models.Entity):
@@ -36,24 +30,16 @@ class CreateNodeProperty:
         self._neo = neo
         self._entity = entity
 
-        self._data_model_query = f"object_name:{self._entity.entity_name} object_slug:{self._entity.slug} object_node:1"
+        # self._data_model_query = f"object_name:{self._entity.entity_name} object_slug:{self._entity.slug} object_node:1"
         self._logger = logging.getLogger("service")
 
     def call(self) -> Struct:
         struct = Struct(0, 0, [])
 
-        # find any matching data models
-        struct_data_models = services.data_models.List(
-            db=self._db,
-            query=self._data_model_query,
-            offset=0,
-            limit=1000,
-        ).call()
-
-        if not struct_data_models.objects:
+        if self._entity.node == 0:
             return struct
 
-        # entity matched data model, create the graph node for this entity
+        # reate the graph node for this entity
         struct.nodes_created += self._create()
 
         return struct

@@ -70,10 +70,20 @@ type = "string"
 
 [person.2]
 node = 0
-slug = "hair_color"
+slug = "first_name"
 type = "string"
 
 [person.3]
+node = 0
+slug = "hair_color"
+type = "string"
+
+[person.4]
+node = 0
+slug = "last_name"
+type = "string"
+
+[person.5]
 node = 1
 slug = "record_id"
 type = "string"

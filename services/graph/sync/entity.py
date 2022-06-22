@@ -40,14 +40,14 @@ class Entity:
             return struct
 
         for entity in entities:
-            struct_node_entity = services.graph.sync.CreateNodeEntity(
+            struct_node_entity = services.graph.sync.CreateNodeFromEntity(
                 neo=self._neo,
                 entity=entity,
             ).call()
 
             struct.nodes_created += struct_node_entity.nodes_created
 
-            struct_node_property = services.graph.sync.CreateNodeProperty(
+            struct_node_property = services.graph.sync.CreateNodeFromSlug(
                 db=self._db,
                 neo=self._neo,
                 entity=entity,

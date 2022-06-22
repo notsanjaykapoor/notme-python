@@ -17,7 +17,7 @@ class Struct:
     errors: list[str]
 
 
-class CreateNodeEntity:
+class CreateNodeFromEntity:
     """
     create graph node from entity object
 

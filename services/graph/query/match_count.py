@@ -42,10 +42,13 @@ def match_node_label_group_count() -> GraphQuery:
     return struct
 
 
-def match_relationship_count() -> GraphQuery:
+def match_relationship_count(names: typing.Optional[str] = None) -> GraphQuery:
     """return total relationship count"""
     struct = GraphQuery("", {})
 
-    struct.query = "match(n)-[r]-(x) return count(r) as count"
+    if names:
+        struct.query = f"match(n)-[r:{names}]-(x) return count(r) as count"
+    else:
+        struct.query = "match(n)-[r]-(x) return count(r) as count"
 
     return struct

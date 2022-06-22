@@ -21,9 +21,10 @@ class Struct:
 class Create:
     """create entity from list of objects"""
 
-    def __init__(self, db: sqlmodel.Session, objects: list[dict]):
+    def __init__(self, db: sqlmodel.Session, objects: list[dict], data_models: dict):
         self._db = db
         self._objects = objects
+        self._data_models = data_models
 
         self._logger = logging.getLogger("service")
 
@@ -59,12 +60,20 @@ class Create:
         return struct
 
     def _entity_object(self, object: dict) -> models.Entity:
+        # find data model, and use to verify fields
+        entity_name = object["entity_name"]
+        slug = object["slug"]
+
+        dm_key = f"{entity_name}:{slug}"
+        data_model = self._data_models[dm_key]
+
         return models.Entity(
             entity_id=object["entity_id"],
             entity_key=object.get("entity_key", ""),
-            entity_name=object["entity_name"],
+            entity_name=entity_name,
             name=object.get("name", None),
-            slug=object["slug"],
+            node=data_model.object_node,
+            slug=slug,
             tags=object.get("tags", None),
             type_name=object["type_name"],
             type_value=object["type_value"],

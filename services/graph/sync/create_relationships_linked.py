@@ -22,7 +22,10 @@ RELATIONSHIP_NAME = "linked"
 
 class CreateRelationshipsLinked:
     """
-    create graph 'linked' relationships ...
+    create graph 'linked' relationships based on the following rules:
+
+    - find data_links that match entity name and slug, as source node
+    - for each source node, create relationship to target nodes with matching dst_name and dst_slug
     """
 
     def __init__(self, db: sqlmodel.Session, neo: neo4j.Session, entity: models.Entity):
@@ -41,11 +44,8 @@ class CreateRelationshipsLinked:
             db=self._db,
             query=self._data_link_query,
             offset=0,
-            limit=1000,
+            limit=1024,
         ).call()
-
-        if not struct_data_links.objects:
-            return struct
 
         for data_link in struct_data_links.objects:
             entities = self._entity_matches(data_link)
@@ -58,6 +58,15 @@ class CreateRelationshipsLinked:
                     src_name=self._entity.entity_name,
                     dst_id=dst_id,
                     dst_name=entity.slug,
+                    rel_name=RELATIONSHIP_NAME,
+                    neo=self._neo,
+                ).call()
+
+                struct.relationships_created += services.graph.sync.CreateRelationship(
+                    src_id=str(dst_id),
+                    src_name=entity.slug,
+                    dst_id=self._entity.entity_id,
+                    dst_name=self._entity.entity_name,
                     rel_name=RELATIONSHIP_NAME,
                     neo=self._neo,
                 ).call()

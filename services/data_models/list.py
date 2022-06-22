@@ -1,6 +1,6 @@
+import dataclasses
 import logging
 import re
-from dataclasses import dataclass
 
 import sqlmodel
 from sqlmodel.sql.expression import Select, SelectOfScalar
@@ -14,7 +14,7 @@ SelectOfScalar.inherit_cache = True  # type: ignore
 Select.inherit_cache = True  # type: ignore
 
 
-@dataclass
+@dataclasses.dataclass
 class Struct:
     code: int
     objects: list[models.Entity]
@@ -22,7 +22,7 @@ class Struct:
     errors: list[str]
 
 
-@dataclass
+@dataclasses.dataclass
 class StructToken:
     code: int
     tokens: list[dict]
@@ -57,7 +57,7 @@ class List:
             if token["field"] == "id":
                 # match query
                 self._dataset = self._dataset.where(self._model.id == value)
-            elif token["field"] == "name":
+            elif token["field"] == ["object_name", "name"]:
                 match = re.match(r"^~", value)
 
                 if match:

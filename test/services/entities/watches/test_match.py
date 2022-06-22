@@ -3,6 +3,7 @@ import pytest
 import sqlmodel
 import ulid
 
+import models
 import services.entities.watches
 
 
@@ -23,6 +24,7 @@ class TestWatchTopic:
         struct_create = services.entities.Create(
             db=session,
             objects=objects,
+            data_models={"any:first_name": models.DataModel(object_node=0)},
         ).call()
 
         assert struct_create.code == 0
@@ -79,6 +81,7 @@ class TestWatchQueryAll:
         struct_create = services.entities.Create(
             db=session,
             objects=objects,
+            data_models={"any:first_name": models.DataModel(object_node=0)},
         ).call()
 
         assert struct_create.code == 0
@@ -132,6 +135,7 @@ class TestWatchQueryEntityName:
         struct_create = services.entities.Create(
             db=session,
             objects=objects,
+            data_models={"person:first_name": models.DataModel(object_node=0)},
         ).call()
 
         assert struct_create.code == 0
@@ -154,6 +158,7 @@ class TestWatchQueryEntityName:
         struct_create = services.entities.Create(
             db=session,
             objects=objects,
+            data_models={"case:jacket_id": models.DataModel(object_node=0)},
         ).call()
 
         assert struct_create.code == 0
@@ -213,6 +218,7 @@ class TestWatchQueryGeoFence:
         struct_create = services.entities.Create(
             db=session,
             objects=objects,
+            data_models={"place:city": models.DataModel(object_node=0)},
         ).call()
 
         assert struct_create.code == 0

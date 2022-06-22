@@ -9,12 +9,12 @@ def test_data_models_slurp(session: sqlmodel.Session):
     struct_slurp = services.data_models.Slurp(db=session, toml_file=file).call()
 
     assert struct_slurp.code == 0
-    assert struct_slurp.count == 24
+    assert struct_slurp.count == 26
 
     struct_list = services.data_models.List(db=session, query="", offset=0, limit=100).call()
 
     assert struct_list.code == 0
-    assert struct_list.count == 24
+    assert struct_list.count == 26
 
     # should be idempotent
 

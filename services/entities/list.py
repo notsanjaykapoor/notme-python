@@ -97,6 +97,9 @@ class List:
                 else:
                     # match query
                     self._dataset = self._dataset.where(self._model.name == value)
+            elif token["field"] == "node":
+                # match query
+                self._dataset = self._dataset.where(self._model.node == value)
             elif token["field"] == "slug":
                 match = re.match(r"^~", value)
 

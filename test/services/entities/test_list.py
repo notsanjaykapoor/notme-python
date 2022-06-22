@@ -2,6 +2,7 @@ import pytest
 import sqlmodel
 import ulid
 
+import models
 import services.entities
 
 
@@ -21,6 +22,7 @@ def entity_id(session: sqlmodel.Session):
     services.entities.Create(
         db=session,
         objects=[entity_params],
+        data_models={"person:first_name": models.DataModel(object_node=0)},
     ).call()
 
     yield entity_id
