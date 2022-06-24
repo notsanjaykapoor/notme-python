@@ -1,0 +1,6 @@
+- name: install
+  raw: "test -e /usr/bin/python3 || (apt update && apt install -y python3-apt)"
+  args:
+    executable: /bin/bash
+  tags:
+    - python

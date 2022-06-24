@@ -1,0 +1,26 @@
+- name: start container
+  docker_container:
+    name: notme_neo
+    image: "arm64v8/neo4j:enterprise"
+    state: started
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:10687"]
+      interval: 2m
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    ports:
+      - "10687:7687"
+      - "10474:7474"
+    volumes:
+      - ./data/neo4j:/data
+      - ./logs/neo4j:/logs
+    env:
+      NEO4J_dbms_memory_pagecache_size: "512M"
+      NEO4J_dbms.memory.heap.initial_size: "512M"
+      NEO4J_dbms_memory_heap_max__size: "512M"
+      NEO4J_AUTH: "neo4j/development"
+      NEO4J_ACCEPT_LICENSE_AGREEMENT: "yes"
+  tags:
+    - neo
+    - services

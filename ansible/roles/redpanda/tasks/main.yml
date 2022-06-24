@@ -1,0 +1,64 @@
+- name: start container
+  docker_container:
+    name: notme_redpanda
+    image: redpanda-python:latest
+    state: started
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8082"]
+      interval: 2m
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    ports:
+      - "8081:8081"
+      - "8082:8082"
+      - "9092:9092"
+      - "28082:28082"
+      - "29092:29092"
+    privileged: "yes"
+    command:
+      - redpanda
+      - start
+      - --smp
+      - "1"
+      - --reserve-memory
+      - 0M
+      - --overprovisioned
+      - --node-id
+      - "0"
+      - --kafka-addr
+      - PLAINTEXT://0.0.0.0:29092,OUTSIDE://0.0.0.0:9092
+      - --advertise-kafka-addr
+      - PLAINTEXT://redpanda:29092,OUTSIDE://localhost:9092
+      - --pandaproxy-addr
+      - PLAINTEXT://0.0.0.0:28082,OUTSIDE://0.0.0.0:8082
+      - --advertise-pandaproxy-addr
+      - PLAINTEXT://redpanda:28082,OUTSIDE://localhost:8082
+  tags:
+    - redpanda
+    - services
+
+- name: check container
+  docker_container_info:
+    name: notme_redpanda
+  register: redpanda
+  tags:
+    - redpanda
+    - services
+
+- name: create queues
+  shell: "rpk topic create {{item}}"
+  loop:
+    - "graph-sync"
+    - "geofence-alerts"
+  register: qcreate
+  when: redpanda.exists
+  tags:
+    - services
+
+- name: list queues
+  shell: "rpk topic list"
+  register: qlist
+
+- debug:
+    var: qlist.stdout_lines

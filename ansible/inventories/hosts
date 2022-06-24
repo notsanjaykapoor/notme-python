@@ -1,0 +1,20 @@
+localhost ansible_connection=local ansible_python_interpreter="/usr/bin/env python"
+
+[all]
+notme-neo ansible_connection=docker ansible_host=notme_neo
+notme-redpanda ansible_connection=docker ansible_host=notme_redpanda
+
+[all:vars]
+ansible_python_interpreter=/usr/bin/python3
+
+[neo]
+notme-neo ansible_connection=docker ansible_host=notme_neo
+
+[neo:vars]
+ansible_python_interpreter=/usr/bin/python3
+
+[redpanda]
+notme-redpanda ansible_connection=docker ansible_host=notme_redpanda
+
+[redpanda:vars]
+ansible_python_interpreter=/usr/bin/python3

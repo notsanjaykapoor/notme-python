@@ -1,0 +1,14 @@
+---
+# start containers
+- name: start containers
+  hosts: localhost
+  roles:
+    - role: ./roles/neo
+    - role: ./roles/redpanda
+
+# install python on all hosts
+- name: install python
+  gather_facts: no
+  hosts: all
+  roles:
+    - role: ./roles/python
