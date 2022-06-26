@@ -22,13 +22,6 @@ class Struct:
     errors: list[str]
 
 
-@dataclasses.dataclass
-class StructToken:
-    code: int
-    tokens: list[dict]
-    errors: list[str]
-
-
 class List:
     def __init__(self, db: sqlmodel.Session, query: str = "", offset: int = 0, limit: int = 20):
         self._db = db

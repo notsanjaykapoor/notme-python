@@ -8,7 +8,7 @@ def test_user_list(session: sqlmodel.Session):  #
     assert struct_create.code == 0
 
     struct_list = services.users.List(db=session, query="user_id:~user").call()
-    assert len(struct_list.users) == 1
+    assert struct_list.count == 1
 
     struct_list = services.users.List(db=session, query="user_id:~xxx").call()
-    assert len(struct_list.users) == 0
+    assert struct_list.count == 0

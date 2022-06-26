@@ -14,6 +14,7 @@ sys.path.insert(1, os.path.join(sys.path[0], ".."))
 import log  # noqa: E402
 import services.database.session  # noqa: E402
 import services.entities  # noqa: E402
+import services.entity_locations  # noqa: E402
 import services.graph.commands  # noqa: E402
 import services.graph.session  # noqa: E402
 import services.graph.sync  # noqa: E402
@@ -30,7 +31,7 @@ services.database.session.migrate()
 def geo():
     """sync geo data to graph database"""
 
-    sync_geo()
+    sync_entity_locations()
 
     os.system("./c/graph-cli count")
 
@@ -45,7 +46,7 @@ def reset():
     logger.info("[graph-cli] truncated")
 
     sync_entities()
-    sync_geo()
+    sync_entity_locations()
 
     os.system("./c/graph-cli count")
 
@@ -68,16 +69,14 @@ def sync_entities():
                 db_offset += db_limit
 
 
-def sync_geo():
+def sync_entity_locations():
     with services.database.session.get() as db:
         with services.graph.session.get() as session:
-            # find all geo entities
+            # find all entity location objects
+            struct_list = services.entity_locations.List(db=db, query="", offset=0, limit=1000).call()
 
-            query = "slug:lat"
-            struct_list = services.entities.List(db=db, query=query, offset=0, limit=1000).call()
-
-            for entity in struct_list.objects:
-                services.graph.sync.EntityGeo(db=db, neo=session, entity_id=entity.entity_id).call()
+            for entity_location in struct_list.objects:
+                services.graph.sync.EntityGeo(db=db, neo=session, entity_id=entity_location.entity_id).call()
 
 
 if __name__ == "__main__":

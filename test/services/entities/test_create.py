@@ -24,6 +24,18 @@ def data_models(session: sqlmodel.Session):
             "object_slug": "last_name",
             "object_type": "string",
         },
+        {
+            "object_name": "person",
+            "object_node": 0,
+            "object_slug": "lat",
+            "object_type": "string",
+        },
+        {
+            "object_name": "person",
+            "object_node": 0,
+            "object_slug": "lon",
+            "object_type": "string",
+        },
     ]
 
     struct_create = services.data_models.Create(
@@ -50,7 +62,7 @@ def test_entity_create(session: sqlmodel.Session, data_models: list[int]):
         {
             "entity_id": entity_id,
             "entity_name": "person",
-            "name": "person 2",
+            "name": "person 1",
             "slug": "last_name",
             "tags": "|random|",
             "type_name": "string",
@@ -67,10 +79,46 @@ def test_entity_create(session: sqlmodel.Session, data_models: list[int]):
     ).call()
 
     assert struct_create.code == 0
-    assert len(struct_create.ids) == 2
-    assert len(struct_create.entity_ids) == 1
     assert struct_create.count == 2
+    assert struct_create.entity_count == 1
+    assert struct_create.location_count == 0
 
-    struct_list = services.entities.List(db=session, query="", offset=0, limit=100).call()
+    services.entities.List(db=session, query="", offset=0, limit=100).call()
 
-    print(struct_list)
+
+def test_entity_create_with_geo(session: sqlmodel.Session, data_models: list[int]):
+    entity_id = ulid.new().str
+
+    entity_params = [
+        {
+            "entity_id": entity_id,
+            "entity_name": "person",
+            "name": "person 1",
+            "slug": "lat",
+            "type_name": "string",
+            "type_value": "41.88094",
+        },
+        {
+            "entity_id": entity_id,
+            "entity_name": "person",
+            "name": "person 1",
+            "slug": "lon",
+            "type_name": "string",
+            "type_value": "-87.63004",
+        },
+    ]
+
+    struct_dms = services.data_models.Hash(db=session, query="").call()
+
+    struct_create = services.entities.Create(
+        db=session,
+        objects=entity_params,
+        data_models=struct_dms.object,
+    ).call()
+
+    assert struct_create.code == 0
+    assert struct_create.count == 2
+    assert struct_create.entity_count == 1
+    assert struct_create.location_count == 1
+
+    services.entities.List(db=session, query="", offset=0, limit=100).call()

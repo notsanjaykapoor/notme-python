@@ -1,6 +1,5 @@
 import dataclasses
 import logging
-import typing
 
 import datadog
 import neo4j
@@ -8,14 +7,14 @@ import sqlmodel
 
 import models
 import services.entities
+import services.entity_locations
 import services.graph
 import services.graph.sync
 
 
 @dataclasses.dataclass
-class EntityPoint:
+class EntityLatLon:
     code: int
-    entity: typing.Optional[models.Entity]
     lat: float
     lon: float
 
@@ -43,54 +42,55 @@ class EntityGeo:
     def call(self) -> Struct:
         struct = Struct(0, 0, [])
 
-        entity_point = self._entity_geo()
-
-        if entity_point.code != 0:
-            struct.code = entity_point.code
-            return struct
-
-        struct.nodes_updated += self._node_update(entity_point)
-
-        return struct
-
-    def _entity_geo(self) -> EntityPoint:
-        """find entity and map to geo coords"""
-        point = EntityPoint(1, None, 0, 0)
-
+        # vaidate entity
         entities = services.entities.get_all_by_id(db=self._db, id=self._entity_id)
 
         if not entities:
-            return point
+            struct.code = 404
+            return struct
+
+        # map geo coords to an entity location object
+        entity_latlon = self._entity_latlon(entities)
+
+        if entity_latlon.code != 0:
+            struct.code = entity_latlon.code
+            return struct
+
+        # update graph database
+        struct.nodes_updated += self._node_update(
+            entity_latlon=entity_latlon,
+            entity_name=entities[0].entity_name,
+        )
+
+        return struct
+
+    def _entity_latlon(self, entities: list[models.Entity]) -> EntityLatLon:
+        """map entity to an entity latlon"""
+        struct = EntityLatLon(0, 0, 0)
 
         entity_lat = [entity.type_value for entity in entities if entity.slug == "lat"]
         entity_lon = [entity.type_value for entity in entities if entity.slug == "lon"]
 
         if not entity_lat or not entity_lon:
-            return point
+            struct.code = 422
+            return struct
 
         assert entity_lat[0]
         assert entity_lon[0]
 
-        point.lat = float(entity_lat[0])
-        point.lon = float(entity_lon[0])
+        struct.lat = float(entity_lat[0])
+        struct.lon = float(entity_lon[0])
 
-        point.entity = entities[0]
-        point.code = 0
+        return struct
 
-        return point
-
-    def _node_update(self, point: EntityPoint) -> int:
-        assert point.entity
-
-        entity = point.entity
-
+    def _node_update(self, entity_latlon: EntityLatLon, entity_name: str) -> int:
         query_update = f"""
-        match(n:{entity.entity_name} {{id: $id}}) set n.location = point({{latitude: $lat, longitude: $lon}})
+        match(n:{entity_name} {{id: $id}}) set n.location = point({{latitude: $lat, longitude: $lon}})
         """
 
-        params = {"id": entity.entity_id, "lat": point.lat, "lon": point.lon}
+        params = {"id": self._entity_id, "lat": entity_latlon.lat, "lon": entity_latlon.lon}
 
-        self._logger.info(f"{__name__} label '{entity.entity_name}' props {params}")
+        self._logger.info(f"{__name__} label '{entity_name}' props {params}")
 
         with datadog.statsd.timed(f"{__name__}.timer", tags=["env:dev", "neo:write"]):
             self._neo.write_transaction(services.graph.tx.write, query_update, params)

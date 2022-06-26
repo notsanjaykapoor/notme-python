@@ -47,6 +47,11 @@ def sync(
     os.system("./c/graph-cli sync geo")
 
 
+@app.command()
+def truncate():
+    _db_truncate()
+
+
 def _db_sync(data_file: str, config_path: str):
     with services.database.session.get() as db, services.graph.session.get() as neo:
         # db config
@@ -82,7 +87,9 @@ def _db_truncate():
         services.graph.commands.truncate(neo)
 
         services.db.truncate_table(db=db, table_name="entities")
+        services.db.truncate_table(db=db, table_name="entity_locations")
         services.db.truncate_table(db=db, table_name="entity_watches")
+        services.db.truncate_table(db=db, table_name="events")
         services.db.truncate_table(db=db, table_name="data_links")
         services.db.truncate_table(db=db, table_name="data_models")
 

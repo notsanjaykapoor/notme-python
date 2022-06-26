@@ -17,7 +17,7 @@ Select.inherit_cache = True  # type: ignore
 @dataclasses.dataclass
 class Struct:
     code: int
-    objects: list[models.Entity]
+    objects: list[models.Event]
     count: int
     errors: list[str]
 
@@ -29,8 +29,8 @@ class List:
         self._offset = offset
         self._limit = limit
 
-        self._model = models.DataLink
-        self._dataset = sqlmodel.select(self._model)  # default database query
+        self._model = models.Event
+        self._dataset = sqlmodel.select(models.Event)  # default database query
         self._logger = logging.getLogger("service")
 
     def call(self) -> Struct:
@@ -47,32 +47,18 @@ class List:
         for token in struct_tokens.tokens:
             value = token["value"]
 
-            if token["field"] == "id":
-                # match query
-                self._dataset = self._dataset.where(self._model.id == value)
-            elif token["field"] == "src_name":
+            if token["field"] == "name":
                 match = re.match(r"^~", value)
 
                 if match:
                     # like query
                     value_normal = re.sub(r"~", "", value)
-                    self._dataset = self._dataset.where(self._model.src_name.like("%" + value_normal + "%"))  # type: ignore
+                    self._dataset = self._dataset.where(self._model.name.like("%" + value_normal + "%"))  # type: ignore
                 else:
                     # match query
-                    self._dataset = self._dataset.where(self._model.src_name == value)
-            elif token["field"] == "src_slug":
-                match = re.match(r"^~", value)
-
-                if match:
-                    # like query
-                    value_normal = re.sub(r"~", "", value)
-                    self._dataset = self._dataset.where(self._model.src_slug.like("%" + value_normal + "%"))  # type: ignore
-                else:
-                    # match query
-                    self._dataset = self._dataset.where(self._model.src_slug == value)
+                    self._dataset = self._dataset.where(self._model.name == value)
 
         struct.objects = self._db.exec(self._dataset.offset(self._offset).limit(self._limit)).all()
-
         struct.count = len(struct.objects)
 
         return struct

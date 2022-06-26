@@ -1,6 +1,6 @@
+import dataclasses
 import logging
 import typing
-from dataclasses import dataclass
 
 import sqlmodel
 
@@ -8,7 +8,7 @@ import models
 from context import request_id
 
 
-@dataclass
+@dataclasses.dataclass
 class Struct:
     code: int
     user: typing.Optional[models.User]

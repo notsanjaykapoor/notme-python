@@ -4,7 +4,9 @@ from .actor_message import ActorMessage  # noqa: F401
 from .data_link import DataLink  # noqa: F401
 from .data_model import DataModel  # noqa: F401
 from .entity import Entity  # noqa: F401
+from .entity_location import EntityLocation  # noqa: F401
 from .entity_watch import EntityWatch  # noqa: F401
+from .event import Event  # noqa: F401
 from .kafka_message import KafkaMessage  # noqa: F401
 from .memgraph_connection import MemgraphConnection  # noqa: F401
 from .user import User  # noqa: F401

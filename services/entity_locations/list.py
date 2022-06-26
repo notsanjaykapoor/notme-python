@@ -17,20 +17,20 @@ Select.inherit_cache = True  # type: ignore
 @dataclasses.dataclass
 class Struct:
     code: int
-    objects: list[models.Entity]
+    objects: list[models.EntityLocation]
     count: int
     errors: list[str]
 
 
 class List:
-    def __init__(self, db: sqlmodel.Session, query: str = "", offset: int = 0, limit: int = 20):
+    def __init__(self, db: sqlmodel.Session, query: str = "", offset: int = 0, limit: int = 100):
         self._db = db
         self._query = query
         self._offset = offset
         self._limit = limit
 
-        self._model = models.DataLink
-        self._dataset = sqlmodel.select(self._model)  # default database query
+        self._model = models.EntityLocation
+        self._dataset = sqlmodel.select(models.EntityLocation)  # default database query
         self._logger = logging.getLogger("service")
 
     def call(self) -> Struct:
@@ -47,29 +47,19 @@ class List:
         for token in struct_tokens.tokens:
             value = token["value"]
 
-            if token["field"] == "id":
-                # match query
-                self._dataset = self._dataset.where(self._model.id == value)
-            elif token["field"] == "src_name":
-                match = re.match(r"^~", value)
+            if token["field"] == "entity_id":
+                # match = re.match(r"^~", value)
 
-                if match:
+                if re.match(r"^~", value):
                     # like query
                     value_normal = re.sub(r"~", "", value)
-                    self._dataset = self._dataset.where(self._model.src_name.like("%" + value_normal + "%"))  # type: ignore
+                    self._dataset = self._dataset.where(self._model.entity_id.like("%" + value_normal + "%"))  # type: ignore
+                elif re.match(r"\S+\|\S+", value):
+                    values = value.split("|")
+                    self._dataset = self._dataset.where(self._model.entity_id.in_(values))  # type: ignore
                 else:
                     # match query
-                    self._dataset = self._dataset.where(self._model.src_name == value)
-            elif token["field"] == "src_slug":
-                match = re.match(r"^~", value)
-
-                if match:
-                    # like query
-                    value_normal = re.sub(r"~", "", value)
-                    self._dataset = self._dataset.where(self._model.src_slug.like("%" + value_normal + "%"))  # type: ignore
-                else:
-                    # match query
-                    self._dataset = self._dataset.where(self._model.src_slug == value)
+                    self._dataset = self._dataset.where(self._model.entity_id == value)
 
         struct.objects = self._db.exec(self._dataset.offset(self._offset).limit(self._limit)).all()
 

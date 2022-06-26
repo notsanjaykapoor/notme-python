@@ -1,5 +1,6 @@
-import strawberry
 import typing
+
+import strawberry
 
 
 @strawberry.type
@@ -19,4 +20,4 @@ class GqlUserGet:
 class GqlUsersList:
     code: int
     errors: list[str]
-    users: list[GqlUser]
+    objects: list[GqlUser]

@@ -1,24 +1,24 @@
+import dataclasses
 import logging
-from dataclasses import dataclass
-from typing import Optional
+import typing
 
-from sqlmodel import Session, select
+import sqlmodel
 
 import models
 
 
-@dataclass
+@dataclasses.dataclass
 class Struct:
     code: int
-    user_id: Optional[int]
+    user_id: typing.Optional[int]
     errors: list[str]
 
 
 class Create:
-    def __init__(self, db: Session, user_id: str):
+    def __init__(self, db: sqlmodel.Session, user_id: str):
         self._db = db
         self._user_id = user_id
-        self._logger = logging.getLogger("api")
+        self._logger = logging.getLogger("service")
 
     def call(self) -> Struct:
         struct = Struct(0, None, [])

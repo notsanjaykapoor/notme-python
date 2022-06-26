@@ -4,27 +4,24 @@ load_dotenv()  # take environment variables from .env.
 
 import contextvars
 import logging
-import strawberry
-import sys
-import ulid
+import sys  # noqa: E402
 
-import gql
-import services.entities
-import services.users
-
-from database import engine
-from dataclasses import dataclass, field
+import strawberry  # noqa: E402
+import ulid  # noqa: E402
 from fastapi import Depends, FastAPI, HTTPException, Request, WebSocket
 from sqlmodel import Session, SQLModel
 from strawberry.fastapi import GraphQLRouter
 from strawberry.schema.config import StrawberryConfig
 
-import models
-
-from context import request_id
-from log import logging_init
+import gql  # noqa: E402
+import models  # noqa: E402
+import services.entities  # noqa: E402
+import services.users  # noqa: E402
+from context import request_id  # noqa: E402
+from log import logging_init  # noqa: E402
 
 logger = logging_init("api")
+
 
 # api db dependency
 def get_db():
@@ -56,15 +53,14 @@ app.include_router(graphql_router, prefix="/graphql")
 
 @app.on_event("startup")
 def on_startup():
-    logger.info(f"api.startup")
+    logger.info("api.startup")
 
-    # create db tables
-    SQLModel.metadata.create_all(engine)
+    services.database.session.migrate()
 
 
 @app.on_event("shutdown")
 def on_shutdown():
-    logger.info(f"api.shutdown")
+    logger.info("api.shutdown")
 
 
 @app.middleware("http")
@@ -76,9 +72,7 @@ async def add_request_id(request: Request, call_next):
 
 
 @app.get("/entities", response_model=list[models.Entity])
-def entities_list(
-    query: str = "", offset: int = 0, limit: int = 100, db: Session = Depends(get_db)
-):
+def entities_list(query: str = "", offset: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     logger.info(f"{request_id.get()} api.entities.list")
 
     struct = services.entities.List(db, query, offset, limit).call()
@@ -115,13 +109,11 @@ def user_get(user_id: str, db: Session = Depends(get_db)):
 
 
 @app.get("/users", response_model=list[models.User])
-def users_list(
-    query: str = "", offset: int = 0, limit: int = 100, db: Session = Depends(get_db)
-):
+def users_list(query: str = "", offset: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     logger.info(f"{request_id.get()} api.users.list")
 
     struct = services.users.List(db, query, offset, limit).call()
 
     # logger.info(f"api.users.list response {struct}")
 
-    return struct.users
+    return struct.objects

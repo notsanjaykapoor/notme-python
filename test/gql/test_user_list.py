@@ -28,7 +28,7 @@ def test_gql_user_list(session: sqlmodel.Session, user_id: str):
         query TestQuery($query: String, $offset: Int, $limit: Int) {
             users_list(query: $query, offset: $offset, limit: $limit) {
                 code
-                users {
+                objects {
                     user_id
                 }
             }
@@ -48,5 +48,5 @@ def test_gql_user_list(session: sqlmodel.Session, user_id: str):
     data = result.data["users_list"]
 
     assert data["code"] == 0
-    assert len(data["users"]) == 1
-    assert data["users"][0]["user_id"] == user_id
+    assert len(data["objects"]) == 1
+    assert data["objects"][0]["user_id"] == user_id

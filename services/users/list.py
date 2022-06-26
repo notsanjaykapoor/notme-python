@@ -1,6 +1,6 @@
+import dataclasses
 import logging
 import re
-from dataclasses import dataclass
 
 import sqlmodel
 
@@ -9,17 +9,11 @@ import services.mql
 from context import request_id
 
 
-@dataclass
+@dataclasses.dataclass
 class Struct:
     code: int
-    users: list[models.User]
-    errors: list[str]
-
-
-@dataclass
-class StructToken:
-    code: int
-    tokens: list[dict]
+    objects: list[models.User]
+    count: int
     errors: list[str]
 
 
@@ -35,7 +29,7 @@ class List:
         self._logger = logging.getLogger("api")
 
     def call(self) -> Struct:
-        struct = Struct(0, [], [])
+        struct = Struct(0, [], 0, [])
 
         self._logger.info(f"{request_id.get()} {__name__} query {self._query}")
 
@@ -59,6 +53,7 @@ class List:
                     # match query
                     self._dataset = self._dataset.where(self._model.user_id == value)
 
-        struct.users = self._db.exec(self._dataset.offset(self._offset).limit(self._limit)).all()
+        struct.objects = self._db.exec(self._dataset.offset(self._offset).limit(self._limit)).all()
+        struct.count = len(struct.objects)
 
         return struct

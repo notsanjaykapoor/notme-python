@@ -9,6 +9,7 @@ sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
 import dot_init  # noqa: E402, F401
 import log  # noqa: E402
+import services.data_models  # noqa: E402
 import services.database.session  # noqa: E402
 import services.entities  # noqa: E402
 import services.entities.watches  # noqa: E402
@@ -69,7 +70,13 @@ def search_city(
         with services.database.session.get() as db, services.graph.session.get() as neo:
             struct_entities = tomtom.places.MapEntity(db=db, place=object).call()
 
-            struct_create = services.entities.Create(db=db, objects=struct_entities.entities).call()
+            struct_dms = services.data_models.Hash(db=db, query="").call()
+
+            struct_create = services.entities.Create(
+                db=db,
+                objects=struct_entities.entities,
+                data_models=struct_dms.object,
+            ).call()
 
             if struct_create.count > 0:
                 logger.info(f"[places-cli] places created {struct_create.entity_count}")
