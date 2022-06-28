@@ -1,9 +1,9 @@
-import logging
 from dataclasses import dataclass
 
 import sqlmodel
 import toml
 
+import log
 import services.data_models
 
 
@@ -21,7 +21,7 @@ class Slurp:
 
         self._toml_dict = toml.load(self._toml_file)
 
-        self._logger = logging.getLogger("service")
+        self._logger = log.init("service")
 
     def call(self) -> Struct:
         struct = Struct(0, 0, [])

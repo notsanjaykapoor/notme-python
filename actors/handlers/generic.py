@@ -1,9 +1,9 @@
-from dataclasses import dataclass
+import dataclasses
 
 import log
 
 
-@dataclass
+@dataclasses.dataclass
 class Struct:
     code: int
     errors: list[str]

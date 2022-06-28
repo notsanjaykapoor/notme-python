@@ -1,11 +1,11 @@
 import asyncio
 import dataclasses
-import logging
 import sys
 
 import confluent_kafka
 
 import kafka.config
+import log
 import models
 
 
@@ -26,7 +26,7 @@ class Reader:
         self._consumer = confluent_kafka.Consumer(kafka.config.config_reader)
         self._timeout = 1.0
         self._topics = [self._topic]
-        self._logger = logging.getLogger("service")
+        self._logger = log.init("service")
 
     async def call(self):
         struct = Struct(0, [])

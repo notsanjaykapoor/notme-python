@@ -1,8 +1,8 @@
 import dataclasses
 import json
-import logging
 
 import kafka
+import log
 import models
 
 
@@ -14,7 +14,7 @@ class Struct:
 
 class Generic(kafka.Handler):
     def __init__(self):
-        self._logger = logging.getLogger("console")
+        self._logger = log.init("service")
 
     async def call(self, msg: models.KafkaMessage):
         struct = Struct(0, [])

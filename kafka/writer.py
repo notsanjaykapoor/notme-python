@@ -1,11 +1,11 @@
 import dataclasses
 import json
-import logging
 import typing
 
 import confluent_kafka
 
 import kafka.config
+import log
 
 
 @dataclasses.dataclass
@@ -19,7 +19,7 @@ class Writer:
         self._topic = topic
 
         self._producer = confluent_kafka.Producer(kafka.config.config_writer)
-        self._logger = logging.getLogger("service")
+        self._logger = log.init("service")
 
     def call(self, key: str, message: typing.Union[dict, str]):
         struct = Struct(0, [])

@@ -9,9 +9,6 @@ class ActorHandler:
     def __init__(self, app_name: str) -> None:
         self._app_name = app_name
 
-        # self._actor_log = ActorLog(app_name=self._app_name)
-        # self._logger = logging.getLogger("actor")
-
     # process actor message
     def call(self, actor: Actor, message: dict):
         print(f"[actor {self._app_name}] {message}")

@@ -1,8 +1,9 @@
 import dataclasses
-import logging
 import os
 
 import requests
+
+import log
 
 
 @dataclasses.dataclass
@@ -25,7 +26,7 @@ class Category:
 
         self._key = os.environ.get("TOMTOM_API_KEY")
         self._url = f"https://api.tomtom.com/search/2/categorySearch/{self._category}.json"
-        self._logger = logging.getLogger("service")
+        self._logger = log.init("service")
 
     def call(self) -> Struct:
         struct = Struct(0, [], 0, 0, [])

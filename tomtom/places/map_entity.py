@@ -1,9 +1,9 @@
 import dataclasses
-import logging
 
 import sqlmodel
 import ulid
 
+import log
 import services.entities
 
 
@@ -24,7 +24,7 @@ class MapEntity:
         self._db = db
         self._place = place
 
-        self._logger = logging.getLogger("service")
+        self._logger = log.init("service")
 
     def call(self) -> Struct:
         struct = Struct(0, [], [])

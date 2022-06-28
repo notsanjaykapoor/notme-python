@@ -1,9 +1,9 @@
 import asyncio
 import dataclasses
-import logging
 import typing
 
 import kafka
+import log
 
 
 @dataclasses.dataclass
@@ -20,7 +20,7 @@ class Scheduler:
         self._handler = handler
 
         self._reader = kafka.Reader(self._topic, self._group, self._handler)
-        self._logger = logging.getLogger("service")
+        self._logger = log.init("service")
 
     def call(self) -> Struct:
         struct = Struct(0, None, [])

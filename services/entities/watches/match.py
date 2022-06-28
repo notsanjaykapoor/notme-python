@@ -1,5 +1,4 @@
 import dataclasses
-import logging
 import re
 import typing
 
@@ -7,6 +6,7 @@ import datadog
 import neo4j
 import sqlmodel
 
+import log
 import models
 import services.entities.watches
 import services.graph.distance
@@ -45,7 +45,7 @@ class Match:
             self._query = ""
 
         self._tokens_geo = ["geo", "geofence"]
-        self._logger = logging.getLogger("service")
+        self._logger = log.init("service")
 
     def call(self) -> Struct:
         struct = Struct(0, [], 0, [])

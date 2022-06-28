@@ -33,7 +33,7 @@ logging_config = {
         }
     },
     "handlers": {
-        "cli": {
+        "cli": {  # deprecated?
             "formatter": "basic",
             "class": "logging.StreamHandler",
             "stream": "ext://sys.stderr",

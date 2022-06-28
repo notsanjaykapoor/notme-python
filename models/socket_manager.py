@@ -1,15 +1,14 @@
-import logging
-import sys
 import typing
-from dataclasses import dataclass
 
 from fastapi import WebSocket
+
+import log
 
 
 class SocketManager:
     def __init__(self):
         self._connections = {}
-        self._logger = logging.getLogger("service")
+        self._logger = log.init("service")
 
     async def broadcast(self, message: str, exclude: set[typing.Any]):
         connections = self._broadcast_set(exclude)
