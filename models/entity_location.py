@@ -14,8 +14,8 @@ class EntityLocation(Base):  # type: ignore
         arbitrary_types_allowed = True
 
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
-    entity_id = sqlalchemy.Column(sqlalchemy.String, unique=True)
-    loc = sqlalchemy.Column(geoalchemy2.Geometry(geometry_type="POINT", srid=4326, nullable=False))
+    entity_id = sqlalchemy.Column(sqlalchemy.String, unique=True, nullable=False)
+    loc = sqlalchemy.Column(geoalchemy2.Geometry(geometry_type="POINT", srid=4326), nullable=False)
 
     def pack(self):
         return {

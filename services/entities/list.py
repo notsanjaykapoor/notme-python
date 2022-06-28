@@ -2,6 +2,7 @@ import dataclasses
 import logging
 import re
 
+import sqlalchemy
 import sqlmodel
 from sqlmodel.sql.expression import Select, SelectOfScalar
 
@@ -71,9 +72,7 @@ class List:
                     # match query
                     self._dataset = self._dataset.where(self._model.entity_key == value)
             elif token["field"] == "entity_name":
-                match = re.match(r"^~", value)
-
-                if match:
+                if re.match(r"^~", value):
                     # like query
                     value_normal = re.sub(r"~", "", value)
                     self._dataset = self._dataset.where(self._model.entity_name.like("%" + value_normal + "%"))  # type: ignore
@@ -81,41 +80,41 @@ class List:
                     # match query
                     self._dataset = self._dataset.where(self._model.entity_name == value)
             elif token["field"] == "name":
-                match = re.match(r"^~", value)
-
-                if match:
+                if re.match(r"^~", value):
                     # like query
                     value_normal = re.sub(r"~", "", value)
                     self._dataset = self._dataset.where(self._model.name.like("%" + value_normal + "%"))  # type: ignore
                 else:
-                    # match query
+                    # equal query
                     self._dataset = self._dataset.where(self._model.name == value)
+            elif token["field"] == "name_text":
+                print(f"value {value}")
+                # full text search
+                ts_vector = sqlalchemy.func.to_tsvector(models.Entity.name)
+                self._dataset = self._dataset.where(ts_vector.match(value))
+                # self._dataset = self._dataset.where(ts_vector.match(sqlalchemy.func.websearch_to_tsquery(value)))
             elif token["field"] == "node":
                 # match query
                 self._dataset = self._dataset.where(self._model.node == value)
             elif token["field"] == "slug":
-                match = re.match(r"^~", value)
-
-                if match:
+                if re.match(r"^~", value):
                     # like query
                     value_normal = re.sub(r"~", "", value)
                     self._dataset = self._dataset.where(self._model.slug.like("%" + value_normal + "%"))  # type: ignore
                 else:
-                    # match query
+                    # equal query
                     self._dataset = self._dataset.where(models.Entity.slug == value)
             elif token["field"] == "tags":
                 # like query
                 value_format = f"|{value}|"
                 self._dataset = self._dataset.where(self._model.tags.like("%" + value_format + "%"))  # type: ignore
             elif token["field"] == "type_value":
-                match = re.match(r"^~", value)
-
-                if match:
+                if re.match(r"^~", value):
                     # like query
                     value_normal = re.sub(r"~", "", value)
                     self._dataset = self._dataset.where(self._model.type_value.like("%" + value_normal + "%"))  # type: ignore
                 else:
-                    # match query
+                    # equal query
                     self._dataset = self._dataset.where(self._model.type_value == value)
 
         struct.objects = self._db.exec(self._dataset.offset(self._offset).limit(self._limit)).all()

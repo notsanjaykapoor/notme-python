@@ -6,6 +6,7 @@ import services.data_links
 import services.data_models
 import services.database.session
 import services.entities
+import services.entity_locations
 import services.graph.query
 import services.graph.session
 import stats_init  # noqa: F401
@@ -15,18 +16,24 @@ CHECK_TAGS = ["check:graph-sync"]
 
 
 def service_check() -> int:
-    """check graph sync health"""
+    """check graph health"""
 
     with services.database.session.get() as db, services.graph.session.get() as neo:
         # database entity id count should match graph node count
 
         db_entity_count = _db_entity_count(db)
-        db_relationship_count = _db_relationship_count(db)
 
         struct_graph = services.graph.query.match_node_count()
         records = services.graph.query.execute(struct_graph.query, struct_graph.params, neo)
 
         graph_node_count = records[0]["count"]
+
+        print(f"db_entity_count {db_entity_count} graph_node_count {graph_node_count}")
+
+        if db_entity_count != graph_node_count:
+            _metric(status=2, message="graph sync error")
+
+        db_relationship_count = _db_relationship_count(db)
 
         struct_graph = services.graph.query.match_relationship_count(names="has")
         records = services.graph.query.execute(struct_graph.query, struct_graph.params, neo)
@@ -40,27 +47,22 @@ def service_check() -> int:
 
         graph_rel_count = graph_rel_has_count + graph_rel_linked_count
 
-        print(f"db_entity_count {db_entity_count} graph_node_count {graph_node_count}")
-
         print(
             f"db_relationship_count {db_relationship_count} graph_rel_has_count {graph_rel_has_count} graph_rel_linked_count {graph_rel_linked_count}"
         )
 
-        if (db_entity_count == graph_node_count) and (db_relationship_count == graph_rel_count):
-            status = 0
-            message = "ok"
-        else:
-            status = 2
-            message = "graph sync invalid"
+        if db_relationship_count != graph_rel_count:
+            _metric(status=2, message="graph sync error")
 
-    print(message)
+        _metric(status=0, message="ok")
 
-    datadog.statsd.service_check(
-        check_name=CHECK_NAME,
-        status=status,
-        message=message,
-        tags=CHECK_TAGS,
-    )
+        db_entity_geo_count = _db_entity_geo_count(db)
+        db_entity_location_count = _db_entity_location_count(db)
+
+        print(f"db_entity_geo_count {db_entity_geo_count} db_entity_location_count {db_entity_location_count}")
+
+        if db_entity_geo_count != db_entity_location_count:
+            _metric(status=2, message="graph sync error")
 
     datadog.statsd.flush()
 
@@ -71,21 +73,30 @@ def _db_entity_count(db) -> int:
     return _db_entity_unique_count(db) + _db_entity_slug_value_count(db)
 
 
+def _db_entity_geo_count(db: sqlmodel.Session) -> int:
+    """count entity objects with lat/lon slugs"""
+    query = "slug:lat"
+    struct_entities = services.entities.List(db=db, query=query, offset=0, limit=1024).call()
+
+    return struct_entities.count
+
+
+def _db_entity_location_count(db: sqlmodel.Session) -> int:
+    """count entity location objects"""
+    struct_count = services.entity_locations.CountIds(db=db).call()
+    return struct_count.count
+
+
 def _db_entity_slug_value_count(db: sqlmodel.Session) -> int:
     """count unique slug, value pairs for entity nodes eq 1"""
-
-    struct_count = services.entities.CountSlugValues(
-        db=db,
-        node=1,
-    ).call()
-
+    struct_count = services.entities.CountSlugValues(db=db, node=1).call()
     return struct_count.count
 
 
 def _db_entity_unique_count(db: sqlmodel.Session) -> int:
     """count unique entity objects"""
-    struct_db_count = services.entities.CountIds(db=db).call()
-    return struct_db_count.count
+    struct_count = services.entities.CountIds(db=db).call()
+    return struct_count.count
 
 
 def _db_relationship_count(db: sqlmodel.Session) -> int:
@@ -120,3 +131,12 @@ def _db_relationship_linked_count(db: sqlmodel.Session) -> int:
                     count += 1
 
     return count
+
+
+def _metric(status: int, message: str):
+    datadog.statsd.service_check(
+        check_name=CHECK_NAME,
+        status=status,
+        message=message,
+        tags=CHECK_TAGS,
+    )
