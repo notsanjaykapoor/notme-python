@@ -4,23 +4,46 @@
     image: "arm64v8/neo4j:enterprise"
     state: started
     healthcheck:
-      test: ["CMD", "curl", "--fail", "http://localhost:10687"]
+      test: ["CMD", "curl", "--fail", "http://localhost:13687"]
       interval: 2m
       timeout: 10s
-      retries: 3
-      start_period: 15s
+      retries: 5
+      start_period: 30s
     ports:
-      - "10687:7687"
-      - "10474:7474"
+      - "13687:7687"
+      - "13474:7474"
+      - "13473:7473"
     volumes:
-      - ./data/neo4j:/data
-      - ./logs/neo4j:/logs
+      - ~/data/neo4j:/data
+      - ~/logs/neo4j:/logs
     env:
       NEO4J_dbms_memory_pagecache_size: "512M"
       NEO4J_dbms.memory.heap.initial_size: "512M"
       NEO4J_dbms_memory_heap_max__size: "512M"
       NEO4J_AUTH: "neo4j/development"
       NEO4J_ACCEPT_LICENSE_AGREEMENT: "yes"
+  tags:
+    - neo
+    - services
+
+- name: check container
+  wait_for:
+    host: "localhost"
+    port: 13687
+  register: container
+  tags:
+    - neo
+    - services
+
+- name: create default databases
+  shell: "cypher-shell -a neo4j://localhost:13687 -u neo4j -p development 'create database {{item}} if not exists;'"
+  loop:
+    - "notme.dev"
+    - "notme.tst"
+  retries: 3
+  delay: 5
+  register: result
+  until: result.rc == 0
   tags:
     - neo
     - services

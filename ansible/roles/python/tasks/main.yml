@@ -1,5 +1,5 @@
 - name: install
-  raw: "test -e /usr/bin/python3 || (apt update && apt install -y python3-apt)"
+  raw: "test -e /usr/bin/python3 || (apt update && apt install -y python3-apt python3-psycopg2)"
   args:
     executable: /bin/bash
   tags:

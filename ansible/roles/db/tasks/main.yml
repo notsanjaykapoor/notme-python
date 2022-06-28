@@ -1,0 +1,59 @@
+- name: download postgis
+  raw: "apt update && apt install -y postgresql-14-postgis-3"
+  args:
+    executable: /bin/bash
+  tags:
+    - db
+
+# - name: download timescale
+#   raw: "apt update && apt install -y curl && curl -s https://packagecloud.io/install/repositories/timescale/timescaledb/script.deb.sh | bash"
+#   args:
+#     executable: /bin/bash
+#   tags:
+#     - db
+
+- name: check postgres port
+  wait_for:
+    host: "localhost"
+    port: 5432
+  register: container
+  tags:
+    - db
+
+- name: create default databases
+  postgresql_db:
+    state: present
+    name: "{{item}}"
+    encoding: UTF-8
+  become: no
+  loop:
+    - "notme_dev"
+    - "notme_tst"
+  tags:
+    - db
+
+- name: add dev extensions
+  postgresql_ext:
+    name: "{{item}}"
+    db: notme_dev
+  become: no
+  loop:
+    - "fuzzystrmatch"
+    - "postgis"
+    - "postgis_tiger_geocoder"
+    - "postgis_topology"
+  tags:
+    - db
+
+- name: "add tst extensions"
+  postgresql_ext:
+    name: "{{item}}"
+    db: notme_tst
+  become: no
+  loop:
+    - "fuzzystrmatch"
+    - "postgis"
+    - "postgis_tiger_geocoder"
+    - "postgis_topology"
+  tags:
+    - db

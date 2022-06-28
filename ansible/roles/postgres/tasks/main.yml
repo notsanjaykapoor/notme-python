@@ -1,0 +1,28 @@
+- name: start container
+  docker_container:
+    name: notme_postgres
+    image: arm64v8/postgres
+    state: started
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:13432"]
+      interval: 2m
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    ports:
+      - "13432:5432"
+    env:
+      POSTGRES_PASSWORD: "development"
+      POSTGRES_USER: "postgres"
+    volumes:
+      - ~/data/postgres:/var/lib/postgresql/data
+  tags:
+    - db
+
+- name: check container
+  wait_for:
+    host: "localhost"
+    port: 13432
+  register: container
+  tags:
+    - db

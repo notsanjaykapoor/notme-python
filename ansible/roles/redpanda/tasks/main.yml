@@ -16,6 +16,8 @@
       - "28082:28082"
       - "29092:29092"
     privileged: "yes"
+    volumes:
+      - ~/data/redpanda:/var/lib/redpanda/data
     command:
       - redpanda
       - start
@@ -41,7 +43,7 @@
 - name: check container
   docker_container_info:
     name: notme_redpanda
-  register: redpanda
+  register: container
   tags:
     - redpanda
     - services
@@ -52,7 +54,7 @@
     - "graph-sync"
     - "geofence-alerts"
   register: qcreate
-  when: redpanda.exists
+  when: container.exists
   tags:
     - services
 

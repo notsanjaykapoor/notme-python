@@ -1,0 +1,24 @@
+# - name: start containers
+#   command: ./scripts/neo4j-cluster-init
+
+- name: check container
+  wait_for:
+    host: "localhost"
+    port: 13687
+  register: container
+  tags:
+    - neo
+    - services
+
+- name: create default databases
+  shell: "cypher-shell -a neo4j://localhost:13687 -u neo4j -p development 'create database {{item}} if not exists;'"
+  loop:
+    - "notme.dev"
+    - "notme.tst"
+  retries: 3
+  delay: 5
+  register: result
+  until: result.rc == 0
+  tags:
+    - neo
+    - services

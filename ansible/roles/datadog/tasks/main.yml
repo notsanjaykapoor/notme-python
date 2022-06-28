@@ -1,0 +1,16 @@
+- name: start container
+  docker_container:
+    name: notme_dd_agent
+    image: gcr.io/datadoghq/agent:7
+    state: started
+    env:
+      DD_API_KEY: "ca6d9d1162c1a0f3f22959d9d6a86afc"
+      DD_DOGSTATSD_NON_LOCAL_TRAFFIC: "true"
+      DD_IGNORE_AUTOCONF: "elastic istio redisdb"
+      DD_SITE: "datadoghq.com"
+    ports:
+      - "8125:8125/udp"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /proc/:/host/proc/:ro
+      - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro

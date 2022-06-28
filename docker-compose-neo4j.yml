@@ -4,8 +4,8 @@ services:
     image: "arm64v8/neo4j:enterprise"
     container_name: notme_neo
     ports:
-      - "10687:7687"
-      - "10474:7474"
+      - "13687:7687"
+      - "13474:7474"
     volumes:
       - ./data/neo4j:/data
       - ./logs/neo4j:/logs

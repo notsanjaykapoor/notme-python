@@ -2,6 +2,7 @@ localhost ansible_connection=local ansible_python_interpreter="/usr/bin/env pyth
 
 [all]
 notme-neo ansible_connection=docker ansible_host=notme_neo
+notme-postgres ansible_connection=docker ansible_host=notme_postgres
 notme-redpanda ansible_connection=docker ansible_host=notme_redpanda
 
 [all:vars]
@@ -11,6 +12,12 @@ ansible_python_interpreter=/usr/bin/python3
 notme-neo ansible_connection=docker ansible_host=notme_neo
 
 [neo:vars]
+ansible_python_interpreter=/usr/bin/python3
+
+[postgres]
+notme-postgres ansible_connection=docker ansible_host=notme_postgres
+
+[postgres:vars]
 ansible_python_interpreter=/usr/bin/python3
 
 [redpanda]
