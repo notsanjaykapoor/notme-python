@@ -4,20 +4,19 @@ load_dotenv()  # take environment variables from .env.
 
 import contextvars
 import logging
-import strawberry
 import sys
-import ulid
 
+import strawberry
+import ulid
 from fastapi import Depends, FastAPI, HTTPException, Request, WebSocket
 
+import log
 import services.ws
 import services.ws.chat
-
 from context import request_id
-from log import logging_init
 from models.socket_manager import SocketManager
 
-logger = logging_init("api")
+logger = log.init("api")
 
 socket_manager = SocketManager()
 

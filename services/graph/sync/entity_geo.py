@@ -1,10 +1,10 @@
 import dataclasses
-import logging
 
 import datadog
 import neo4j
 import sqlmodel
 
+import log
 import models
 import services.entities
 import services.entity_locations
@@ -36,7 +36,7 @@ class EntityGeo:
         self._neo = neo
         self._entity_id = entity_id
 
-        self._logger = logging.getLogger("service")
+        self._logger = log.init("service")
 
     @datadog.statsd.timed(f"{__name__}.timer", tags=["env:dev"])
     def call(self) -> Struct:

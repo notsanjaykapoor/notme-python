@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import logging
 import os
 import sys
 
@@ -8,9 +7,9 @@ from curio import Channel, run
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
-from log import logging_init
+import log  # noqa: F401
 
-logger = logging_init("cli")
+logger = log.init("api")
 
 
 async def consumer(ch: Channel):

@@ -1,5 +1,4 @@
 import dataclasses
-import logging
 import typing
 
 import ulid
@@ -19,7 +18,6 @@ class Publish:
         self._topic = topic
 
         self._key = key or ulid.new().str
-        self._logger = logging.getLogger("service")
 
     def call(self) -> Struct:
         struct = Struct(0, [])

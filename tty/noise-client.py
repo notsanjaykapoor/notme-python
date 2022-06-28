@@ -13,9 +13,9 @@ import socket
 
 from noise.connection import NoiseConnection
 
-from log import logging_init
+import log
 
-logger = logging_init("cli")
+logger = log.init("cli")
 
 host = "localhost"
 port = int(os.environ["NOISE_SERVER_PORT"])

@@ -14,26 +14,23 @@ import json
 import logging
 import signal
 import time
+from typing import Optional
+
 import typer
 import ulid
 import uvloop
 import websocket
-
 from database import engine
 from sqlmodel import Session, SQLModel
-from typing import Optional
 
 import kafka
-
+import log
 import services.crypto.symmetric
 import services.crypto.symmetric.aesgcm
 
-from log import logging_init
-
-
 app = typer.Typer()
 
-logger = logging_init("cli")
+logger = log.init("cli")
 
 
 @app.command()

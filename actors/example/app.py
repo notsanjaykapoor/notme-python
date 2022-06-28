@@ -1,12 +1,11 @@
 import asyncio
-import logging
-import toml
-
 from dataclasses import dataclass
+
+import toml
 
 import actors.example.workers.echo
 import actors.example.workers.source
-
+import log
 from models.actor import Actor
 
 
@@ -24,7 +23,7 @@ class App:
         self._toml_dict = toml.load(self._toml_file)
         self._app_name = self._toml_dict["name"]
 
-        self._logger = logging.getLogger("actor")
+        self._logger = log.init("actor")
 
     def call(self) -> Struct:
         struct = Struct(0, {}, [])

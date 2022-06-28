@@ -1,5 +1,3 @@
-import logging
-import re
 import typing
 from dataclasses import dataclass
 
@@ -21,7 +19,6 @@ class ListSlugs:
         self._db = db
 
         self._dataset = select(models.Entity.slug, models.Entity.type_name).distinct()
-        self._logger = logging.getLogger("api")
 
     def call(self) -> Struct:
         struct = Struct(0, ("", ""), 0, [])

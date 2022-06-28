@@ -1,5 +1,4 @@
 import dataclasses
-import logging
 import typing
 
 import sqlalchemy
@@ -20,7 +19,6 @@ class CountIds:
         self._db = db
 
         self._dataset = sqlmodel.select([sqlalchemy.func.count(models.EntityLocation.entity_id.distinct())])  # type: ignore
-        self._logger = logging.getLogger("service")
 
     def call(self) -> Struct:
         struct = Struct(0, 0, [])

@@ -1,9 +1,9 @@
 import dataclasses
-import logging
 
 import sqlalchemy
 import sqlmodel
 
+import log
 import models
 
 
@@ -20,7 +20,7 @@ class Create:
         self._db = db
         self._objects = objects
 
-        self._logger = logging.getLogger("service")
+        self._logger = log.init("service")
 
     def call(self) -> Struct:
         struct = Struct(0, [], 0, [])

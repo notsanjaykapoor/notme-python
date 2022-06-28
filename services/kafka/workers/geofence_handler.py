@@ -8,6 +8,7 @@ import attrs
 import datadog
 
 import kafka
+import log
 import models
 import services.entities
 import services.entities.watches
@@ -26,7 +27,7 @@ class Struct:
 @attrs.define
 class GeofenceHandler(kafka.Handler):
     _topic: str = services.kafka.topics.TOPIC_GEOFENCE_ALERTS
-    _logger: logging.Logger = logging.getLogger("actor")
+    _logger: logging.Logger = log.init("actor")
 
     @datadog.statsd.timed(f"{__name__}.timer", tags=["env:dev", "kafka:reader"])
     async def call(self, msg: models.KafkaMessage) -> kafka.KafkaResult:

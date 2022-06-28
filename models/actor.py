@@ -1,9 +1,9 @@
 import asyncio
-import logging
 import sys
 import typing
 
 import kafka
+import log
 
 
 class Actor:
@@ -35,7 +35,7 @@ class Actor:
             # no topic, create default input queue
             self._queue = asyncio.Queue(maxsize=0)
 
-        self._logger = logging.getLogger("actor")
+        self._logger = log.init("actor")
 
     def cancel(self):
         if self._task:

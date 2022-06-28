@@ -1,9 +1,9 @@
 import dataclasses
-import logging
 
 import neo4j
 import sqlmodel
 
+import log
 import models
 import services.data_links
 import services.entities
@@ -34,7 +34,7 @@ class CreateRelationshipsLinked:
         self._entity = entity
 
         self._data_link_query = f"src_name:{self._entity.entity_name} src_slug:{self._entity.slug}"
-        self._logger = logging.getLogger("service")
+        self._logger = log.init("service")
 
     def call(self) -> Struct:
         struct = Struct(0, 0, [])

@@ -20,7 +20,7 @@ import services.graph.query  # noqa: E402
 import services.graph.session  # noqa: E402
 import services.graph.tx  # noqa: E402
 
-logger = log.logging_init("cli")
+logger = log.init("cli")
 
 app = typer.Typer()
 

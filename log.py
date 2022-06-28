@@ -1,10 +1,13 @@
 import logging
-from logging.config import dictConfig
+import logging.config
+
+import coloredlogs
 
 LOG_LEVEL: str = "DEBUG"
 
+FORMAT: str = "%(asctime)s - %(name)s - %(message)s"
 # FORMAT: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-FORMAT: str = "%(asctime)s - %(levelname)s - %(message)s"
+# FORMAT: str = "%(asctime)s - %(levelname)s - %(message)s"
 
 # grey = "\x1b[38;20m"
 # yellow = "\x1b[33;20m"
@@ -84,20 +87,10 @@ logging_config = {
 
 
 def init(name: str):
-    dictConfig(logging_config)
+    logging.config.dictConfig(logging_config)
 
     logger = logging.getLogger(name)
 
-    # coloredlogs.install(level='DEBUG', logger=logger, milliseconds=True, fmt=FORMAT)
-
-    return logger
-
-
-def logging_init(name: str):
-    dictConfig(logging_config)
-
-    logger = logging.getLogger(name)
-
-    # coloredlogs.install(level='DEBUG', logger=logger, milliseconds=True, fmt=FORMAT)
+    coloredlogs.install(level="DEBUG", logger=logger, milliseconds=True, fmt=FORMAT)
 
     return logger

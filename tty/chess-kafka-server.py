@@ -14,22 +14,20 @@ import json
 import logging
 import signal
 import time
+from typing import Optional
+
 import typer
 import ulid
 import uvloop
-
-from sqlmodel import Session, SQLModel
-from typing import Optional
-
 from database import engine
+from sqlmodel import Session, SQLModel
 
+import log
 from actors.chess.app import App
-
-from log import logging_init
 
 app = typer.Typer()
 
-logger = logging_init("cli")
+logger = log.init("api")
 
 
 @app.command()

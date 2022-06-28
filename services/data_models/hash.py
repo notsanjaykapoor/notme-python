@@ -1,8 +1,8 @@
 import dataclasses
-import logging
 
 import sqlmodel
 
+import log
 import models
 import services.data_models
 from context import request_id
@@ -24,7 +24,8 @@ class Hash:
 
         self._model = models.DataModel
         self._dataset = sqlmodel.select(models.DataModel)  # default database query
-        self._logger = logging.getLogger("service")
+
+        self._logger = log.init("service")
 
     def call(self) -> Struct:
         struct = Struct(0, {}, [])

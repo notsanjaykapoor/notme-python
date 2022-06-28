@@ -14,9 +14,9 @@ from itertools import cycle
 
 from noise.connection import NoiseConnection
 
-from log import logging_init
+import log
 
-logger = logging_init("cli")
+logger = log.init("cli")
 
 if __name__ == "__main__":
     host = "localhost"

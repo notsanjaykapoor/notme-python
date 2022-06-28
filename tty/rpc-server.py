@@ -7,23 +7,23 @@ load_dotenv()
 import logging
 import os
 import sys
+
 import ulid
 import zerorpc
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
-from database import engine
 from dataclasses import dataclass, field
-from log import logging_init
+
+from database import engine
 from fastapi import Depends, FastAPI, HTTPException, Request, WebSocket
 from sqlmodel import Session, SQLModel
 
+import log
 import services.zero.rpc
-
 from context import request_id
 
-
-logger = logging_init("cli")
+logger = log.init("cli")
 
 
 def rpc_server(port: int = 4242):

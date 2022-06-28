@@ -7,16 +7,16 @@ load_dotenv()
 import json
 import os
 import sys
+
 import typer
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
-from log import logging_init
-
+import log
 import models
 import services.memgraph
 
-logger = logging_init("cli")
+logger = log.init("cli")
 
 app = typer.Typer()
 

@@ -1,7 +1,6 @@
-import asyncio
-import logging
-
 from dataclasses import dataclass
+
+import log
 
 
 @dataclass
@@ -12,7 +11,7 @@ class Struct:
 
 class Generic:
     def __init__(self) -> None:
-        self._logger = logging.getLogger("actor")
+        self._logger = log.init("actor")
 
     # called by actor to process a single message
     def call(self, actor_name: str, message: dict) -> Struct:

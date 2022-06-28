@@ -1,4 +1,3 @@
-import logging
 from dataclasses import dataclass
 
 import sqlmodel
@@ -27,7 +26,6 @@ class ListSlugValues:
             .where(models.Entity.slug == self._slug)
             .distinct()
         )
-        self._logger = logging.getLogger("service")
 
     def call(self) -> Struct:
         struct = Struct(0, [], 0, [])

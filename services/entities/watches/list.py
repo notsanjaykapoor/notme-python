@@ -1,9 +1,9 @@
 import dataclasses
-import logging
 import re
 
 import sqlmodel
 
+import log
 import models
 import services.mql
 from context import request_id
@@ -26,7 +26,7 @@ class List:
 
         self._model = models.EntityWatch
         self._dataset = sqlmodel.select(models.EntityWatch)  # default database query
-        self._logger = logging.getLogger("api")
+        self._logger = log.init("service")
 
     def call(self) -> Struct:
         struct = Struct(0, [], 0, [])

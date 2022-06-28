@@ -15,7 +15,7 @@ import log  # noqa: E402
 
 app = typer.Typer()
 
-logger = log.logging_init("cli")
+logger = log.init("cli")
 
 
 @app.command()

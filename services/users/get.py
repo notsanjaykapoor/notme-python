@@ -1,9 +1,9 @@
 import dataclasses
-import logging
 import typing
 
 import sqlmodel
 
+import log
 import models
 from context import request_id
 
@@ -21,7 +21,7 @@ class Get:
         self._user_id = user_id
 
         self._model = models.User
-        self._logger = logging.getLogger("api")
+        self._logger = log.init("service")
 
     def call(self) -> Struct:
         struct = Struct(0, None, [])

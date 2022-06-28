@@ -8,6 +8,7 @@ import attrs
 import datadog
 
 import kafka
+import log
 import models
 import services.database.session
 import services.entities
@@ -27,7 +28,7 @@ class Struct:
 @attrs.define
 class GraphHandler(kafka.Handler):
     _topic: str = services.kafka.topics.TOPIC_GRAPH_SYNC
-    _logger: logging.Logger = logging.getLogger("actor")
+    _logger: logging.Logger = log.init("actor")
 
     @datadog.statsd.timed(f"{__name__}.timer", tags=["env:dev", "kafka:reader"])
     async def call(self, msg: models.KafkaMessage) -> kafka.KafkaResult:

@@ -1,10 +1,10 @@
 import dataclasses
 import datetime
-import logging
 import typing
 
 import sqlmodel
 
+import log
 import models
 
 
@@ -19,7 +19,7 @@ class Create:
     def __init__(self, db: sqlmodel.Session, object: dict):
         self._db = db
         self._object = object
-        self._logger = logging.getLogger("service")
+        self._logger = log.init("service")
 
     def call(self) -> Struct:
         struct = Struct(0, None, [])

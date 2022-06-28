@@ -1,4 +1,3 @@
-import logging
 from dataclasses import dataclass
 
 import datadog
@@ -26,8 +25,6 @@ class Entity:
         self._db = db
         self._neo = neo
         self._entity_id = entity_id
-
-        self._logger = logging.getLogger("service")
 
     @datadog.statsd.timed(f"{__name__}.timer", tags=["env:dev"])
     def call(self) -> Struct:

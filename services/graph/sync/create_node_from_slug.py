@@ -1,10 +1,10 @@
 import dataclasses
-import logging
 
 import datadog
 import neo4j
 import sqlmodel
 
+import log
 import models
 import services.data_models
 import services.entities
@@ -30,8 +30,7 @@ class CreateNodeFromSlug:
         self._neo = neo
         self._entity = entity
 
-        # self._data_model_query = f"object_name:{self._entity.entity_name} object_slug:{self._entity.slug} object_node:1"
-        self._logger = logging.getLogger("service")
+        self._logger = log.init("service")
 
     def call(self) -> Struct:
         struct = Struct(0, 0, [])

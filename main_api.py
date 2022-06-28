@@ -14,13 +14,13 @@ from strawberry.fastapi import GraphQLRouter
 from strawberry.schema.config import StrawberryConfig
 
 import gql  # noqa: E402
+import log
 import models  # noqa: E402
 import services.entities  # noqa: E402
 import services.users  # noqa: E402
 from context import request_id  # noqa: E402
-from log import logging_init  # noqa: E402
 
-logger = logging_init("api")
+logger = log.init("api")
 
 
 # api db dependency

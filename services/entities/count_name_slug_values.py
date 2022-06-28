@@ -1,6 +1,5 @@
 import collections
 import dataclasses
-import logging
 import typing
 
 import sqlalchemy
@@ -35,7 +34,6 @@ class CountNameSlugValues:
             .where(models.Entity.node == self._node)
             .distinct()
         )
-        self._logger = logging.getLogger("service")
 
     def call(self) -> Struct:
         struct = Struct(0, [], 0, [])

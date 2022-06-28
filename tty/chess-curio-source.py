@@ -3,15 +3,15 @@
 import logging
 import os
 import sys
-import ulid
 
+import ulid
 from curio import Channel, run
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
-from log import logging_init
+import log
 
-logger = logging_init("cli")
+logger = log.init("api")
 
 
 async def producer(ch: Channel, file: str):

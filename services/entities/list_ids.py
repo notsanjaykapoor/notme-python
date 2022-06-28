@@ -1,5 +1,4 @@
 import dataclasses
-import logging
 import typing
 
 import sqlmodel
@@ -20,7 +19,6 @@ class ListIds:
         self._db = db
 
         self._dataset = sqlmodel.select(models.Entity.entity_id).distinct()
-        self._logger = logging.getLogger("service")
 
     def call(self) -> Struct:
         struct = Struct(0, [], 0, [])

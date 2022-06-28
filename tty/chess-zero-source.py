@@ -7,16 +7,16 @@ load_dotenv()
 import logging
 import os
 import sys
+
 import ulid
 import zmq
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
+import log
 import services.zero.sockets
 
-from log import logging_init
-
-logger = logging_init("cli")
+logger = log.init("cli")
 
 
 def chess_zero_source(file: str):

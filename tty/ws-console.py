@@ -9,6 +9,7 @@ import json
 import logging
 import os
 import sys
+
 import typer
 import ulid
 import uvloop
@@ -16,10 +17,10 @@ import websockets
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
-from log import logging_init
+import log
 from services.io.console_socket import IoConsoleSocket
 
-logger = logging_init("console")
+logger = log.init("console")
 
 app = typer.Typer()
 

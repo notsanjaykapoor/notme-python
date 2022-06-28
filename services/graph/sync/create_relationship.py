@@ -1,9 +1,9 @@
-import logging
 import typing
 
 import datadog
 import neo4j
 
+import log
 import services.entities
 import services.graph
 import services.graph.tx
@@ -28,7 +28,7 @@ class CreateRelationship:
         self._rel_name = rel_name
         self._neo = neo
 
-        self._logger = logging.getLogger("service")
+        self._logger = log.init("service")
 
     def call(self) -> int:
         query_exists = f"""
