@@ -1,20 +1,14 @@
-from dotenv import load_dotenv
+import sys  # noqa: E402
 
-load_dotenv()  # take environment variables from .env.
+import ulid  # noqa: E402
+from fastapi import FastAPI, WebSocket  # noqa: E402
 
-import contextvars
-import logging
-import sys
-
-import strawberry
-import ulid
-from fastapi import Depends, FastAPI, HTTPException, Request, WebSocket
-
-import log
-import services.ws
-import services.ws.chat
-from context import request_id
-from models.socket_manager import SocketManager
+import dot_init  # noqa: F401
+import log  # noqa: E402
+import services.ws  # noqa: E402
+import services.ws.chat  # noqa: E402
+from context import request_id  # noqa: E402
+from models.socket_manager import SocketManager  # noqa: E402
 
 logger = log.init("api")
 
@@ -39,5 +33,5 @@ async def websocket_endpoint(websocket: WebSocket):
         logger.info(f"{request_id.get()} api.ws connected")
 
         await services.ws.Reader(websocket).call()
-    except:
+    except Exception:
         logger.info(f"{request_id.get()} api.ws exception {sys.exc_info()[0]}")

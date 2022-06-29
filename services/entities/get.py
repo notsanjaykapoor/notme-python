@@ -11,9 +11,7 @@ def get_all_by_id(db: sqlmodel.Session, id: typing.Union[int, str]) -> list[mode
     model = models.Entity
     dataset = sqlmodel.select(model)
 
-    match = re.match(r"^\d+$", str(id))
-
-    if match:
+    if re.match(r"^\d+$", str(id)):
         dataset = dataset.where(model.id == id)
     else:
         dataset = dataset.where(model.entity_id == id)

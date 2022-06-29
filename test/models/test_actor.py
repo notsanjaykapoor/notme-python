@@ -16,7 +16,7 @@ class ActorHandler:
 
 @pytest.mark.asyncio
 async def test_actor():
-    print(f"test_actor")
+    print("test_actor")
 
     name = "actor-1"
     queue = asyncio.Queue(maxsize=0)

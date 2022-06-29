@@ -10,8 +10,8 @@ import models
 @dataclass
 class Struct:
     code: int
-    object_ids: list[int]
-    object_count: int
+    ids: list[int]
+    count: int
     errors: list[str]
 
 
@@ -40,8 +40,8 @@ class Create:
                 self._db.commit()
 
                 if db_object.id:
-                    struct.object_ids.append(db_object.id)
-                    struct.object_count += 1
+                    struct.ids.append(db_object.id)
+                    struct.count += 1
         except sqlalchemy.exc.IntegrityError:
             self._db.rollback()
             struct.code = 409

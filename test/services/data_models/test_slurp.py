@@ -11,6 +11,8 @@ def test_data_models_slurp(session: sqlmodel.Session):
     assert struct_slurp.code == 0
     assert struct_slurp.count == 26
 
+    slurp_ids = struct_slurp.ids
+
     struct_list = services.data_models.List(db=session, query="", offset=0, limit=100).call()
 
     assert struct_list.code == 0
@@ -22,3 +24,5 @@ def test_data_models_slurp(session: sqlmodel.Session):
 
     assert struct_slurp.code == 0
     assert struct_slurp.count == 0
+
+    services.data_models.delete_by_id(db=session, ids=slurp_ids)

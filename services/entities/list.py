@@ -88,7 +88,6 @@ class List:
                     # equal query
                     self._dataset = self._dataset.where(self._model.name == value)
             elif token["field"] == "name_text":
-                print(f"value {value}")
                 # full text search
                 ts_vector = sqlalchemy.func.to_tsvector(models.Entity.name)
                 self._dataset = self._dataset.where(ts_vector.match(value))

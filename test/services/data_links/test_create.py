@@ -28,7 +28,9 @@ def data_models(session: sqlmodel.Session):
         objects=objects,
     ).call()
 
-    yield struct_create.object_ids
+    yield struct_create.ids
+
+    services.data_models.delete_by_id(db=session, ids=struct_create.ids)
 
 
 def test_data_link_create__valid(session: sqlmodel.Session, data_models: list[int]):

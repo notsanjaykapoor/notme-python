@@ -10,6 +10,7 @@ import services.data_models
 @dataclass
 class Struct:
     code: int
+    ids: list[int]
     count: int
     errors: list[str]
 
@@ -24,7 +25,7 @@ class Slurp:
         self._logger = log.init("service")
 
     def call(self) -> Struct:
-        struct = Struct(0, 0, [])
+        struct = Struct(0, [], 0, [])
 
         data_model_names = self._toml_dict.keys()
 
@@ -47,6 +48,7 @@ class Slurp:
             ).call()
 
             if struct_create.code == 0:
-                struct.count += struct_create.object_count
+                struct.ids += struct_create.ids
+                struct.count += struct_create.count
 
         return struct

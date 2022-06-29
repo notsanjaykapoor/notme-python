@@ -58,6 +58,8 @@ class Create:
             struct.code = 409
             self._logger.error(f"{__name__} {sys.exc_info()[0]} error")
         except Exception:
+            print(sys.exc_info())  #
+
             self._db.rollback()
             struct.code = 500
             self._logger.error(f"{__name__} {sys.exc_info()[0]} exception")

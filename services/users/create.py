@@ -10,7 +10,7 @@ import models
 @dataclasses.dataclass
 class Struct:
     code: int
-    user_id: typing.Optional[int]
+    id: typing.Optional[int]
     errors: list[str]
 
 
@@ -30,6 +30,6 @@ class Create:
         self._db.add(db_object)
         self._db.commit()
 
-        struct.user_id = db_object.id
+        struct.id = db_object.id
 
         return struct

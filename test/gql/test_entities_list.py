@@ -6,6 +6,7 @@ import ulid
 
 import gql
 import models
+import services.entities
 import services.users
 
 gql_schema = strawberry.Schema(
@@ -27,13 +28,15 @@ def entity_id(session: sqlmodel.Session):
         "type_value": "First",
     }
 
-    services.entities.Create(
+    struct_create = services.entities.Create(
         db=session,
         objects=[entity_params],
         data_models={"person:first_name": models.DataModel(object_node=0)},
     ).call()
 
     yield entity_id
+
+    services.entities.delete_by_id(db=session, ids=struct_create.ids)  # type: ignore
 
 
 def test_gql_entities_list(session: sqlmodel.Session, entity_id: str):

@@ -43,7 +43,9 @@ def data_models(session: sqlmodel.Session):
         objects=objects,
     ).call()
 
-    yield struct_create.object_ids
+    yield struct_create.ids
+
+    services.data_models.delete_by_id(db=session, ids=struct_create.ids)
 
 
 def test_entity_create(session: sqlmodel.Session, data_models: list[int]):
@@ -83,7 +85,7 @@ def test_entity_create(session: sqlmodel.Session, data_models: list[int]):
     assert struct_create.entity_count == 1
     assert struct_create.location_count == 0
 
-    services.entities.List(db=session, query="", offset=0, limit=100).call()
+    services.entities.delete_by_id(db=session, ids=struct_create.ids)  # type: ignore
 
 
 def test_entity_create_with_geo(session: sqlmodel.Session, data_models: list[int]):
@@ -110,6 +112,8 @@ def test_entity_create_with_geo(session: sqlmodel.Session, data_models: list[int
 
     struct_dms = services.data_models.Hash(db=session, query="").call()
 
+    print(struct_dms)
+
     struct_create = services.entities.Create(
         db=session,
         objects=entity_params,
@@ -121,4 +125,4 @@ def test_entity_create_with_geo(session: sqlmodel.Session, data_models: list[int
     assert struct_create.entity_count == 1
     assert struct_create.location_count == 1
 
-    services.entities.List(db=session, query="", offset=0, limit=100).call()
+    services.entities.delete_by_id(db=session, ids=struct_create.ids)  # type: ignore
