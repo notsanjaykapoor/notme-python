@@ -12,7 +12,7 @@ import log
 import models
 import services.database.session
 import services.entities
-import services.entities.watches
+import services.entity_watches
 import services.graph.session
 import services.graph.sync
 import services.kafka.topics
@@ -55,7 +55,7 @@ class GraphHandler(kafka.Handler):
                     services.graph.sync.EntityGeo(db=db, neo=neo, entity_id=message_object["id"]).call()
 
                     # check watches
-                    struct_watches = services.entities.watches.Match(
+                    struct_watches = services.entity_watches.Match(
                         db=db,
                         neo=neo,
                         entity_ids=[message_object["id"]],
@@ -63,7 +63,7 @@ class GraphHandler(kafka.Handler):
                     ).call()
 
                     # publish entity messages
-                    services.entities.watches.Publish(
+                    services.entity_watches.Publish(
                         watches=struct_watches.watches,
                         entity_ids=[message_object["id"]],
                     ).call()

@@ -2,7 +2,7 @@ import dataclasses
 import typing
 
 import models
-import services.entities.watches
+import services.entity_watches
 import services.mql
 
 

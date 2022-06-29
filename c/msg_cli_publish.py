@@ -16,7 +16,6 @@ import models  # noqa: E402
 import services.database.session  # noqa: E402
 import services.db  # noqa: E402
 import services.entities  # noqa: E402
-import services.entities.watches  # noqa: E402
 import services.kafka.topics  # noqa: E402
 
 logger = log.init("cli")

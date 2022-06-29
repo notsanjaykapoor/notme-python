@@ -5,7 +5,7 @@ import ulid
 
 import models
 import services.entities
-import services.entities.watches
+import services.entity_watches
 
 
 class TestWatchTopic:
@@ -46,24 +46,24 @@ class TestWatchTopic:
             }
         ]
 
-        struct_watches = services.entities.watches.Create(db=session, objects=objects).call()
+        struct_watches = services.entity_watches.Create(db=session, objects=objects).call()
 
         assert struct_watches.code == 0
         assert struct_watches.count == 1
 
         yield struct_watches.ids
 
-        services.entities.watches.delete_by_id(db=session, ids=struct_watches.ids)
+        services.entity_watches.delete_by_id(db=session, ids=struct_watches.ids)
 
     def test_topic_match(self, session: sqlmodel.Session, neo_session: neo4j.Session, watch_ids: list[int], entity_ids: list[int]):
         # with topic match
-        struct_matches = services.entities.watches.Match(db=session, neo=neo_session, entity_ids=entity_ids, topic="topic").call()
+        struct_matches = services.entity_watches.Match(db=session, neo=neo_session, entity_ids=entity_ids, topic="topic").call()
 
         assert struct_matches.code == 0
         assert struct_matches.count == 1
 
         # with topic nomatch
-        struct_matches = services.entities.watches.Match(db=session, neo=neo_session, entity_ids=entity_ids, topic="bogus").call()
+        struct_matches = services.entity_watches.Match(db=session, neo=neo_session, entity_ids=entity_ids, topic="bogus").call()
 
         assert struct_matches.code == 0
         assert struct_matches.count == 0
@@ -107,17 +107,17 @@ class TestWatchQueryAll:
             }
         ]
 
-        struct_watches = services.entities.watches.Create(db=session, objects=objects).call()
+        struct_watches = services.entity_watches.Create(db=session, objects=objects).call()
 
         assert struct_watches.code == 0
         assert struct_watches.count == 1
 
         yield struct_watches.ids
 
-        services.entities.watches.delete_by_id(db=session, ids=struct_watches.ids)
+        services.entity_watches.delete_by_id(db=session, ids=struct_watches.ids)
 
     def test_entity_match(self, session: sqlmodel.Session, neo_session: neo4j.Session, watch_ids: list[int], entity_ids: list[int]):
-        struct_matches = services.entities.watches.Match(db=session, neo=neo_session, entity_ids=entity_ids).call()
+        struct_matches = services.entity_watches.Match(db=session, neo=neo_session, entity_ids=entity_ids).call()
 
         assert struct_matches.code == 0
         assert struct_matches.count == 1
@@ -190,17 +190,17 @@ class TestWatchQueryEntityName:
             }
         ]
 
-        struct_watches = services.entities.watches.Create(db=session, objects=objects).call()
+        struct_watches = services.entity_watches.Create(db=session, objects=objects).call()
 
         assert struct_watches.code == 0
         assert struct_watches.count == 1
 
         yield struct_watches.ids
 
-        services.entities.watches.delete_by_id(db=session, ids=struct_watches.ids)
+        services.entity_watches.delete_by_id(db=session, ids=struct_watches.ids)
 
     def test_entity_match(self, session: sqlmodel.Session, neo_session: neo4j.Session, watch_ids: list[int], entity_person_ids: list[int]):
-        struct_matches = services.entities.watches.Match(db=session, neo=neo_session, entity_ids=entity_person_ids).call()
+        struct_matches = services.entity_watches.Match(db=session, neo=neo_session, entity_ids=entity_person_ids).call()
 
         assert struct_matches.code == 0
         assert struct_matches.count == 1
@@ -210,7 +210,7 @@ class TestWatchQueryEntityName:
         assert [watch.id] == watch_ids
 
     def test_entity_nomatch(self, session: sqlmodel.Session, neo_session: neo4j.Session, watch_ids: list[int], entity_case_ids: list[int]):
-        struct_matches = services.entities.watches.Match(db=session, neo=neo_session, entity_ids=entity_case_ids).call()
+        struct_matches = services.entity_watches.Match(db=session, neo=neo_session, entity_ids=entity_case_ids).call()
 
         assert struct_matches.code == 0
         assert struct_matches.count == 0
@@ -252,17 +252,17 @@ class TestWatchQueryGeoFence:
             }
         ]
 
-        struct_watches = services.entities.watches.Create(db=session, objects=objects).call()
+        struct_watches = services.entity_watches.Create(db=session, objects=objects).call()
 
         assert struct_watches.code == 0
         assert struct_watches.count == 1
 
         yield struct_watches.ids
 
-        services.entities.watches.delete_by_id(db=session, ids=struct_watches.ids)
+        services.entity_watches.delete_by_id(db=session, ids=struct_watches.ids)
 
     def test_entity_match(self, session: sqlmodel.Session, neo_session: neo4j.Session, watch_ids: list[int], entity_place_ids: list[int], mocker):
-        service = services.entities.watches.Match(db=session, neo=neo_session, entity_ids=entity_place_ids)
+        service = services.entity_watches.Match(db=session, neo=neo_session, entity_ids=entity_place_ids)
 
         m = mocker.patch.object(service, "_watch_entity_geo_query", return_value=["record"])
 

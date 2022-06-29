@@ -8,7 +8,7 @@ import sqlmodel
 
 import log
 import models
-import services.entities.watches
+import services.entity_watches
 import services.graph.distance
 import services.graph.query
 import services.graph.session
@@ -57,7 +57,7 @@ class Match:
             return struct
 
         # get watches
-        struct_watches = services.entities.watches.List(self._db, self._query, 0, 100).call()
+        struct_watches = services.entity_watches.List(self._db, self._query, 0, 100).call()
 
         for watch in struct_watches.objects:
             if self._watch_entities_matches(watch, entities) != 0:

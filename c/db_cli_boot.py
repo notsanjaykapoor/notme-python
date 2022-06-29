@@ -13,7 +13,7 @@ import services.data_models  # noqa: E402
 import services.database.session  # noqa: E402
 import services.db  # noqa: E402
 import services.entities  # noqa: E402
-import services.entities.watches  # noqa: E402
+import services.entity_watches  # noqa: E402
 import services.graph.commands  # noqa: E402
 import services.graph.session  # noqa: E402
 import services.kafka.topics  # noqa: E402
@@ -57,13 +57,13 @@ def _db_sync(data_file: str, config_path: str):
         # db config
         struct_models = services.data_models.Slurp(db=db, toml_file=f"{config_path}/data_models.toml").call()
         struct_links = services.data_links.Slurp(db=db, toml_file=f"{config_path}/data_links.toml").call()
-        struct_watches = services.entities.watches.Slurp(db=db, toml_file=f"{config_path}/entity_watches.toml").call()
+        struct_watches = services.entity_watches.Slurp(db=db, toml_file=f"{config_path}/entity_watches.toml").call()
 
         # db entities
         struct_entities = services.entities.Slurp(db=db, json_file=data_file).call()
 
         for entity_id in list(struct_entities.entity_ids):
-            struct_watches_match = services.entities.watches.Match(
+            struct_watches_match = services.entity_watches.Match(
                 db=db,
                 neo=neo,
                 entity_ids=[entity_id],
@@ -71,7 +71,7 @@ def _db_sync(data_file: str, config_path: str):
             ).call()
 
             # publish entity messages
-            services.entities.watches.Publish(
+            services.entity_watches.Publish(
                 watches=struct_watches_match.watches,
                 entity_ids=[entity_id],
             ).call()

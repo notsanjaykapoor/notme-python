@@ -4,7 +4,7 @@ import sqlmodel
 import toml
 
 import services.entities
-import services.entities.watches
+import services.entity_watches
 import services.kafka.topics
 
 
@@ -27,7 +27,7 @@ class Slurp:
 
         for object in self._toml_dict["watches"]:
             # persist to database
-            struct_create = services.entities.watches.Create(
+            struct_create = services.entity_watches.Create(
                 self._db,
                 objects=[object],
             ).call()

@@ -12,7 +12,7 @@ import log  # noqa: E402
 import services.data_models  # noqa: E402
 import services.database.session  # noqa: E402
 import services.entities  # noqa: E402
-import services.entities.watches  # noqa: E402
+import services.entity_watches  # noqa: E402
 import services.graph.session  # noqa: E402
 import tomtom.geocode  # noqa: E402
 import tomtom.places  # noqa: E402
@@ -82,7 +82,7 @@ def search_city(
                 logger.info(f"[places-cli] places created {struct_create.entity_count}")
 
                 for entity_id in list(struct_create.entity_ids):
-                    struct_watches = services.entities.watches.Match(
+                    struct_watches = services.entity_watches.Match(
                         db=db,
                         neo=neo,
                         entity_ids=[entity_id],
@@ -92,7 +92,7 @@ def search_city(
                     logger.info(f"[places-cli]  watches {struct_watches.count}")
 
                     if struct_watches.count > 0:
-                        struct_publish_changed = services.entities.watches.Publish(
+                        struct_publish_changed = services.entity_watches.Publish(
                             watches=struct_watches.watches,
                             entity_ids=[entity_id],
                         ).call()
