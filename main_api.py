@@ -1,10 +1,12 @@
 import strawberry  # noqa: E402
 import ulid  # noqa: E402
 from fastapi import APIRouter, Depends, FastAPI, Request  # noqa: E402
+from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import Session  # noqa: E402
 from strawberry.fastapi import GraphQLRouter  # noqa: E402
 from strawberry.schema.config import StrawberryConfig  # noqa: E402
 
+import context  # noqa: E402
 import dot_init  # noqa: F401
 import gql  # noqa: E402
 import log  # noqa: E402
@@ -12,7 +14,6 @@ import models  # noqa: E402
 import services.database.session  # noqa: E402
 import services.entities  # noqa: E402
 import services.users  # noqa: E402
-from context import request_id  # noqa: E402
 
 logger = log.init("api")
 
@@ -53,6 +54,14 @@ app = FastAPI()
 app.include_router(graphql_router, prefix="/graphql")
 app.include_router(api_router, prefix="/api/v1")
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 @app.on_event("startup")
 def on_startup():
@@ -69,14 +78,14 @@ def on_shutdown():
 @app.middleware("http")
 async def add_request_id(request: Request, call_next):
     # set request id context var
-    request_id.set(ulid.new().str)
+    context.rid_set(ulid.new().str)
     response = await call_next(request)
     return response
 
 
 @app.get("/api/v1/entities", tags=["entities"], response_model=list[models.Entity])
 def entities_list(query: str = "", offset: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    logger.info(f"{request_id.get()} api.v1.entities.list")
+    logger.info(f"{context.rid_get()} api.v1.entities.list")
 
     struct = services.entities.List(db, query, offset, limit).call()
 
@@ -95,7 +104,7 @@ def api_ping():
 
 @app.post("/api/v1/users", response_model=int)
 def user_create(user_id: str, db: Session = Depends(get_db)):
-    logger.info(f"{request_id.get()} api.user.create")
+    logger.info(f"{context.rid_get()} api.user.create")
 
     struct = services.users.Create(db, user_id).call()
 
@@ -104,7 +113,7 @@ def user_create(user_id: str, db: Session = Depends(get_db)):
 
 @app.get("/api/v1/users/{user_id}", response_model=models.User)
 def user_get(user_id: str, db: Session = Depends(get_db)):
-    logger.info(f"{request_id.get()} api.user.get")
+    logger.info(f"{context.rid_get()} api.user.get")
 
     struct = services.users.Get(db, user_id).call()
 
@@ -113,7 +122,7 @@ def user_get(user_id: str, db: Session = Depends(get_db)):
 
 @app.get("/api/v1/users", response_model=list[models.User])
 def users_list(query: str = "", offset: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    logger.info(f"{request_id.get()} api.users.list")
+    logger.info(f"{context.rid_get()} api.users.list")
 
     struct = services.users.List(db, query, offset, limit).call()
 
