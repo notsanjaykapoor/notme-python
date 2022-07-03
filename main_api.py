@@ -14,9 +14,13 @@ import models  # noqa: E402
 import services.database.session  # noqa: E402
 import services.entities  # noqa: E402
 import services.users  # noqa: E402
+import services.webauthn.auth
+import services.webauthn.register
 
 logger = log.init("api")
 
+# create app object
+app = FastAPI()
 
 # api db dependency
 def get_db():
@@ -47,9 +51,6 @@ graphql_router = GraphQLRouter(
     gql_schema,
     context_getter=get_gql_context,
 )
-
-# create app with router(s)
-app = FastAPI()
 
 app.include_router(graphql_router, prefix="/graphql")
 app.include_router(api_router, prefix="/api/v1")
@@ -129,3 +130,43 @@ def users_list(query: str = "", offset: int = 0, limit: int = 100, db: Session =
     # logger.info(f"api.users.list response {struct}")
 
     return struct.objects
+
+
+@app.post("/api/v1/webauthn/auth/complete")
+def webauthn_auth_complete(params: services.webauthn.auth.CompleteParams, db: Session = Depends(get_db)):
+    logger.info(f"{context.rid_get()} api.webauthn.auth.complete")
+
+    struct = services.webauthn.auth.Complete(params, db).call()
+
+    return {"code": struct.code, "object": {}}
+
+
+@app.post("/api/v1/webauthn/auth/init")
+def webauthn_auth_init(params: services.webauthn.auth.InitParams, db: Session = Depends(get_db)):
+    logger.info(f"{context.rid_get()} api.webauthn.auth.init")
+
+    struct = services.webauthn.auth.Init(params, db).call()
+
+    logger.info(f"{context.rid_get()} response {type(struct.object)}")
+
+    return {"code": struct.code, "object": struct.object}
+
+
+@app.post("/api/v1/webauthn/register/complete")
+def webauthn_register_complete(params: services.webauthn.register.CompleteParams, db: Session = Depends(get_db)):
+    logger.info(f"{context.rid_get()} api.webauthn.register.complete")
+
+    struct = services.webauthn.register.Complete(params, db).call()
+
+    return {"code": struct.code, "object": {}}
+
+
+@app.post("/api/v1/webauthn/register/init")
+def webauthn_register_init(params: services.webauthn.register.InitParams, db: Session = Depends(get_db)):
+    logger.info(f"{context.rid_get()} api.webauthn.register.init")
+
+    struct = services.webauthn.register.Init(params, db).call()
+
+    logger.info(f"{context.rid_get()} response {type(struct.object)}")
+
+    return {"code": struct.code, "object": struct.object}

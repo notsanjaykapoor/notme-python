@@ -19,6 +19,12 @@ class Query:
         return gql.types.GqlBlocksList(code=0, errors=[], blocks=[])
 
     @strawberry.field
+    def entities_list(self, info: Info, query: str = "", offset: int = 0, limit: int = 10) -> gql.types.GqlEntitiesList:
+        logger.info(f"{context.rid_get()} gql.{info.field_name} query {query}")
+
+        return services.entities.List(info.context["db"], query, offset, limit).call()  # type: ignore
+
+    @strawberry.field
     def user_get(self, user_id: str, info: Info) -> gql.types.GqlUserGet:
         logger.info(f"{context.rid_get()} gql.{info.field_name} {user_id}")
 
@@ -29,9 +35,3 @@ class Query:
         logger.info(f"{context.rid_get()} gql.{info.field_name} query {query}")
 
         return services.users.List(info.context["db"], query, offset, limit).call()  # type: ignore
-
-    @strawberry.field
-    def entities_list(self, info: Info, query: str = "", offset: int = 0, limit: int = 10) -> gql.types.GqlEntitiesList:
-        logger.info(f"{context.rid_get()} gql.{info.field_name} query {query}")
-
-        return services.entities.List(info.context["db"], query, offset, limit).call()  # type: ignore

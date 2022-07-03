@@ -44,7 +44,7 @@ class GqlUser:
     id: int
     credentials_count: int
     emails_count: int
-    mobile: str
+    mobile: typing.Optional[str]
     mobile_count: int
     state: str
     totp_count: int

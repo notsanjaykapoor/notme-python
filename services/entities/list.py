@@ -49,8 +49,6 @@ class List:
             value = token["value"]
 
             if token["field"] == "entity_id":
-                # match = re.match(r"^~", value)
-
                 if match := re.match(r"^~", value):
                     # like query
                     value_normal = re.sub(r"~", "", value)

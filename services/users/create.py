@@ -16,10 +16,11 @@ class Struct:
 
 
 class Create:
-    def __init__(self, db: sqlmodel.Session, user_id: str, mobile: str):
+    def __init__(self, db: sqlmodel.Session, user_id: str, mobile: typing.Optional[str] = None):
         self._db = db
         self._user_id = user_id
         self._mobile = mobile
+
         self._logger = log.init("service")
 
     def call(self) -> Struct:
