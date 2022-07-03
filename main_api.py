@@ -22,7 +22,8 @@ logger = log.init("api")
 # create app object
 app = FastAPI()
 
-# api db dependency
+
+# db dependency
 def get_db():
     with services.database.session.get() as session:
         yield session

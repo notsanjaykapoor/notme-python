@@ -1,2 +1,2 @@
-from .create import Create
-from .list import List
+from .create import Create  # noqa F401
+from .list import List  # noqa F401

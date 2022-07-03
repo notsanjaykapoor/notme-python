@@ -48,15 +48,21 @@ class List:
             value = token["value"]
 
             if token["field"] == "name":
-                match = re.match(r"^~", value)
-
-                if match:
+                if re.match(r"^~", value):
                     # like query
                     value_normal = re.sub(r"~", "", value)
                     self._dataset = self._dataset.where(self._model.name.like("%" + value_normal + "%"))  # type: ignore
                 else:
                     # match query
                     self._dataset = self._dataset.where(self._model.name == value)
+            elif token["field"] == "user_id":
+                if re.match(r"^~", value):
+                    # like query
+                    value_normal = re.sub(r"~", "", value)
+                    self._dataset = self._dataset.where(self._model.user_id.like("%" + value_normal + "%"))  # type: ignore
+                else:
+                    # match query
+                    self._dataset = self._dataset.where(self._model.user_id == value)
 
         struct.objects = self._db.exec(self._dataset.offset(self._offset).limit(self._limit)).all()
         struct.count = len(struct.objects)

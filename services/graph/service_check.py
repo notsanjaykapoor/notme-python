@@ -35,12 +35,12 @@ def service_check() -> int:
 
         db_relationship_count = _db_relationship_count(db)
 
-        struct_graph = services.graph.query.match_relationship_count(names="has")
+        struct_graph = services.graph.query.match_edges_count(names="has")
         records = services.graph.query.execute(struct_graph.query, struct_graph.params, neo)
 
         graph_rel_has_count = records[0]["count"]
 
-        struct_graph = services.graph.query.match_relationship_count(names="linked")
+        struct_graph = services.graph.query.match_edges_count(names="linked")
         records = services.graph.query.execute(struct_graph.query, struct_graph.params, neo)
 
         graph_rel_linked_count = records[0]["count"]

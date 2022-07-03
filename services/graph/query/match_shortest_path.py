@@ -1,0 +1,24 @@
+import dataclasses
+
+
+@dataclasses.dataclass
+class GraphQuery:
+    query: str
+    params: dict
+
+
+def match_shortest_path(src_label: str, src_id: str, dst_label: str, dst_id: str) -> GraphQuery:
+    """find all shortest paths between nodes"""
+
+    struct = GraphQuery("", {})
+
+    struct.query = f"""
+    match (p1:{src_label} {{id: $src_id}}), (p2:{dst_label} {{id: $dst_id}}), p = allShortestPaths((p1)-[r*]-(p2)) return p
+    """
+
+    struct.params = {
+        "src_id": src_id,
+        "dst_id": dst_id,
+    }
+
+    return struct

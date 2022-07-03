@@ -26,11 +26,39 @@ app = typer.Typer()
 
 
 @app.command()
+def edges(
+    node: str = typer.Option(...),
+):
+    """find all node edges"""
+
+    node_name, node_id = node.split(":", 1)
+
+    struct_graph = services.graph.query.match_edges(
+        src_label=node_name,
+        src_id=node_id,
+    )
+
+    logger.info(f"[graph-cli] query '{struct_graph.query}' params {struct_graph.params}")
+
+    with datadog.statsd.timed(f"{__name__}.timer", tags=["env:dev", "neo:read"]):
+        with services.graph.session.get() as neo:
+            records = neo.read_transaction(services.graph.tx.read, struct_graph.query, struct_graph.params)
+
+    if not records:
+        logger.info("[graph-cli] no records found")
+
+    for i, record in enumerate(records):
+        logger.info("")
+
+        logger.info(f"[graph-cli] record {i+1} {record}")
+
+
+@app.command()
 def geo(
     node: str = typer.Option(...),
     radius: str = typer.Option(None, "--radius", "-r"),
 ):
-    """find neighbors filtered by distance"""
+    """find node neighbors within specified distance"""
 
     name, id = node.split(":", 1)
 
@@ -70,33 +98,26 @@ def neighbors(
     node: str = typer.Option(...),
     max_hops: int = typer.Option(1),
 ):
-    """find all neighbors filtered by label and constrained by hops"""
+    """find all node neighbors filtered by label and constrained by hops"""
 
-    name, id = node.split(":", 1)
+    node_name, node_id = node.split(":", 1)
 
     with services.database.session.get() as db:
         struct_list = services.entities.ListEntityNames(db).call()
         # map to list of list values, e.g. [['case'], ['person']]
-        node_labels = [[s] for s in struct_list.values]
+        dst_labels = [[s] for s in struct_list.values]
 
-    query = f"match p = (a:{name} {{id: $id_1}})-[*1.." + str(max_hops) + "]-(b) " f"where labels(b) in {node_labels} " + "return distinct(b) as n"
+    struct_graph = services.graph.query.match_neighbors(
+        node_label=node_name,
+        node_id=node_id,
+        max_hops=max_hops,
+        dst_labels=dst_labels,
+    )
 
-    # query = (
-    #     f"match p = (s:{name} {{id: $id_1}})-[*1.."
-    #     + str(max_hops)
-    #     + f"]-(e) return s,e,relationships(p) as r"
-    # )
-
-    # query = f"match (a:{name} {{id: $id_1}})-[*1..10]-(b) where labels(b) in [['case'], ['person']] return distinct(b) as n"
-
-    params = {
-        "id_1": id,
-    }
-
-    logger.info(f"[graph-cli] {query} {params}")
+    logger.info(f"[graph-cli] {struct_graph.query} {struct_graph.params}")
 
     with services.graph.session.get() as neo:
-        records = neo.read_transaction(services.graph.tx.read, query, params)
+        records = neo.read_transaction(services.graph.tx.read, struct_graph.query, struct_graph.params)
 
     if not records:
         logger.info("[graph-cli] no records found")
@@ -123,18 +144,25 @@ def shortest_path(
     node_1: str = typer.Option(...),
     node_2: str = typer.Option(...),
 ):
-    """find all shortest path between nodes"""
+    """find all shortest paths between nodes"""
 
-    name_1, id_1 = node_1.split(":", 1)
-    name_2, id_2 = node_2.split(":", 1)
+    src_label, src_id = node_1.split(":", 1)
+    dst_label, dst_id = node_2.split(":", 1)
+
+    # struct_graph = services.graph.query.match_shortest_path(
+    #     src_label=src_label,
+    #     src_id=src_id,
+    #     dst_label=dst_label,
+    #     dst_id=dst_id,
+    # )
 
     query = f"""
-    match (p1:{name_1} {{id: $id_1}}), (p2:{name_2} {{id: $id_2}}), p = allShortestPaths((p1)-[r*]-(p2)) return p
+    match (p1:{src_label} {{id: $src_id}}), (p2:{dst_label} {{id: $dst_id}}), p = allShortestPaths((p1)-[r*]-(p2)) return p
     """
 
     params = {
-        "id_1": id_1,
-        "id_2": id_2,
+        "src_id": src_id,
+        "dst_id": dst_id,
     }
 
     logger.info(f"[graph-cli] {query} {params}")

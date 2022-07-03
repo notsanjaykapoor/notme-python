@@ -1,5 +1,4 @@
 import dataclasses
-import datetime
 import typing
 
 import sqlmodel
@@ -12,7 +11,7 @@ import services.credentials
 @dataclasses.dataclass
 class Struct:
     code: int
-    id: typing.Optional[id]
+    id: typing.Optional[int]
     errors: list[str]
 
 

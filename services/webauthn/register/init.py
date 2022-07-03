@@ -34,7 +34,7 @@ class Init:
         self._logger = log.init("service")
 
     def call(self) -> Struct:
-        struct = Struct(0, {}, [])
+        struct = Struct(0, "", [])
 
         self._logger.info(f"{context.rid_get()} {__name__} user_id {self._user_id}")
 

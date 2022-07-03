@@ -20,6 +20,23 @@ class GqlBlocksList:
 
 
 @strawberry.type
+class GqlDoc:
+    clock: str
+    data: str
+    doc_id: str
+    id: int
+    name: str
+    user_id: str
+
+
+@strawberry.type
+class GqlDocsList:
+    code: int
+    errors: list[str]
+    docs: list[GqlDoc]  # todo
+
+
+@strawberry.type
 class GqlEntity:
     id: int
     entity_id: str
@@ -37,6 +54,20 @@ class GqlEntitiesList:
     code: int
     errors: list[str]
     objects: list[GqlEntity]
+
+
+@strawberry.type
+class GqlNode:
+    id: str
+    labels: list[str]
+    name: str
+
+
+@strawberry.type
+class GqlNodesList:
+    code: int
+    errors: list[str]
+    objects: list[GqlNode]
 
 
 @strawberry.type

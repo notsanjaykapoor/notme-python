@@ -3,6 +3,7 @@ import dataclasses
 import datetime
 import json
 import os
+import secrets
 
 import pydantic
 import sqlmodel
@@ -87,7 +88,7 @@ class Complete:
 
     def _credential_create(self, verification: webauthn.registration.verify_registration_response.VerifiedRegistration) -> int:
         cred_object = {
-            "name": f"{self._user_id}-cred",
+            "name": f"{self._user_id}-{secrets.token_hex(2)}",
             "public_key": base64.b64encode(verification.credential_public_key),
             "sign_count": verification.sign_count,
             "timestamp": datetime.datetime.utcnow(),
