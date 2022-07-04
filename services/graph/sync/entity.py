@@ -12,7 +12,7 @@ import services.graph.sync
 class Struct:
     code: int
     nodes_created: int
-    relationships_created: int
+    edges_created: int
     errors: list[str]
 
 
@@ -37,14 +37,14 @@ class Entity:
             return struct
 
         for entity in entities:
-            struct_node_entity = services.graph.sync.CreateNodeFromEntity(
+            struct_node_entity = services.graph.sync.CreateNodeFromEntityId(
                 neo=self._neo,
                 entity=entity,
             ).call()
 
             struct.nodes_created += struct_node_entity.nodes_created
 
-            struct_node_property = services.graph.sync.CreateNodeFromSlug(
+            struct_node_property = services.graph.sync.CreateNodeFromEntitySlug(
                 db=self._db,
                 neo=self._neo,
                 entity=entity,
@@ -52,20 +52,29 @@ class Entity:
 
             struct.nodes_created += struct_node_property.nodes_created
 
-            struct_relationships_has = services.graph.sync.CreateRelationshipsHas(
+            struct_node_links = services.graph.sync.CreateNodeEdgeFromDataLinks(
                 db=self._db,
                 neo=self._neo,
                 entity=entity,
             ).call()
 
-            struct.relationships_created += struct_relationships_has.relationships_created
+            struct.nodes_created += struct_node_links.nodes_created
+            struct.edges_created += struct_node_links.edges_created
 
-            struct_relationships_linked = services.graph.sync.CreateRelationshipsLinked(
+            struct_edges_has = services.graph.sync.CreateEdgesHas(
                 db=self._db,
                 neo=self._neo,
                 entity=entity,
             ).call()
 
-            struct.relationships_created += struct_relationships_linked.relationships_created
+            struct.edges_created += struct_edges_has.edges_created
+
+            # struct_relationships_linked = services.graph.sync.CreateRelationshipsLinked(
+            #     db=self._db,
+            #     neo=self._neo,
+            #     entity=entity,
+            # ).call()
+
+            # struct.edges_created += struct_relationships_linked.relationships_created
 
         return struct

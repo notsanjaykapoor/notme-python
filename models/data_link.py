@@ -16,6 +16,10 @@ class DataLink(SQLModel, table=True):  # type: ignore
     dst_name: str = Field(index=True)
     dst_slug: str = Field(index=True)
 
+    @property
+    def name_slug_str(self) -> str:
+        return ":".join(list(sorted([f"{self.src_name}_{self.src_slug}", f"{self.dst_name}_{self.dst_slug}"])))
+
     def pack(self):
         return {
             "id": self.id,

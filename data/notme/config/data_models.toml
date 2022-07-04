@@ -1,143 +1,185 @@
-[alpr]
-
-[alpr.0]
+[[alpr]]
 
 node = 0
 slug = "city"
 type = "string"
 
-[alpr.1]
+[[alpr]]
+
+node = 1
+slug = "id"
+type = "string"
+
+[[alpr]]
 
 node = 1
 slug = "license"
 type = "string"
 
-[alpr.2]
+[[alpr]]
 
 node = 0
 slug = "lat"
 type = "string"
 
-[alpr.3]
+[[alpr]]
 
 node = 0
 slug = "lon"
 type = "string"
 
-[case]
+[[case]]
 
-[case.0]
 node = 0
 slug = "city"
 type = "string"
 
-[case.1]
+[[case]]
+
+node = 1
+slug = "id"
+type = "string"
+
+[[case]]
+
 node = 0
 slug = "incident_type"
 type = "string"
 
-[case.2]
+[[case]]
+
 node = 1
 slug = "jacket_id"
 type = "string"
 
-[case.3]
+[[case]]
+
 node = 0
 slug = "status"
 type = "string"
 
-[case.4]
+[[case]]
+
 node = 0
 slug = "year"
 type = "integer"
 
-[case.5]
+[[case]]
+
 node = 1
 slug = "record_id"
 type = "string"
 
-[person]
+[[person]]
 
-[person.0]
 node = 0
 slug = "age"
 type = "integer"
 
-[person.1]
+[[person]]
+
 node = 0
 slug = "eye_color"
 type = "string"
 
-[person.2]
+[[person]]
+
 node = 0
 slug = "first_name"
 type = "string"
 
-[person.3]
+[[person]]
+
 node = 0
 slug = "hair_color"
 type = "string"
 
-[person.4]
+[[person]]
+
+node = 1
+slug = "id"
+type = "string"
+
+[[person]]
+
 node = 0
 slug = "last_name"
 type = "string"
 
-[person.5]
+[[person]]
+
 node = 1
 slug = "record_id"
 type = "string"
 
-[place]
+[[place]]
 
-[place.0]
 node = 0
 slug = "city"
 type = "string"
 
-[place.1]
+[[place]]
+
+node = 1
+slug = "id"
+type = "string"
+
+[[place]]
+
 node = 0
 slug = "lat"
 type = "string"
 
-[place.2]
+[[place]]
+
 node = 0
 slug = "lon"
 type = "string"
 
-[place.3]
+[[place]]
+
 node = 0
 slug = "postal_code"
 type = "string"
 
-[place.4]
+[[place]]
+
 node = 0
 slug = "street"
 type = "string"
 
-[vehicle]
+[[vehicle]]
 
-[vehicle.0]
+node = 1
+slug = "id"
+type = "string"
+
+[[vehicle]]
+
 node = 0
 slug = "impounded"
 type = "boolean"
 
-[vehicle.1]
+[[vehicle]]
+
 node = 1
 slug = "license"
 type = "string"
 
-[vehicle.2]
+[[vehicle]]
+
 node = 0
 slug = "make"
 type = "string"
 
-[vehicle.3]
+[[vehicle]]
+
 node = 0
 slug = "stolen"
 type = "boolean"
 
-[vehicle.4]
+[[vehicle]]
+
 node = 0
 slug = "year"
 type = "integer"

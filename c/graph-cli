@@ -35,7 +35,7 @@ def count():
         for record in records:
             logger.info(f"[graph-cli] nodes total {record['count']}")
 
-        struct_graph = services.graph.query.match_relationship_count()
+        struct_graph = services.graph.query.match_edges_count()
         records, summary = services.graph.query.execute_with_summary(struct_graph.query, struct_graph.params, neo)
 
         for record in sorted(records, key=lambda record: -1 * record["count"]):

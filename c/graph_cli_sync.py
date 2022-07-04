@@ -52,31 +52,20 @@ def reset():
 
 
 def sync_entities():
-    with services.database.session.get() as db:
-        with services.graph.session.get() as neo:
-            db_offset = 0
-            db_limit = 100
+    with services.database.session.get() as db, services.graph.session.get() as neo:
+        struct_list = services.entities.ListIds(db=db).call()
 
-            while True:
-                struct_list = services.entities.ListIds(db=db, query="", offset=db_offset, limit=db_limit).call()
-
-                if struct_list.count == 0:
-                    break
-
-                for entity_id in struct_list.ids:
-                    services.graph.sync.Entity(db=db, neo=neo, entity_id=entity_id).call()
-
-                db_offset += db_limit
+        for entity_id in struct_list.ids:
+            services.graph.sync.Entity(db=db, neo=neo, entity_id=entity_id).call()
 
 
-def sync_entity_locations():
-    with services.database.session.get() as db:
-        with services.graph.session.get() as session:
-            # find all entity location objects
-            struct_list = services.entity_locations.List(db=db, query="", offset=0, limit=1000).call()
+def sync_entity_locations(offset: int = 0, limit: int = 1024):
+    with services.database.session.get() as db, services.graph.session.get() as neo:
+        # find all entity location objects
+        struct_list = services.entity_locations.List(db=db, query="", offset=offset, limit=limit).call()
 
-            for entity_location in struct_list.objects:
-                services.graph.sync.EntityGeo(db=db, neo=session, entity_id=entity_location.entity_id).call()
+        for entity_location in struct_list.objects:
+            services.graph.sync.EntityGeo(db=db, neo=neo, entity_id=entity_location.entity_id).call()
 
 
 if __name__ == "__main__":

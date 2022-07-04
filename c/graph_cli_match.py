@@ -96,25 +96,26 @@ def geo(
 @app.command()
 def neighbors(
     node: str = typer.Option(...),
+    dst_label: str = typer.Option(None),
     max_hops: int = typer.Option(1),
 ):
     """find all node neighbors filtered by label and constrained by hops"""
 
     node_name, node_id = node.split(":", 1)
 
-    with services.database.session.get() as db:
-        struct_list = services.entities.ListEntityNames(db).call()
-        # map to list of list values, e.g. [['case'], ['person']]
-        dst_labels = [[s] for s in struct_list.values]
+    # with services.database.session.get() as db:
+    #     struct_list = services.entities.ListEntityNames(db).call()
+    #     # map to list of list values, e.g. [['case'], ['person']]
+    #     dst_labels = [[s] for s in struct_list.values]
 
     struct_graph = services.graph.query.match_neighbors(
-        node_label=node_name,
+        node_label=f"{node_name}:entity",
         node_id=node_id,
         max_hops=max_hops,
-        dst_labels=dst_labels,
+        dst_label=dst_label,
     )
 
-    logger.info(f"[graph-cli] {struct_graph.query} {struct_graph.params}")
+    logger.info(f"[graph-cli] query '{struct_graph.query}' params {struct_graph.params}")
 
     with services.graph.session.get() as neo:
         records = neo.read_transaction(services.graph.tx.read, struct_graph.query, struct_graph.params)
@@ -165,7 +166,7 @@ def shortest_path(
         "dst_id": dst_id,
     }
 
-    logger.info(f"[graph-cli] {query} {params}")
+    logger.info(f"[graph-cli] query '{query}' params {params}")
 
     with services.graph.session.get() as neo:
         records = neo.read_transaction(services.graph.tx.read, query, params)

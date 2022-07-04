@@ -3,6 +3,7 @@
     "model": "alpr",
     "properties": [
       { "slug": "city", "type": "string", "value": "chicago" },
+      { "slug": "id", "type": "string", "value": "01G5N6YA27J8PEXZT77V89T6RC" },
       { "slug": "lat", "type": "string", "value": "41.88094" },
       { "slug": "lon", "type": "string", "value": "-87.63004" },
       { "slug": "license", "type": "string", "value": "A0001" }
@@ -15,6 +16,7 @@
     "model": "alpr",
     "properties": [
       { "slug": "city", "type": "string", "value": "chicago" },
+      { "slug": "id", "type": "string", "value": "01G5VNWVEPKADVTMBAD8HBJV2A" },
       { "slug": "lat", "type": "string", "value": "41.89753" },
       { "slug": "lon", "type": "string", "value": "-87.64557" },
       { "slug": "license", "type": "string", "value": "A0002" }
@@ -26,6 +28,7 @@
     "model": "case",
     "properties": [
       { "slug": "city", "type": "string", "value": "chicago" },
+      { "slug": "id", "type": "string", "value": "01G0PX2SRQ1MT68QATJZ754DA4" },
       { "slug": "incident_type", "type": "string", "value": "petty theft" },
       { "slug": "record_id", "type": "string", "value": "1" },
       { "slug": "status", "type": "string", "value": "open" },
@@ -38,6 +41,7 @@
     "model": "case",
     "properties": [
       { "slug": "city", "type": "string", "value": "chicago" },
+      { "slug": "id", "type": "string", "value": "01G57BC065YN867428QJGMNNFQ" },
       { "slug": "incident_type", "type": "string", "value": "battery" },
       { "slug": "jacket_id", "type": "string", "value": "3" },
       { "slug": "status", "type": "string", "value": "open" },
@@ -50,8 +54,9 @@
     "model": "person",
     "properties": [
       { "slug": "age", "type": "integer", "value": 11 },
-      { "slug": "hair_color", "type": "string", "value": "grey" },
       { "slug": "eye_color", "type": "string", "value": "green" },
+      { "slug": "hair_color", "type": "string", "value": "grey" },
+      { "slug": "id", "type": "string", "value": "01G523AGR6RZ22QGYJXYCZYZHV" },
       { "slug": "first_name", "type": "string", "value": "person" },
       { "slug": "last_name", "type": "string", "value": "1" },
       { "slug": "record_id", "type": "string", "value": "1" },
@@ -64,8 +69,9 @@
     "model": "person",
     "properties": [
       { "slug": "age", "type": "integer", "value": 22 },
-      { "slug": "hair_color", "type": "string", "value": "grey" },
       { "slug": "eye_color", "type": "string", "value": "green" },
+      { "slug": "hair_color", "type": "string", "value": "grey" },
+      { "slug": "id", "type": "string", "value": "01G523AP9CA3P6ZXY5JEVQG916" },
       { "slug": "first_name", "type": "string", "value": "person" },
       { "slug": "last_name", "type": "string", "value": "2" },
       { "slug": "record_id", "type": "string", "value": "2" },
@@ -80,6 +86,7 @@
       { "slug": "age", "type": "integer", "value": 33 },
       { "slug": "eye_color", "type": "string", "value": "brown" },
       { "slug": "hair_color", "type": "string", "value": "grey" },
+      { "slug": "id", "type": "string", "value": "01G5386HVMP79PKM21YJGMFG5K" },
       { "slug": "first_name", "type": "string", "value": "person" },
       { "slug": "last_name", "type": "string", "value": "3" },
       { "slug": "record_id", "type": "string", "value": "3" },
@@ -94,6 +101,7 @@
       { "slug": "age", "type": "integer", "value": 44 },
       { "slug": "eye_color", "type": "string", "value": "brown" },
       { "slug": "hair_color", "type": "string", "value": "grey" },
+      { "slug": "id", "type": "string", "value": "01G5386T0RDJVF85QXMWB0DSXZ" },
       { "slug": "first_name", "type": "string", "value": "person" },
       { "slug": "last_name", "type": "string", "value": "4" },
       { "slug": "record_id", "type": "string", "value": "4" },
@@ -108,6 +116,7 @@
       { "slug": "age", "type": "integer", "value": 55 },
       { "slug": "eye_color", "type": "string", "value": "brown" },
       { "slug": "hair_color", "type": "string", "value": "grey" },
+      { "slug": "id", "type": "string", "value": "01G57P3WYJE3KWQH810J5M64DC" },
       { "slug": "first_name", "type": "string", "value": "person" },
       { "slug": "last_name", "type": "string", "value": "5" }
     ],
@@ -117,6 +126,7 @@
   {
     "model": "vehicle",
     "properties": [
+      { "slug": "id", "type": "string", "value": "01G0PX2SRQP8CEQWPZ6B3D08NP" },
       { "slug": "impounded", "type": "boolean", "value": false },
       { "slug": "license", "type": "string", "value": "A0001" },
       { "slug": "make", "type": "string", "value": "toyota" },

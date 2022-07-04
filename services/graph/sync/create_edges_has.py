@@ -13,16 +13,17 @@ import services.graph.sync
 @dataclasses.dataclass
 class Struct:
     code: int
-    relationships_created: int
+    edges_created: int
     errors: list[str]
 
 
-RELATIONSHIP_NAME = "has"
+DST_LABEL_NAME = "property"
+EDGE_NAME = "has"
 
 
-class CreateRelationshipsHas:
+class CreateEdgesHas:
     """
-    create graph 'has' relationship from entity object to all of its properties with node eq 1
+    create graph 'has' edge from entity object to all of its properties with node eq 1
     """
 
     def __init__(self, db: sqlmodel.Session, neo: neo4j.Session, entity: models.Entity):
@@ -47,12 +48,12 @@ class CreateRelationshipsHas:
         for entity in struct_entities.objects:
             dst_id = services.entities.graph_value_store(entity.type_name, str(entity.type_value))
 
-            struct.relationships_created += services.graph.sync.CreateRelationship(
+            struct.edges_created += services.graph.sync.CreateEdge(
                 src_id=self._entity.entity_id,
-                src_name=self._entity.entity_name,
-                dst_id=dst_id,
-                dst_name=entity.slug,
-                rel_name=RELATIONSHIP_NAME,
+                src_label=self._entity.entity_name,
+                dst_id=f"{entity.slug}:{dst_id}",
+                dst_label=DST_LABEL_NAME,
+                edge_name=EDGE_NAME,
                 neo=self._neo,
             ).call()
 
@@ -60,6 +61,7 @@ class CreateRelationshipsHas:
 
     def _entity_matches(self, data_model: models.DataModel) -> list[models.Entity]:
         # find matching entities based on this entity id and matching slug of data model rule
+        # e.g. "entity_id:123456 slug:jacket_id"
         entity_query = f"entity_id:{self._entity.entity_id} slug:{data_model.object_slug}"
 
         struct_entities = services.entities.List(

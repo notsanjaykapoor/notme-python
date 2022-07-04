@@ -55,6 +55,7 @@ class List:
 
         for record in records:
             node = record["n"]
+
             struct.objects.append(
                 gql.types.GqlNode(  # type: ignore
                     id=node.get("id"),

@@ -32,7 +32,7 @@ class Slurp:
         for name in data_model_names:
             objects = []
 
-            for dict in self._toml_dict[name].values():
+            for dict in self._toml_dict[name]:
                 object = {
                     "object_name": name,
                     "object_node": dict["node"],

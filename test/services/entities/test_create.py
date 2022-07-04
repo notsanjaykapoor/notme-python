@@ -20,6 +20,12 @@ def data_models(session: sqlmodel.Session):
         },
         {
             "object_name": "person",
+            "object_node": 1,
+            "object_slug": "id",
+            "object_type": "string",
+        },
+        {
+            "object_name": "person",
             "object_node": 0,
             "object_slug": "last_name",
             "object_type": "string",
@@ -56,6 +62,15 @@ def test_entity_create(session: sqlmodel.Session, data_models: list[int]):
             "entity_id": entity_id,
             "entity_name": "person",
             "name": "person 1",
+            "slug": "id",
+            "tags": "|person|",
+            "type_name": "string",
+            "type_value": entity_id,
+        },
+        {
+            "entity_id": entity_id,
+            "entity_name": "person",
+            "name": "person 1",
             "slug": "first_name",
             "tags": "|person|",
             "type_name": "string",
@@ -81,7 +96,7 @@ def test_entity_create(session: sqlmodel.Session, data_models: list[int]):
     ).call()
 
     assert struct_create.code == 0
-    assert struct_create.count == 2
+    assert struct_create.count == 3
     assert struct_create.entity_count == 1
     assert struct_create.location_count == 0
 

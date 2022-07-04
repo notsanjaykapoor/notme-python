@@ -56,21 +56,21 @@ class CreateRelationshipsLinked:
         for data_link in struct_data_links.objects:
             # create symmetric relationships between src and dst
 
-            struct.relationships_created += services.graph.sync.CreateRelationship(
+            struct.relationships_created += services.graph.sync.CreateEdge(
                 src_id=str(self._entity.type_value),
-                src_name=self._entity.slug,
+                src_label=self._entity.slug,
                 dst_id=str(self._entity.type_value),
-                dst_name=data_link.dst_slug,
-                rel_name=RELATIONSHIP_NAME,
+                dst_label=data_link.dst_slug,
+                edge_name=RELATIONSHIP_NAME,
                 neo=self._neo,
             ).call()
 
-            struct.relationships_created += services.graph.sync.CreateRelationship(
+            struct.relationships_created += services.graph.sync.CreateEdge(
                 src_id=str(self._entity.type_value),
-                src_name=data_link.dst_slug,
+                src_label=data_link.dst_slug,
                 dst_id=str(self._entity.type_value),
-                dst_name=self._entity.slug,
-                rel_name=RELATIONSHIP_NAME,
+                dst_label=self._entity.slug,
+                edge_name=RELATIONSHIP_NAME,
                 neo=self._neo,
             ).call()
 

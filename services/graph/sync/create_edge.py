@@ -9,30 +9,30 @@ import services.graph
 import services.graph.tx
 
 
-class CreateRelationship:
-    """create graph relationship"""
+class CreateEdge:
+    """create graph edge"""
 
     def __init__(
         self,
         src_id: str,
-        src_name: str,
+        src_label: str,
         dst_id: typing.Union[int, str],
-        dst_name: str,
-        rel_name: str,
+        dst_label: str,
+        edge_name: str,
         neo: neo4j.Session,
     ):
         self._src_id = src_id
-        self._src_name = src_name
+        self._src_label = src_label
         self._dst_id = dst_id
-        self._dst_name = dst_name
-        self._rel_name = rel_name
+        self._dst_label = dst_label
+        self._edge_name = edge_name
         self._neo = neo
 
         self._logger = log.init("service")
 
     def call(self) -> int:
         query_exists = f"""
-        match (a:{self._src_name})-[r:{self._rel_name}]-(b:{self._dst_name})
+        match (a:{self._src_label})-[r:{self._edge_name}]-(b:{self._dst_label})
         where a.id = $src_id and b.id = $dst_id
         return count(r) as count
         """
@@ -49,12 +49,12 @@ class CreateRelationship:
             return 0
 
         query_create = f"""
-        match (a:{self._src_name}), (b:{self._dst_name})
+        match (a:{self._src_label}), (b:{self._dst_label})
         where a.id = $src_id and b.id = $dst_id
-        create (a)-[r:{self._rel_name}]->(b)
+        create (a)-[r:{self._edge_name}]->(b)
         """
 
-        self._logger.info(f"{__name__} src {self._src_name}:{self._src_id} dst {self._dst_name}:{self._dst_id}")
+        self._logger.info(f"{__name__} src {self._src_label}:{self._src_id} dst {self._dst_label}:{self._dst_id}")
 
         with datadog.statsd.timed(f"{__name__}.timer", tags=["env:dev", "neo:write"]):
             self._neo.write_transaction(services.graph.tx.write, query_create, params)

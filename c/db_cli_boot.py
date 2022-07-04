@@ -52,17 +52,11 @@ def truncate():
     _db_truncate()
 
 
-def _db_sync(data_file: str, config_path: str):
+def _db_publish(entity_ids: set[str]):
+    logger.info(f"[db-cli] publish entities {len(entity_ids)}")
+
     with services.database.session.get() as db, services.graph.session.get() as neo:
-        # db config
-        struct_models = services.data_models.Slurp(db=db, toml_file=f"{config_path}/data_models.toml").call()
-        struct_links = services.data_links.Slurp(db=db, toml_file=f"{config_path}/data_links.toml").call()
-        struct_watches = services.entity_watches.Slurp(db=db, toml_file=f"{config_path}/entity_watches.toml").call()
-
-        # db entities
-        struct_entities = services.entities.Slurp(db=db, json_file=data_file).call()
-
-        for entity_id in list(struct_entities.entity_ids):
+        for entity_id in entity_ids:
             struct_watches_match = services.entity_watches.Match(
                 db=db,
                 neo=neo,
@@ -76,10 +70,26 @@ def _db_sync(data_file: str, config_path: str):
                 entity_ids=[entity_id],
             ).call()
 
+    logger.info("[db-cli] publish completed")
+
+
+def _db_sync(data_file: str, config_path: str):
+    with services.database.session.get() as db:
+        # db config
+        struct_models = services.data_models.Slurp(db=db, toml_file=f"{config_path}/data_models.toml").call()
+        struct_links = services.data_links.Slurp(db=db, toml_file=f"{config_path}/data_links.toml").call()
+        struct_watches = services.entity_watches.Slurp(db=db, toml_file=f"{config_path}/entity_watches.toml").call()
+
+        # db entities
+        struct_entities = services.entities.Slurp(db=db, json_file=data_file).call()
+
         logger.info(f"[db-cli] imported data models {struct_models.count}")
         logger.info(f"[db-cli] imported data links {struct_links.count}")
         logger.info(f"[db-cli] imported entity watches {struct_watches.count}")
         logger.info(f"[db-cli] imported entities {struct_entities.count}")
+
+        # publish messages bsased on db updates
+        _db_publish(struct_entities.entity_ids)
 
 
 def _db_truncate():

@@ -74,6 +74,8 @@ class Create:
         dm_key = f"{entity_name}:{slug}"
         data_model = self._data_models[dm_key]
 
+        node = data_model.object_node  # data model defines node value
+
         entity_id = object["entity_id"]
         entity_key = object.get("entity_key", f"notme-{entity_id}")
 
@@ -82,7 +84,7 @@ class Create:
             entity_key=entity_key,
             entity_name=entity_name,
             name=object.get("name", None),
-            node=data_model.object_node,
+            node=node,
             slug=slug,
             tags=object.get("tags", None),
             type_name=object["type_name"],
