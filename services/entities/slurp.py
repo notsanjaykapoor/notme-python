@@ -30,8 +30,15 @@ class Slurp:
         struct_dms = services.data_models.Hash(db=self._db, query="").call()
 
         for object in self._objects:
+            properties = self._object_props_validate_id_present(object, object["properties"])
+
+            if self._object_props_validate_id(object, properties) != 0:
+                struct.code = 422
+                struct.errors.append("invalid id")
+                return struct
+
             # format object into proper entity objects
-            entity_objects = self._object_to_entities(object)
+            entity_objects = self._object_to_entities(object, properties)
 
             # check if entity(s) exist
             if self._get_entities_count(entity_objects) > 0:
@@ -66,11 +73,39 @@ class Slurp:
 
         return struct_list.count
 
-    def _object_to_entities(self, object: dict) -> list[dict]:
+    def _object_props_validate_id(self, object: dict, properties: list[dict]) -> int:
+        prop_hash = [prop_hash for prop_hash in properties if prop_hash["slug"] == "id"][0]
+
+        if prop_hash["value"] != object["id"]:
+            # invalid id
+            return 1
+
+        return 0
+
+    def _object_props_validate_id_present(self, object: dict, properties: list[dict]) -> list[dict]:
+        slugs = [property["slug"] for property in properties]
+
+        if "id" in slugs:
+            return properties
+
+        # clone and add id property
+        props_clone = properties.copy()
+
+        props_clone.append(
+            {
+                "slug": "id",
+                "type": "string",
+                "value": object["id"],
+            }
+        )
+
+        return props_clone
+
+    def _object_to_entities(self, object: dict, properties: list[dict]) -> list[dict]:
         entities: list[dict] = []
 
-        for properties in object["properties"]:
-            entities.append(self._object_to_entity(object, properties))
+        for prop_hash in properties:
+            entities.append(self._object_to_entity(object, prop_hash))
 
         return entities
 

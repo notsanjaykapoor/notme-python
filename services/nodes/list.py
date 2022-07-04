@@ -45,6 +45,9 @@ class List:
 
         struct_tokens = services.mql.Parse(self._query).call()
 
+        # for token in struct_tokens.tokens:
+        #     value = token["value"]
+
         self._logger.info(f"{context.rid_get()} {__name__} tokens {struct_tokens.tokens}")
 
         struct_graph = services.graph.query.match_all()
@@ -60,15 +63,22 @@ class List:
                 gql.types.GqlNode(  # type: ignore
                     id=node.get("id"),
                     name=node.get("name", ""),
-                    labels=[label for label in node.labels],
+                    labels=sorted([label for label in node.labels]),
                 )
             )
 
-        # for token in struct_tokens.tokens:
-        #     value = token["value"]
+        # sort objects
 
-        # struct.objects = self._db.exec(self._dataset.offset(self._offset).limit(self._limit)).all()
+        struct.objects = sorted(struct.objects, key=lambda object: self._object_sort(object))
 
         struct.count = len(struct.objects)
 
         return struct
+
+    def _object_sort(self, object: gql.types.GqlNode) -> str:
+        if object.name:
+            return object.name
+        elif "property" in object.labels:
+            return f"za{object.id}"
+        else:
+            return f"zb{object.id}"
