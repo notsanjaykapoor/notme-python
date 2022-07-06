@@ -2,6 +2,7 @@ import strawberry
 from strawberry.types import Info
 
 import context
+import dot_init  # noqa: F401
 import gql.types
 import log
 import services.entities

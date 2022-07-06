@@ -2,6 +2,7 @@ import dataclasses
 import json
 
 import sqlmodel
+import ulid
 
 import services.data_models
 import services.entities
@@ -30,7 +31,12 @@ class Slurp:
         struct_dms = services.data_models.Hash(db=self._db, query="").call()
 
         for object in self._objects:
-            properties = self._object_props_validate_id_present(object, object["properties"])
+            object = self._object_props_validate_id_present(object)
+
+            properties = self._object_props_validate_id_slug_present(
+                object=object,
+                properties=object["properties"],
+            )
 
             if self._object_props_validate_id(object, properties) != 0:
                 struct.code = 422
@@ -41,7 +47,7 @@ class Slurp:
             entity_objects = self._object_to_entities(object, properties)
 
             # check if entity(s) exist
-            if self._get_entities_count(entity_objects) > 0:
+            if self._entities_matching_count(entity_objects) > 0:
                 continue
 
             # persist to database
@@ -58,7 +64,8 @@ class Slurp:
 
         return struct
 
-    def _get_entities_count(self, entity_objects: list[dict]) -> int:
+    def _entities_matching_count(self, entity_objects: list[dict]) -> int:
+        """return count of matching entities"""
         if not entity_objects:
             return 0
 
@@ -74,6 +81,7 @@ class Slurp:
         return struct_list.count
 
     def _object_props_validate_id(self, object: dict, properties: list[dict]) -> int:
+        """validate object id matches id slug"""
         prop_hash = [prop_hash for prop_hash in properties if prop_hash["slug"] == "id"][0]
 
         if prop_hash["value"] != object["id"]:
@@ -82,7 +90,21 @@ class Slurp:
 
         return 0
 
-    def _object_props_validate_id_present(self, object: dict, properties: list[dict]) -> list[dict]:
+    def _object_props_validate_id_present(self, object: dict) -> dict:
+        """add object id iff its missing"""
+
+        if "id" in object:
+            return object
+
+        # clone and add id property
+        object_clone = object.copy()
+
+        object_clone["id"] = ulid.new().str
+
+        return object_clone
+
+    def _object_props_validate_id_slug_present(self, object: dict, properties: list[dict]) -> list[dict]:
+        """add id slug iff its missing"""
         slugs = [property["slug"] for property in properties]
 
         if "id" in slugs:

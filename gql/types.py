@@ -58,16 +58,27 @@ class GqlEntitiesList:
 
 @strawberry.type
 class GqlNode:
-    id: str
+    eid: str  # entity object id
+    gid: str  # neo4j graph id
     labels: list[str]
     name: str
+
+
+@strawberry.type
+class GqlNodeEdge:
+    name: str
+    src_gid: str
+    tgt_gid: str
 
 
 @strawberry.type
 class GqlNodesList:
     code: int
     errors: list[str]
-    objects: list[GqlNode]
+    nodes: list[GqlNode]
+    nodes_count: int
+    edges: list[GqlNodeEdge]
+    edges_count: int
 
 
 @strawberry.type
