@@ -109,8 +109,8 @@ def neighbors(
     #     dst_labels = [[s] for s in struct_list.values]
 
     struct_graph = services.graph.query.match_neighbors(
-        node_label=f"{node_name}:entity",
-        node_id=node_id,
+        src_label=f"{node_name}:entity",
+        src_id=node_id,
         max_hops=max_hops,
         dst_label=dst_label,
     )
@@ -126,10 +126,14 @@ def neighbors(
     for i, record in enumerate(records):
         logger.info("")
 
-        node = record["n"]
+        path = record["path"]
+        nodes = path.nodes
+        edges = path.relationships
 
         logger.info(f"[graph-cli] record {i+1}")
-        logger.info(f"[graph-cli] node {node}")
+        logger.info(f"[graph-cli] path {path}")
+        logger.info(f"[graph-cli] nodes {nodes}")
+        logger.info(f"[graph-cli] edges {edges}")
 
         # node_start = record["s"]
         # node_end = record["e"]

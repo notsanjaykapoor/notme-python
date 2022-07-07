@@ -43,9 +43,7 @@ class List:
             value = token["value"]
 
             if token["field"] == "user_id":
-                match = re.match(r"^~", value)
-
-                if match:
+                if re.match(r"^~", value):
                     # like query
                     value_normal = re.sub(r"~", "", value)
                     self._dataset = self._dataset.where(self._model.user_id.like("%" + value_normal + "%"))  # type: ignore

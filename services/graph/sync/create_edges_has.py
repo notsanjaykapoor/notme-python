@@ -46,7 +46,8 @@ class CreateEdgesHas:
         ).call()
 
         for entity in struct_entities.objects:
-            dst_id = services.entities.graph_value_store(entity.type_name, str(entity.type_value))
+            dst_id = str(entity.type_value)
+            # dst_id = services.entities.graph_value_store(entity.type_name, str(entity.type_value))
 
             struct.edges_created += services.graph.sync.CreateEdge(
                 src_id=self._entity.entity_id,
