@@ -76,6 +76,7 @@ class GqlNodesList:
     code: int
     errors: list[str]
     node_start: typing.Optional[GqlNode]
+    node_end: typing.Optional[GqlNode]
     nodes: list[GqlNode]
     nodes_count: int
     edges: list[GqlEdge]

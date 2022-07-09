@@ -11,7 +11,7 @@ def get() -> neo4j.Session:
 
 def _get_driver() -> neo4j.Driver:
     driver = neo4j.GraphDatabase.driver(
-        os.environ["NEO4J_BOLT_URL"],
+        os.environ["NEO4J_HOST_URL"],
         auth=(os.environ["NEO4J_USER"], os.environ["NEO4J_PASSWORD"]),
     )
 

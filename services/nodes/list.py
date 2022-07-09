@@ -23,6 +23,7 @@ Select.inherit_cache = True  # type: ignore
 class Struct:
     code: int
     node_start: typing.Optional[gql.types.GqlNode]
+    node_end: typing.Optional[gql.types.GqlNode]
     nodes: list[gql.types.GqlNode]
     nodes_count: int
     edges: list[gql.types.GqlEdge]
@@ -41,7 +42,7 @@ class List:
         self._logger = log.init("service")
 
     def call(self) -> Struct:
-        struct = Struct(0, None, [], 0, [], 0, [])
+        struct = Struct(0, None, None, [], 0, [], 0, [])
 
         self._logger.info(f"{context.rid_get()} {__name__} db query '{self._query}'")
 
@@ -49,25 +50,46 @@ class List:
 
         struct_tokens = services.mql.Parse(self._query).call()
 
-        self._logger.info(f"{context.rid_get()} {__name__} db tokens {struct_tokens.tokens}")
+        tokens = struct_tokens.tokens
 
-        query_fields = [token["field"] for token in struct_tokens.tokens]
+        self._logger.info(f"{context.rid_get()} {__name__} tokens {tokens}")
+
+        query_fields = [token["field"] for token in tokens]
 
         if "start" in query_fields:
-            records = self._nodes_match_start(tokens=struct_tokens.tokens)
+            # e.g. start:person+1 radius:3h
+            records = self._nodes_match_start(tokens=tokens)
 
             if not len(records):
                 struct.code = 404
+                struct.errors.append("start node not found")
+                return struct
+
+            if len(records) > 1:
+                struct.code = 422
+                struct.errors.append("start node is not unique")
                 return struct
 
             start = records[0]["node"]
-            struct.node_start = self._gql_node(node=start, nid=start.id)
+
+            # set start node
+            struct.node_start = self._gql_node(node=start)
+
+            if "radius" in query_fields:
+                records += self._nodes_search(start, tokens)
+        elif "path" in query_fields:
+            # e.g. path:person+1,person+2
+            records = self._nodes_match_paths(tokens=tokens)
+
+            if len(records):
+                # set start and end nodes
+                path = records[0]["path"]
+                struct.node_start = self._gql_node(node=path.start_node)
+                struct.node_end = self._gql_node(node=path.end_node)
+
         else:
             records = self._nodes_match_all_with_edges()
             records += self._nodes_match_all_no_edges()
-
-        if "radius" in query_fields:
-            records += self._nodes_search(start, struct_tokens.tokens)
 
         # records keys can be 'node', 'edge', or 'path'
         records_node = [record for record in records if "node" in record.keys()]
@@ -75,15 +97,13 @@ class List:
         records_path = [record for record in records if "path" in record.keys()]
 
         # parse 'node' records by nodes
-        nodes_hash_base = self._nodes_by_id(records_node)
+        nodes_hash_base = self._record_nodes_by_id(records_node)
 
         # parse 'edge' records by edge ids
-        edges_hash_base = self._edges_by_node_ids(records_edge)
+        edges_hash_base = self._record_edges_by_node_ids(records_edge)
 
-        # parse 'path' records by nodes
+        # parse 'path' records by nodes and edge ids
         nodes_hash_path = self._path_nodes_by_id(records_path)
-
-        # parse 'path' records by edge ids
         edges_hash_path = self._path_edges_by_node_ids(records_path)
 
         # merge results
@@ -115,36 +135,13 @@ class List:
 
         return struct
 
-    def _edges_by_node_ids(self, records: neo4j.Record) -> dict[str, neo4j.graph.Relationship]:
-        """map records to hash of edges indexed by node [start, end] ids"""
-
-        edges: dict[str, neo4j.graph.Relationship] = {}
-
-        for record in records:
-            edge = record["edge"]
-            node_start, node_end = edge.nodes
-            key = ":".join(sorted([str(node_start.id), str(node_end.id)]))
-            edges[key] = edge
-
-        return edges
-
-    def _gql_node(self, node: neo4j.graph.Node, nid: str) -> gql.types.GqlNode:
+    def _gql_node(self, node: neo4j.graph.Node, nid: typing.Optional[str] = None) -> gql.types.GqlNode:
         return gql.types.GqlNode(
             eid=node.get("id"),
             labels=sorted([label for label in node.labels]),
             name=node.get("name", ""),
-            nid=nid,
+            nid=nid or node.id,
         )  # type: ignore
-
-    def _nodes_by_id(self, records: neo4j.Record) -> dict[str, neo4j.graph.Node]:
-        """map records to hash of nodes indexed by node id"""
-        nodes: dict[str, neo4j.graph.Node] = {}
-
-        for record in records:
-            node = record["node"]
-            nodes[str(node.id)] = node
-
-        return nodes
 
     def _nodes_match_all_no_edges(self) -> list[neo4j.Record]:
         """find all nodes without edges"""
@@ -166,6 +163,53 @@ class List:
 
         return records
 
+    def _nodes_match_id(self, id: str) -> list[neo4j.Record]:
+        """return records matching node id"""
+        struct_graph = services.graph.query.match_node(id=id)
+
+        self._logger.info(f"{context.rid_get()} {__name__} neo query '{struct_graph.query}' params {struct_graph.params}")
+
+        return self._neo.read_transaction(services.graph.tx.read, struct_graph.query, struct_graph.params)
+
+    def _nodes_match_paths(self, tokens: list[dict]) -> list[neo4j.Record]:
+        """return all shortest paths"""
+        assert len(tokens)
+
+        for token in tokens:
+            field = token["field"]
+            value = token["value"]
+
+            if field == "path":
+                # e.g. path:person+1,person+2
+                id_1, id_2 = map(lambda id: id.strip(), value.split(","))
+
+                records_1 = self._nodes_match_id(id=id_1)
+                records_2 = self._nodes_match_id(id=id_2)
+
+                if not len(records_1) or not len(records_2):
+                    raise ValueError("invalid path node")
+
+                node_1 = records_1[0]["node"]
+                node_2 = records_2[0]["node"]
+
+                node_1_labels = ":".join([label for label in node_1.labels])
+                node_2_labels = ":".join([label for label in node_2.labels])
+
+                struct_graph = services.graph.query.match_shortest_path(
+                    src_label=node_1_labels,
+                    src_id=node_1.get("id"),
+                    dst_label=node_2_labels,
+                    dst_id=node_2.get("id"),
+                )
+
+                self._logger.info(f"{context.rid_get()} {__name__} neo query '{struct_graph.query}' params {struct_graph.params}")
+
+                records = self._neo.read_transaction(services.graph.tx.read, struct_graph.query, struct_graph.params)
+
+                return records
+
+        return []
+
     def _nodes_match_start(self, tokens: list[dict]) -> list[neo4j.Record]:
         """find start node"""
         assert len(tokens)
@@ -175,13 +219,7 @@ class List:
             value = token["value"]
 
             if field == "start":
-                struct_graph = services.graph.query.match_node(id=value)
-
-                self._logger.info(f"{context.rid_get()} {__name__} neo query '{struct_graph.query}' params {struct_graph.params}")
-
-                records = self._neo.read_transaction(services.graph.tx.read, struct_graph.query, struct_graph.params)
-
-                return records
+                return self._nodes_match_id(id=value)
 
         return []
 
@@ -216,7 +254,7 @@ class List:
         return []
 
     def _path_edges_by_node_ids(self, records: neo4j.Record) -> dict[str, neo4j.graph.Relationship]:
-        """map records to hash of edges indexed by node [start, end] ids"""
+        """map path records to hash of edges indexed by node [start, end] ids"""
 
         edges: dict[str, neo4j.graph.Relationship] = {}
 
@@ -231,13 +269,36 @@ class List:
         return edges
 
     def _path_nodes_by_id(self, records: neo4j.Record) -> dict[str, neo4j.graph.Node]:
-        """map records to hash of nodes indexed by node id"""
+        """map path records to hash of nodes indexed by node id"""
         nodes: dict[str, neo4j.graph.Node] = {}
 
         for record in records:
             path = record["path"]
             for node in path.nodes:
                 nodes[str(node.id)] = node
+
+        return nodes
+
+    def _record_edges_by_node_ids(self, records: neo4j.Record) -> dict[str, neo4j.graph.Relationship]:
+        """map records to hash of edges indexed by node [start, end] ids"""
+
+        edges: dict[str, neo4j.graph.Relationship] = {}
+
+        for record in records:
+            edge = record["edge"]
+            node_start, node_end = edge.nodes
+            key = ":".join(sorted([str(node_start.id), str(node_end.id)]))
+            edges[key] = edge
+
+        return edges
+
+    def _record_nodes_by_id(self, records: neo4j.Record) -> dict[str, neo4j.graph.Node]:
+        """map records to hash of nodes indexed by node id"""
+        nodes: dict[str, neo4j.graph.Node] = {}
+
+        for record in records:
+            node = record["node"]
+            nodes[str(node.id)] = node
 
         return nodes
 

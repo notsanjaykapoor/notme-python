@@ -13,7 +13,7 @@ def match_shortest_path(src_label: str, src_id: str, dst_label: str, dst_id: str
     struct = GraphQuery("", {})
 
     struct.query = f"""
-    match (p1:{src_label} {{id: $src_id}}), (p2:{dst_label} {{id: $dst_id}}), p = allShortestPaths((p1)-[r*]-(p2)) return p
+    match (p1:{src_label} {{id: $src_id}}), (p2:{dst_label} {{id: $dst_id}}), path = allShortestPaths((p1)-[r*]-(p2)) return path
     """
 
     struct.params = {

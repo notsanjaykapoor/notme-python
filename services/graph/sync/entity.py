@@ -69,12 +69,4 @@ class Entity:
 
             struct.edges_created += struct_edges_has.edges_created
 
-            # struct_relationships_linked = services.graph.sync.CreateRelationshipsLinked(
-            #     db=self._db,
-            #     neo=self._neo,
-            #     entity=entity,
-            # ).call()
-
-            # struct.edges_created += struct_relationships_linked.relationships_created
-
         return struct
