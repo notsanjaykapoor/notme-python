@@ -77,7 +77,7 @@ def session_fixture():
 @pytest.fixture(name="neo_session")
 def neo_session_fixture():
     driver = neo4j.GraphDatabase.driver(
-        os.environ["NEO4J_BOLT_URL"],
+        os.environ["NEO4J_HOST_URL"],
         auth=(os.environ["NEO4J_USER"], os.environ["NEO4J_PASSWORD"]),
     )
 

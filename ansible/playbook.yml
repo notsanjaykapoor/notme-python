@@ -4,6 +4,7 @@
   roles:
     - role: ./roles/datadog
     - role: ./roles/neo
+    # - role: ./roles/neo_cluster
     - role: ./roles/postgres
     - role: ./roles/redpanda
 

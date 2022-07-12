@@ -2,16 +2,16 @@ import os
 
 import datadog
 
-import stats_init  # noqa: F401
 import dot_init  # noqa: F401
 import network
+import stats_init  # noqa: F401
 
 CHECK_NAME = "notme.service_check"
 CHECK_TAGS = ["check:neo"]
 
 
 def service_check() -> int:
-    neo_url = os.environ.get("NEO4J_BOLT_URL")
+    neo_url = os.environ.get("NEO4J_HOST_URL")
 
     if not neo_url:
         raise ValueError("neo4j url not defined")
