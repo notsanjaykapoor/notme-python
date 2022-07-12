@@ -118,7 +118,8 @@
       { "slug": "hair_color", "type": "string", "value": "grey" },
       { "slug": "id", "type": "string", "value": "01G57P3WYJE3KWQH810J5M64DC" },
       { "slug": "first_name", "type": "string", "value": "person" },
-      { "slug": "last_name", "type": "string", "value": "5" }
+      { "slug": "last_name", "type": "string", "value": "5" },
+      { "slug": "record_id", "type": "string", "value": "0" }
     ],
     "id": "01G57P3WYJE3KWQH810J5M64DC",
     "name": "person 5"
