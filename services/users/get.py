@@ -3,9 +3,9 @@ import typing
 
 import sqlmodel
 
+import context
 import log
 import models
-from context import request_id
 
 
 @dataclasses.dataclass
@@ -26,7 +26,7 @@ class Get:
     def call(self) -> Struct:
         struct = Struct(0, None, [])
 
-        self._logger.info(f"{request_id.get()} {__name__} {self._user_id}")
+        self._logger.info(f"{context.rid_get()} {__name__} {self._user_id}")
 
         struct.user = self._db.exec(sqlmodel.select(self._model).where(self._model.user_id == self._user_id)).first()
 

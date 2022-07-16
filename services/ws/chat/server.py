@@ -1,11 +1,9 @@
 import logging
-import sys
 from dataclasses import dataclass
 
 from fastapi import WebSocket, WebSocketDisconnect
 
-from context import request_id
-from models.socket_manager import SocketManager
+import models
 
 
 @dataclass
@@ -15,7 +13,7 @@ class Struct:
 
 
 class Server:
-    def __init__(self, socket_manager: SocketManager, ws: WebSocket, user_id: str):
+    def __init__(self, socket_manager: models.SocketManager, ws: WebSocket, user_id: str):
         self._socket_manager = socket_manager
         self._ws = ws
         self._user_id = user_id
@@ -41,7 +39,7 @@ class Server:
                 await self._socket_manager.broadcast(data, {self._ws})
         except WebSocketDisconnect:
             self._logger.info(f"{__name__} {self._user_id} disconnected")
-        except:
-            self._logger.info(f"{__name__} exception {sys.exc_info()[0]}")
+        except Exception as e:
+            self._logger.info(f"{__name__} exception {e}")
         finally:
             self._socket_manager.connection_remove(self._ws)

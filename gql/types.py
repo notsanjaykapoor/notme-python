@@ -86,6 +86,21 @@ class GqlNodesList:
 
 
 @strawberry.type
+class GqlSecret:
+    id: int
+    login: str
+    origin: str
+    user_id: str
+
+
+@strawberry.type
+class GqlSecretsList:
+    code: int
+    errors: list[str]
+    secrets: list[GqlSecret]  # todo
+
+
+@strawberry.type
 class GqlUser:
     id: int
     credentials_count: int

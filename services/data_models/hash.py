@@ -2,10 +2,10 @@ import dataclasses
 
 import sqlmodel
 
+import context
 import log
 import models
 import services.data_models
-from context import request_id
 
 
 @dataclasses.dataclass
@@ -30,7 +30,7 @@ class Hash:
     def call(self) -> Struct:
         struct = Struct(0, {}, [])
 
-        self._logger.info(f"{request_id.get()} {__name__} query {self._query}")
+        self._logger.info(f"{context.rid_get()} {__name__} query {self._query}")
 
         # get list of data models
 

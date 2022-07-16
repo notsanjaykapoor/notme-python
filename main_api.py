@@ -1,8 +1,11 @@
+import datadog
+import sqlmodel
 import strawberry  # noqa: E402
 import ulid  # noqa: E402
 from fastapi import APIRouter, Depends, FastAPI, Request  # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware
-from sqlmodel import Session  # noqa: E402
+
+# from sqlmodel import Session  # noqa: E402
 from strawberry.fastapi import GraphQLRouter  # noqa: E402
 from strawberry.schema.config import StrawberryConfig  # noqa: E402
 
@@ -85,8 +88,9 @@ async def add_request_id(request: Request, call_next):
     return response
 
 
+@datadog.statsd.timed("api.v1.entities.list", tags=["env:dev", "api:rest"])
 @app.get("/api/v1/entities", tags=["entities"], response_model=list[models.Entity])
-def entities_list(query: str = "", offset: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+def entities_list(query: str = "", offset: int = 0, limit: int = 100, db: sqlmodel.Session = Depends(get_db)):
     logger.info(f"{context.rid_get()} api.v1.entities.list")
 
     struct = services.entities.List(db, query, offset, limit).call()
@@ -96,6 +100,7 @@ def entities_list(query: str = "", offset: int = 0, limit: int = 100, db: Sessio
     return struct.objects
 
 
+@datadog.statsd.timed("api.ping", tags=["env:dev", "api:rest"])
 @app.get("/ping")
 def api_ping():
     return {
@@ -104,26 +109,29 @@ def api_ping():
     }
 
 
+@datadog.statsd.timed("api.users.create", tags=["env:dev", "api:rest"])
 @app.post("/api/v1/users", response_model=int)
-def user_create(user_id: str, db: Session = Depends(get_db)):
-    logger.info(f"{context.rid_get()} api.user.create")
+def user_create(user_id: str, db: sqlmodel.Session = Depends(get_db)):
+    logger.info(f"{context.rid_get()} api.users.create")
 
     struct = services.users.Create(db, user_id).call()
 
     return struct.id
 
 
+@datadog.statsd.timed("api.users.get", tags=["env:dev"])
 @app.get("/api/v1/users/{user_id}", response_model=models.User)
-def user_get(user_id: str, db: Session = Depends(get_db)):
-    logger.info(f"{context.rid_get()} api.user.get")
+def user_get(user_id: str, db: sqlmodel.Session = Depends(get_db)):
+    logger.info(f"{context.rid_get()} api.users.get")
 
     struct = services.users.Get(db, user_id).call()
 
     return struct.user
 
 
+@datadog.statsd.timed("api.users.list", tags=["env:dev"])
 @app.get("/api/v1/users", response_model=list[models.User])
-def users_list(query: str = "", offset: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+def users_list(query: str = "", offset: int = 0, limit: int = 100, db: sqlmodel.Session = Depends(get_db)):
     logger.info(f"{context.rid_get()} api.users.list")
 
     struct = services.users.List(db, query, offset, limit).call()
@@ -133,8 +141,9 @@ def users_list(query: str = "", offset: int = 0, limit: int = 100, db: Session =
     return struct.objects
 
 
+@datadog.statsd.timed("api.webauthn.auth.complete", tags=["env:dev", "api:rest"])
 @app.post("/api/v1/webauthn/auth/complete")
-def webauthn_auth_complete(params: services.webauthn.auth.CompleteParams, db: Session = Depends(get_db)):
+def webauthn_auth_complete(params: services.webauthn.auth.CompleteParams, db: sqlmodel.Session = Depends(get_db)):
     logger.info(f"{context.rid_get()} api.webauthn.auth.complete")
 
     struct = services.webauthn.auth.Complete(params, db).call()
@@ -142,8 +151,9 @@ def webauthn_auth_complete(params: services.webauthn.auth.CompleteParams, db: Se
     return {"code": struct.code, "object": {}}
 
 
+@datadog.statsd.timed("api.webauthn.auth.init", tags=["env:dev", "api:rest"])
 @app.post("/api/v1/webauthn/auth/init")
-def webauthn_auth_init(params: services.webauthn.auth.InitParams, db: Session = Depends(get_db)):
+def webauthn_auth_init(params: services.webauthn.auth.InitParams, db: sqlmodel.Session = Depends(get_db)):
     logger.info(f"{context.rid_get()} api.webauthn.auth.init")
 
     struct = services.webauthn.auth.Init(params, db).call()
@@ -153,8 +163,9 @@ def webauthn_auth_init(params: services.webauthn.auth.InitParams, db: Session = 
     return {"code": struct.code, "object": struct.object}
 
 
+@datadog.statsd.timed("api.webauthn.register.complete", tags=["env:dev", "api:rest"])
 @app.post("/api/v1/webauthn/register/complete")
-def webauthn_register_complete(params: services.webauthn.register.CompleteParams, db: Session = Depends(get_db)):
+def webauthn_register_complete(params: services.webauthn.register.CompleteParams, db: sqlmodel.Session = Depends(get_db)):
     logger.info(f"{context.rid_get()} api.webauthn.register.complete")
 
     struct = services.webauthn.register.Complete(params, db).call()
@@ -162,8 +173,9 @@ def webauthn_register_complete(params: services.webauthn.register.CompleteParams
     return {"code": struct.code, "object": {}}
 
 
+@datadog.statsd.timed("api.webauthn.register.init", tags=["env:dev", "api:rest"])
 @app.post("/api/v1/webauthn/register/init")
-def webauthn_register_init(params: services.webauthn.register.InitParams, db: Session = Depends(get_db)):
+def webauthn_register_init(params: services.webauthn.register.InitParams, db: sqlmodel.Session = Depends(get_db)):
     logger.info(f"{context.rid_get()} api.webauthn.register.init")
 
     struct = services.webauthn.register.Init(params, db).call()

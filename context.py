@@ -2,7 +2,7 @@ import contextvars
 
 import ulid
 
-request_id = contextvars.ContextVar("request_id", default=ulid.new().str)
+request_id: contextvars.ContextVar = contextvars.ContextVar("request_id", default=ulid.new().str)
 
 
 def rid_set(id: str) -> int:

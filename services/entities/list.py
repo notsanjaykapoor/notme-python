@@ -5,10 +5,10 @@ import sqlalchemy
 import sqlmodel
 from sqlmodel.sql.expression import Select, SelectOfScalar
 
+import context
 import log
 import models
 import services.mql
-from context import request_id
 
 # this disables the warning: SAWarning: Class SelectOfScalar will not make use of SQL compilation caching
 SelectOfScalar.inherit_cache = True  # type: ignore
@@ -37,13 +37,13 @@ class List:
     def call(self) -> Struct:
         struct = Struct(0, [], 0, [])
 
-        self._logger.info(f"{request_id.get()} {__name__} query {self._query}")
+        self._logger.info(f"{context.rid_get()} {__name__} query {self._query}")
 
         # tokenize query
 
         struct_tokens = services.mql.Parse(self._query).call()
 
-        self._logger.info(f"{request_id.get()} {__name__} tokens {struct_tokens.tokens}")
+        self._logger.info(f"{context.rid_get()} {__name__} tokens {struct_tokens.tokens}")
 
         for token in struct_tokens.tokens:
             value = token["value"]
