@@ -128,12 +128,12 @@ class Match:
 
                 meters = services.graph.distance.meters(radius)
 
-                struct_graph = services.graph.query.match_geo_distance_from_point(
+                struct_graph = services.graph.query.match_geo_filtered_from_point(
                     lat=float(lat),
                     lon=float(lon),
+                    meters=meters,
                     dst_id=entity.entity_id,
                     dst_label=None,
-                    meters=meters,
                 )
 
                 records = self._watch_entity_geo_query(query=struct_graph.query, params=struct_graph.params)

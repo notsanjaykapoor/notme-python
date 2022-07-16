@@ -60,6 +60,8 @@ class GqlEntitiesList:
 class GqlNode:
     eid: str  # entity object id
     labels: list[str]
+    lat: float
+    lon: float
     name: str
     nid: str  # neo4j graph id
 

@@ -1,7 +1,7 @@
 import dataclasses
 import os
 
-import requests
+import requests  # type: ignore
 
 import log
 

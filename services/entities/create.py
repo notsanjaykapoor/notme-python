@@ -1,5 +1,4 @@
 import dataclasses
-import sys
 
 import sqlalchemy
 import sqlmodel
@@ -53,16 +52,14 @@ class Create:
             # create entity locations
             struct_locations = services.entity_locations.Create(db=self._db, entity_ids=list(struct.entity_ids)).call()
             struct.location_count = struct_locations.count
-        except sqlalchemy.exc.IntegrityError:
+        except sqlalchemy.exc.IntegrityError as e:
             self._db.rollback()
             struct.code = 409
-            self._logger.error(f"{__name__} {sys.exc_info()[0]} error")
-        except Exception:
-            print(sys.exc_info())  #
-
+            self._logger.error(f"{__name__} error {e}")
+        except Exception as e:
             self._db.rollback()
             struct.code = 500
-            self._logger.error(f"{__name__} {sys.exc_info()[0]} exception")
+            self._logger.error(f"{__name__} exception {e}")
 
         return struct
 

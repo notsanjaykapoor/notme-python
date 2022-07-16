@@ -7,9 +7,10 @@ from .match_count import (  # noqa: F401
     match_node_label_group_count,
 )
 from .match_edges import match_edges  # noqa: F401
-from .match_geo_distance import (  # noqa: F401
-    match_geo_distance_from_node,
-    match_geo_distance_from_point,
+from .match_geo import (  # noqa: F401
+    match_geo_all_from_node,
+    match_geo_all_from_point,
+    match_geo_filtered_from_point,
 )
 from .match_neighbors import match_neighbors  # noqa: F401
 from .match_node import match_node  # noqa: F401

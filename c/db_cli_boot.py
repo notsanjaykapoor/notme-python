@@ -2,6 +2,7 @@
 import os
 import sys
 
+import toml  # type: ignore
 import typer
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
@@ -76,6 +77,9 @@ def _db_publish(entity_ids: set[str]):
 def _db_sync(data_file: str, config_path: str):
     with services.database.session.get() as db:
         # db config
+        toml_dict = toml.load("./data/notme/config/cities.toml")
+        struct_cities = services.cities.Create(db=db, objects=toml_dict["cities"]).call()
+
         struct_models = services.data_models.Slurp(db=db, toml_file=f"{config_path}/data_models.toml").call()
         struct_links = services.data_links.Slurp(db=db, toml_file=f"{config_path}/data_links.toml").call()
         struct_watches = services.entity_watches.Slurp(db=db, toml_file=f"{config_path}/entity_watches.toml").call()
@@ -83,13 +87,14 @@ def _db_sync(data_file: str, config_path: str):
         # db entities
         struct_entities = services.entities.Slurp(db=db, json_file=data_file).call()
 
+        logger.info(f"[db-cli] imported cities {struct_cities.count}")
         logger.info(f"[db-cli] imported data models {struct_models.count}")
         logger.info(f"[db-cli] imported data links {struct_links.count}")
         logger.info(f"[db-cli] imported entity watches {struct_watches.count}")
         logger.info(f"[db-cli] imported entities {struct_entities.count}")
 
         # publish messages bsased on db updates
-        _db_publish(struct_entities.entity_ids)
+        # _db_publish(struct_entities.entity_ids)
 
 
 def _db_truncate():
@@ -102,6 +107,7 @@ def _db_truncate():
         services.db.truncate_table(db=db, table_name="events")
         services.db.truncate_table(db=db, table_name="data_links")
         services.db.truncate_table(db=db, table_name="data_models")
+        services.db.truncate_table(db=db, table_name="cities")
 
         logger.info("[db-cli] db and graph truncated")
 

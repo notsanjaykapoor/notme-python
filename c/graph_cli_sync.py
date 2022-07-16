@@ -65,7 +65,7 @@ def sync_entity_locations(offset: int = 0, limit: int = 1024):
         struct_list = services.entity_locations.List(db=db, query="", offset=offset, limit=limit).call()
 
         for entity_location in struct_list.objects:
-            services.graph.sync.EntityGeo(db=db, neo=neo, entity_id=entity_location.entity_id).call()
+            services.graph.sync.EntityGeo(db=db, neo=neo, entity_location=entity_location).call()
 
 
 if __name__ == "__main__":

@@ -16,4 +16,4 @@ def test_event_create(session: sqlmodel.Session):
     assert struct_list.code == 0
     assert struct_list.count == 1
 
-    print(struct_list)
+    services.events.truncate(db=session)

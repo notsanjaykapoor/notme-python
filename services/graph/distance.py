@@ -2,8 +2,6 @@ import re
 
 
 def meters(s: str) -> float:
-    match = re.match(r"^(\d+)m", s)
-
     if match := re.match(r"^(\d+)mi", s):
         # miles to meters
         return int(match[1]) * 1609.34

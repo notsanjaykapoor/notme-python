@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 import sqlmodel
-import toml
+import toml  # type: ignore
 
 import services.entities
 import services.entity_watches

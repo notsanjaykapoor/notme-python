@@ -7,6 +7,7 @@ import ulid
 import gql
 import models
 import services.entities
+import services.graph
 import services.users
 
 gql_schema = strawberry.Schema(

@@ -6,23 +6,23 @@ from sqlalchemy.ext.declarative import declarative_base
 Base = declarative_base()
 
 
-class EntityLocation(Base):  # type: ignore
+class City(Base):  # type: ignore
     """use sqlalchemy orm instead of sqlmodel"""
 
-    __tablename__ = "entity_locations"
+    __tablename__ = "cities"
 
     class Config:
         arbitrary_types_allowed = True
 
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
-    entity_id = sqlalchemy.Column(sqlalchemy.String, unique=True, nullable=False)
     loc = sqlalchemy.Column(geoalchemy2.Geometry(geometry_type="POINT", srid=4326), nullable=False)
+    name = sqlalchemy.Column(sqlalchemy.String, unique=True, nullable=False)
 
     def pack(self):
         return {
             "id": self.id,
-            "entity_id": self.entity_id,
             "loc": self.loc,
+            "name": self.name,
         }
 
     @property

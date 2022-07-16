@@ -1,7 +1,6 @@
-import asyncio
 from dataclasses import dataclass
 
-import toml
+import toml  # type: ignore
 
 import actors.example.workers.echo
 import actors.example.workers.source

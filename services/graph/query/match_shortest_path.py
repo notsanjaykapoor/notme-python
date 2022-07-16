@@ -1,15 +1,8 @@
-import dataclasses
-
-
-@dataclasses.dataclass
-class GraphQuery:
-    query: str
-    params: dict
+from .types import GraphQuery
 
 
 def match_shortest_path(src_label: str, src_id: str, dst_label: str, dst_id: str) -> GraphQuery:
     """find all shortest paths between nodes"""
-
     struct = GraphQuery("", {})
 
     struct.query = f"""

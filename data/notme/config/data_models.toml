@@ -79,6 +79,12 @@ type = "integer"
 [[person]]
 
 node = 0
+slug = "city"
+type = "string"
+
+[[person]]
+
+node = 0
 slug = "eye_color"
 type = "string"
 
@@ -146,6 +152,12 @@ type = "string"
 
 node = 0
 slug = "street"
+type = "string"
+
+[[vehicle]]
+
+node = 0
+slug = "city"
 type = "string"
 
 [[vehicle]]

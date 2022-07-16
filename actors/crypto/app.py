@@ -1,11 +1,9 @@
-import asyncio
 import logging
-import toml
-
 from dataclasses import dataclass
 
-import actors.crypto.workers.source
+import toml  # type: ignore
 
+import actors.crypto.workers.source
 from models.actor import Actor
 
 

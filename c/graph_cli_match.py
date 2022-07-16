@@ -55,17 +55,16 @@ def edges(
 
 @app.command()
 def geo(
-    node: str = typer.Option(...),
+    node: str = typer.Option(None, "--node"),
     radius: str = typer.Option(None, "--radius", "-r"),
 ):
     """find node neighbors within specified distance"""
 
-    name, id = node.split(":", 1)
-
+    label, id = node.split(":")
     meters = services.graph.distance.meters(radius)
 
-    struct_graph = services.graph.query.match_geo_distance_from_node(
-        src_label=name,
+    struct_graph = services.graph.query.match_geo_all_from_node(
+        src_label=label,
         src_id=id,
         meters=meters,
     )

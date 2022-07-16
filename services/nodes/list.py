@@ -10,6 +10,7 @@ from sqlmodel.sql.expression import Select, SelectOfScalar
 import context
 import gql.types
 import log
+import services.graph.distance
 import services.graph.query
 import services.graph.tx
 import services.mql
@@ -56,27 +57,27 @@ class List:
 
         query_fields = [token["field"] for token in tokens]
 
-        if "start" in query_fields:
-            # e.g. start:person+1 radius:3h
+        if "node" in query_fields:
+            # e.g. node:person+1 radius:3h
             records = self._nodes_match_start(tokens=tokens)
 
             if not len(records):
                 struct.code = 404
-                struct.errors.append("start node not found")
+                struct.errors.append("node not found")
                 return struct
 
             if len(records) > 1:
                 struct.code = 422
-                struct.errors.append("start node is not unique")
+                struct.errors.append("node is not unique")
                 return struct
 
-            start = records[0]["node"]
+            node = records[0]["node"]
 
             # set start node
-            struct.node_start = self._gql_node(node=start)
+            struct.node_start = self._gql_node(node=node)
 
             if "radius" in query_fields:
-                records += self._nodes_search(start, tokens)
+                records += self._nodes_search(node, tokens)
         elif "path" in query_fields:
             # e.g. path:person+1,person+2
             records = self._nodes_match_paths(tokens=tokens)
@@ -136,9 +137,20 @@ class List:
         return struct
 
     def _gql_node(self, node: neo4j.graph.Node, nid: typing.Optional[str] = None) -> gql.types.GqlNode:
+        point = node.get("location", None)
+
+        if point:
+            lat = point.y
+            lon = point.x
+        else:
+            lat = 0.0
+            lon = 0.0
+
         return gql.types.GqlNode(
             eid=node.get("id"),
             labels=sorted([label for label in node.labels]),
+            lat=lat,
+            lon=lon,
             name=node.get("name", ""),
             nid=nid or node.id,
         )  # type: ignore
@@ -218,12 +230,12 @@ class List:
             field = token["field"]
             value = token["value"]
 
-            if field == "start":
+            if field == "node":
                 return self._nodes_match_id(id=value)
 
         return []
 
-    def _nodes_search(self, start: neo4j.graph.Node, tokens: list[dict]) -> list[neo4j.Record]:
+    def _nodes_search(self, node: neo4j.graph.Node, tokens: list[dict]) -> list[neo4j.Record]:
         assert len(tokens)
 
         for token in tokens:
@@ -231,19 +243,33 @@ class List:
             value = token["value"]
 
             if field == "radius":
-                match = re.match(r"^(\d+)h$", value)
+                match = re.match(r"^(\d+)(ho|mi?)$", value)
+
                 if not match:
                     raise ValueError("invalid radius")
 
-                hops = match[1]
+                num = int(match[1])
+                unit = match[2]
 
-                node_labels = ":".join([label for label in start.labels])
+                node_labels = ":".join([label for label in node.labels])
 
-                struct_graph = services.graph.query.match_neighbors(
-                    src_label=node_labels,
-                    src_id=start.get("id"),
-                    max_hops=int(hops),
-                )
+                struct_graph: services.graph.query.types.GraphQuery
+
+                if unit == "ho":
+                    struct_graph = services.graph.query.match_neighbors(
+                        src_label=node_labels,
+                        src_id=node.get("id"),
+                        max_hops=num,
+                    )
+                else:
+                    # map "3mi" to meters
+                    meters = services.graph.distance.meters(value)
+
+                    struct_graph = services.graph.query.match_geo_all_from_node(
+                        src_label=node_labels,
+                        src_id=node.get("id"),
+                        meters=meters,
+                    )
 
                 self._logger.info(f"{context.rid_get()} {__name__} neo query '{struct_graph.query}' params {struct_graph.params}")
 

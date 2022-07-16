@@ -4,9 +4,7 @@ import neo4j
 
 
 def get() -> neo4j.Session:
-    session = _get_driver().session(database=os.environ["NEO4J_DB_NAME"])
-
-    return session
+    return _get_driver().session(database=os.environ["NEO4J_DB_NAME"])
 
 
 def _get_driver() -> neo4j.Driver:

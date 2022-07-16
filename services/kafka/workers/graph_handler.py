@@ -52,7 +52,7 @@ class GraphHandler(kafka.Handler):
             elif message_object["name"] == "entity.geo.changed":
                 with services.database.session.get() as db, services.graph.session.get() as neo:
                     # process message
-                    services.graph.sync.EntityGeo(db=db, neo=neo, entity_id=message_object["id"]).call()
+                    # services.graph.sync.EntityGeo(db=db, neo=neo, entity_id=message_object["id"]).call()
 
                     # check watches
                     struct_watches = services.entity_watches.Match(

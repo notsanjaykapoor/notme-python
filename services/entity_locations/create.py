@@ -1,11 +1,15 @@
 import dataclasses
 import sys
+import typing
 
+import shapely
+import shapely.geometry
 import sqlalchemy
 import sqlmodel
 
 import log
 import models
+import services.cities
 import services.entities
 
 
@@ -25,7 +29,7 @@ class Struct:
 
 
 class Create:
-    """create entity location"""
+    """create entity location from entity set"""
 
     def __init__(self, db: sqlmodel.Session, entity_ids: list[str]):
         self._db = db
@@ -41,7 +45,7 @@ class Create:
         for entity_id in self._entity_ids:
             entities = services.entities.get_all_by_id(db=self._db, id=entity_id)
 
-            # map geo coords to an entity location object
+            # map entity set to an entity latlon
             entity_latlon = self._entity_latlon(entities)
 
             if entity_latlon.code != 0:
@@ -74,21 +78,48 @@ class Create:
 
         return struct
 
+    def _city_point(self, name: str) -> typing.Optional[shapely.geometry.Point]:
+        struct_list = services.cities.List(
+            db=self._db,
+            query=f"name:{name}",
+            offset=0,
+            limit=1,
+        ).call()
+
+        if not struct_list.count:
+            return None
+
+        return struct_list.objects[0].point
+
     def _entity_latlon(self, entities: list[models.Entity]) -> EntityLatLon:
         """map entity set to an entity latlon"""
         struct = EntityLatLon(0, 0, 0)
 
+        entity_city = [entity.type_value for entity in entities if entity.slug == "city"]
         entity_lat = [entity.type_value for entity in entities if entity.slug == "lat"]
         entity_lon = [entity.type_value for entity in entities if entity.slug == "lon"]
 
-        if not entity_lat or not entity_lon:
+        if entity_lat and entity_lon:
+            # use entity lat, lon
+            assert entity_lat[0]
+            assert entity_lon[0]
+
+            struct.lat = float(entity_lat[0])
+            struct.lon = float(entity_lon[0])
+        elif entity_city:
+            # map city to lat, lon
+            assert entity_city[0]
+
+            point = self._city_point(name=entity_city[0].lower())
+
+            if not point:
+                struct.code = 422
+                return struct
+
+            struct.lat = point.y
+            struct.lon = point.x
+        else:
             struct.code = 422
             return struct
-
-        assert entity_lat[0]
-        assert entity_lon[0]
-
-        struct.lat = float(entity_lat[0])
-        struct.lon = float(entity_lon[0])
 
         return struct

@@ -1,11 +1,6 @@
-import dataclasses
 import typing
 
-
-@dataclasses.dataclass
-class GraphQuery:
-    query: str
-    params: dict
+from .types import GraphQuery
 
 
 def match_edges_count(names: typing.Optional[str] = None) -> GraphQuery:

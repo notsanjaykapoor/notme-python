@@ -1,0 +1,17 @@
+[[cities]]
+
+name = "Boston"
+lat = 42.3601
+lon = -71.0589
+
+[[cities]]
+
+name = "Chicago"
+lat = 41.8781
+lon = -87.6298
+
+[[cities]]
+
+name = "Philadelphia"
+lat = 39.9526
+lon = -75.1652

@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 import sqlmodel
-import toml
+import toml  # type: ignore
 
 import log
 import services.data_models

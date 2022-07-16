@@ -30,21 +30,36 @@ def database_tables_create(engine: sqlalchemy.future.Engine):
     sqlmodel.SQLModel.metadata.create_all(engine)
 
     # sqlalchemy tables
+
+    if not sqlalchemy.inspect(engine).has_table(models.City.__tablename__):
+        models.City.__table__.create(engine)
+
     if not sqlalchemy.inspect(engine).has_table(models.EntityLocation.__tablename__):
         models.EntityLocation.__table__.create(engine)
 
 
 def database_tables_drop(engine: sqlalchemy.future.Engine):
     # sqlalchemy tables
+
+    if sqlalchemy.inspect(engine).has_table(models.City.__tablename__):
+        models.City.__table__.drop(engine)
+
     if sqlalchemy.inspect(engine).has_table(models.EntityLocation.__tablename__):
         models.EntityLocation.__table__.drop(engine)
 
     sqlmodel.SQLModel.metadata.drop_all(engine)
 
 
+def database_tables_init(engine: sqlalchemy.future.Engine):
+    # initialize hypertables
+    session = sqlmodel.Session(engine)
+    session.execute("select create_hypertable('events', 'timestamp')")
+
+
 # Set up the database once
 database_tables_drop(engine)
 database_tables_create(engine)
+database_tables_init(engine)
 
 
 @pytest.fixture(name="session")

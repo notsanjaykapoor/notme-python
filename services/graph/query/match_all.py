@@ -1,10 +1,4 @@
-import dataclasses
-
-
-@dataclasses.dataclass
-class GraphQuery:
-    query: str
-    params: dict
+from .types import GraphQuery
 
 
 def match_all() -> GraphQuery:

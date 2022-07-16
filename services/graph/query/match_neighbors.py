@@ -1,15 +1,8 @@
-import dataclasses
-
-
-@dataclasses.dataclass
-class GraphQuery:
-    query: str
-    params: dict
+from .types import GraphQuery
 
 
 def match_neighbors(src_label: str, src_id: str, max_hops: int, dst_label: str = None) -> GraphQuery:
     """find all node neighbors filtered by dst label and constrained by hops"""
-
     struct = GraphQuery("", {})
 
     if dst_label:

@@ -1,16 +1,23 @@
-import pytest
+# import pytest
 import sqlmodel
 
+import services.db
 import services.events
 
 
+def db_truncate_events(session: sqlmodel.Session):
+    services.db.truncate_table(db=session, table_name="events")
+
+
 def db_init_hypertable(session: sqlmodel.Session):
+    # events table needs to be empty when calling create_hypertable
     session.execute("select create_hypertable('events', 'timestamp')")
 
 
-@pytest.mark.skip(reason="timescaledb extension required")
+# @pytest.mark.skip(reason="timescaledb extension required")
 def test_event_query(session: sqlmodel.Session):
-    db_init_hypertable(session)
+    # db_truncate_events(session)
+    # db_init_hypertable(session)
 
     objects = [
         {
@@ -41,3 +48,5 @@ def test_event_query(session: sqlmodel.Session):
     assert len(buckets) == 1
     assert buckets[0]["count"] == 3
     assert buckets[0]["name"] == "entity.created"
+
+    services.events.truncate(db=session)

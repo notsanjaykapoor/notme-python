@@ -1,7 +1,7 @@
 import logging
 from dataclasses import dataclass
 
-import toml
+import toml  # type: ignore
 
 import actors.chess.workers.map
 import actors.chess.workers.source
