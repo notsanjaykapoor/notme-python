@@ -1,28 +1,88 @@
-- name: start container
-  docker_container:
-    name: notme_postgres
-    image: arm64v8/postgres
-    state: started
-    healthcheck:
-      test: ["CMD", "curl", "--fail", "http://localhost:13432"]
-      interval: 2m
-      timeout: 10s
-      retries: 3
-      start_period: 15s
-    ports:
-      - "13432:5432"
-    env:
-      POSTGRES_PASSWORD: "development"
-      POSTGRES_USER: "postgres"
-    volumes:
-      - ~/data/postgres:/var/lib/postgresql/data
+- name: download postgis
+  raw: "apt update && apt install -y postgresql-14-postgis-3"
+  args:
+    executable: /bin/bash
+  tags:
+    - postgres
+
+- name: download timescale packages
+  raw: "apt update && apt install -y git cmake postgresql-server-dev-14 libkrb5-dev"
+  args:
+    executable: /bin/bash
+  tags:
+    - postgres
+
+- name: check timescale directory
+  stat:
+    path: ./timescaledb
+  register: timescale_dir
+  tags:
+    - postgres
+
+- name: install timescale
+  raw: "{{item}}"
+  loop:
+    - "git clone https://github.com/timescale/timescaledb.git"
+    - "cd timescaledb && ./bootstrap"
+    - "cd timescaledb/build && make"
+    - "cd timescaledb/build && make install"
+  when: not timescale_dir.stat.exists
+  tags:
+    - postgres
+
+- name: configure postgres
+  template:
+    src: ./templates/postgresql.conf.j2
+    dest: /var/lib/postgresql/data/postgresql.conf
+    owner: postgres
+    group: postgres
   tags:
     - db
 
-- name: check container
+- name: check postgres port
   wait_for:
     host: "localhost"
-    port: 13432
+    port: 5432
   register: container
   tags:
-    - db
+    - postgres
+
+- name: create default databases
+  postgresql_db:
+    state: present
+    name: "{{item}}"
+    encoding: UTF-8
+  become: no
+  loop:
+    - "notme_dev"
+    - "notme_tst"
+  tags:
+    - postgres
+
+- name: add dev extensions
+  postgresql_ext:
+    name: "{{item}}"
+    db: notme_dev
+  become: no
+  loop: # extension dir: /usr/share/postgresql/14/extension/
+    - "fuzzystrmatch"
+    - "postgis"
+    - "postgis_tiger_geocoder"
+    - "postgis_topology"
+    - "timescaledb"
+  tags:
+    - postgres
+
+- name: "add tst extensions"
+  postgresql_ext:
+    name: "{{item}}"
+    db: notme_tst
+  become: no
+  loop: # extension dir: /usr/share/postgresql/14/extension/
+    - "fuzzystrmatch"
+    - "postgis"
+    - "postgis_tiger_geocoder"
+    - "postgis_topology"
+    - "timescaledb"
+  tags:
+    - postgres

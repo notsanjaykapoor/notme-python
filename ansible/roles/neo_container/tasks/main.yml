@@ -24,7 +24,7 @@
       NEO4J_ACCEPT_LICENSE_AGREEMENT: "yes"
   tags:
     - neo
-    - services
+    - container
 
 - name: check container
   wait_for:
@@ -33,7 +33,7 @@
   register: container
   tags:
     - neo
-    - services
+    - container
 
 - name: create default databases
   shell: "cypher-shell -a neo4j://localhost:13687 -u neo4j -p development 'create database {{item}} if not exists;'"
@@ -46,4 +46,4 @@
   until: result.rc == 0
   tags:
     - neo
-    - services
+    - container

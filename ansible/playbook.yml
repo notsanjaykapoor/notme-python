@@ -2,11 +2,11 @@
 - name: start containers
   hosts: localhost
   roles:
-    - role: ./roles/datadog
-    - role: ./roles/neo
-    # - role: ./roles/neo_cluster
-    - role: ./roles/postgres
-    - role: ./roles/redpanda
+    - role: ./roles/datadog_container
+    - role: ./roles/neo_container
+    # - role: ./roles/neo_cluster_container
+    - role: ./roles/postgres_container
+    - role: ./roles/redpanda_container
 
 - name: install python
   gather_facts: no
@@ -14,10 +14,10 @@
   roles:
     - role: ./roles/python
 
-- name: initialize database
+- name: initialize postgres database
   gather_facts: no
   hosts: postgres
   vars_files:
-    - ./roles/db/vars.yml
+    - ./roles/postgres/vars.yml
   roles:
-    - role: ./roles/db
+    - role: ./roles/postgres

@@ -38,7 +38,7 @@
       - PLAINTEXT://redpanda:28082,OUTSIDE://localhost:8082
   tags:
     - redpanda
-    - services
+    - container
 
 - name: check container
   docker_container_info:
@@ -46,7 +46,7 @@
   register: container
   tags:
     - redpanda
-    - services
+    - container
 
 - name: create queues
   shell: "rpk topic create {{item}}"
@@ -56,7 +56,8 @@
   register: qcreate
   when: container.exists
   tags:
-    - services
+    - redpanda
+    - container
 
 - name: list queues
   shell: "rpk topic list"
