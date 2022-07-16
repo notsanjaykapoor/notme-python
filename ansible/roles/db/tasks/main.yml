@@ -5,12 +5,39 @@
   tags:
     - db
 
-# - name: download timescale
-#   raw: "apt update && apt install -y curl && curl -s https://packagecloud.io/install/repositories/timescale/timescaledb/script.deb.sh | bash"
-#   args:
-#     executable: /bin/bash
-#   tags:
-#     - db
+- name: download timescale packages
+  raw: "apt update && apt install -y git cmake postgresql-server-dev-14 libkrb5-dev"
+  args:
+    executable: /bin/bash
+  tags:
+    - db
+
+- name: check timescale directory
+  stat:
+    path: ./timescaledb
+  register: timescale_dir
+  tags:
+    - db
+
+- name: install timescale
+  raw: "{{item}}"
+  loop:
+    - "git clone https://github.com/timescale/timescaledb.git"
+    - "cd timescaledb && ./bootstrap"
+    - "cd timescaledb/build && make"
+    - "cd timescaledb/build && make install"
+  when: not timescale_dir.stat.exists
+  tags:
+    - db
+
+- name: configure postgres
+  template:
+    src: ./templates/postgresql.conf.j2
+    dest: /var/lib/postgresql/data/postgresql.conf
+    owner: postgres
+    group: postgres
+  tags:
+    - db
 
 - name: check postgres port
   wait_for:
@@ -37,11 +64,12 @@
     name: "{{item}}"
     db: notme_dev
   become: no
-  loop:
+  loop: # extension dir: /usr/share/postgresql/14/extension/
     - "fuzzystrmatch"
     - "postgis"
     - "postgis_tiger_geocoder"
     - "postgis_topology"
+    - "timescaledb"
   tags:
     - db
 
@@ -50,10 +78,11 @@
     name: "{{item}}"
     db: notme_tst
   become: no
-  loop:
+  loop: # extension dir: /usr/share/postgresql/14/extension/
     - "fuzzystrmatch"
     - "postgis"
     - "postgis_tiger_geocoder"
     - "postgis_topology"
+    - "timescaledb"
   tags:
     - db
