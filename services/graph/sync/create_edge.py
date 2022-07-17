@@ -3,6 +3,7 @@ import typing
 import datadog
 import neo4j
 
+import env
 import log
 import services.entities
 import services.graph
@@ -56,7 +57,7 @@ class CreateEdge:
 
         self._logger.info(f"{__name__} src {self._src_label}:{self._src_id} dst {self._dst_label}:{self._dst_id}")
 
-        with datadog.statsd.timed(f"{__name__}.timer", tags=["env:dev", "neo:write"]):
+        with datadog.statsd.timed("neo.writer", tags=[f"env:{env.name()}", f"writer:{__name__}"]):
             self._neo.write_transaction(services.graph.tx.write, query_create, params)
             return 1
 

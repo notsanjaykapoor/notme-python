@@ -20,21 +20,21 @@ class Query:
     def blocks_list(self, info: Info, query: str = "", offset: int = 0, limit: int = 10) -> gql.types.GqlBlocksList:
         logger.info(f"{context.rid_get()} gql.{info.field_name} query {query}")
 
-        with datadog.statsd.timed(f"gql.{info.field_name}", tags=["env:dev", "api:gql"]):
+        with datadog.statsd.timed("gql", tags=["env:dev", f"gql:{info.field_name}"]):
             return gql.types.GqlBlocksList(code=0, errors=0, blocks=[])  # type: ignore
 
     @strawberry.field
     def docs_list(self, info: Info, query: str = "", offset: int = 0, limit: int = 10) -> gql.types.GqlDocsList:
         logger.info(f"{context.rid_get()} gql.{info.field_name} query {query}")
 
-        with datadog.statsd.timed(f"gql.{info.field_name}", tags=["env:dev", "api:gql"]):
+        with datadog.statsd.timed("gql", tags=["env:dev", f"gql:{info.field_name}"]):
             return gql.types.GqlDocsList(code=0, errors=0, docs=[])  # type: ignore
 
     @strawberry.field
     def entities_list(self, info: Info, query: str = "", offset: int = 0, limit: int = 10) -> gql.types.GqlEntitiesList:
         logger.info(f"{context.rid_get()} gql.{info.field_name} query {query}")
 
-        with datadog.statsd.timed(f"gql.{info.field_name}", tags=["env:dev", "api:gql"]):
+        with datadog.statsd.timed("gql", tags=["env:dev", f"gql:{info.field_name}"]):
             return services.entities.List(
                 db=info.context["db"],
                 query=query,
@@ -46,7 +46,7 @@ class Query:
     def nodes_list(self, info: Info, query: str = "", offset: int = 0, limit: int = 10) -> gql.types.GqlNodesList:
         logger.info(f"{context.rid_get()} gql.{info.field_name} query {query}")
 
-        with datadog.statsd.timed(f"gql.{info.field_name}", tags=["env:dev", "api:gql"]):
+        with datadog.statsd.timed("gql", tags=["env:dev", f"gql:{info.field_name}"]):
             with services.graph.session.get() as neo:
                 return services.nodes.List(
                     db=info.context["db"],
@@ -60,21 +60,21 @@ class Query:
     def secrets_list(self, info: Info, query: str = "", offset: int = 0, limit: int = 10) -> gql.types.GqlSecretsList:
         logger.info(f"{context.rid_get()} gql.{info.field_name} query {query}")
 
-        with datadog.statsd.timed(f"gql.{info.field_name}", tags=["env:dev", "api:gql"]):
+        with datadog.statsd.timed("gql", tags=["env:dev", f"gql:{info.field_name}"]):
             return gql.types.GqlSecretsList(code=0, errors=0, secrets=[])  # type: ignore
 
     @strawberry.field
     def user_get(self, user_id: str, info: Info) -> gql.types.GqlUserGet:
         logger.info(f"{context.rid_get()} gql.{info.field_name} {user_id}")
 
-        with datadog.statsd.timed(f"gql.{info.field_name}", tags=["env:dev", "api:gql"]):
+        with datadog.statsd.timed("gql", tags=["env:dev", f"gql:{info.field_name}"]):
             return services.users.Get(db=info.context["db"], user_id=user_id).call()  # type: ignore
 
     @strawberry.field
     def users_list(self, info: Info, query: str = "", offset: int = 0, limit: int = 10) -> gql.types.GqlUsersList:
         logger.info(f"{context.rid_get()} gql.{info.field_name} query {query}")
 
-        with datadog.statsd.timed(f"gql.{info.field_name}", tags=["env:dev", "api:gql"]):
+        with datadog.statsd.timed("gql", tags=["env:dev", f"gql:{info.field_name}"]):
             return services.users.List(
                 db=info.context["db"],
                 query=query,

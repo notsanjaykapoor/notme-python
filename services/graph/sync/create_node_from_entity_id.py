@@ -3,6 +3,7 @@ import dataclasses
 import datadog
 import neo4j
 
+import env
 import log
 import models
 import services.graph.query
@@ -73,6 +74,6 @@ class CreateNodeFromEntityId:
 
         self._logger.info(f"{__name__} label {self._node_labels} props {params}")
 
-        with datadog.statsd.timed(f"{__name__}.timer", tags=["env:dev", "neo:write"]):
+        with datadog.statsd.timed("neo.writer", tags=[f"env:{env.name()}", f"writer:{__name__}"]):
             summary = self._neo.write_transaction(services.graph.tx.write, query_create, params)
             return summary.counters.nodes_created

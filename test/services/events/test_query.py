@@ -1,24 +1,10 @@
-# import pytest
 import sqlmodel
 
 import services.db
 import services.events
 
 
-def db_truncate_events(session: sqlmodel.Session):
-    services.db.truncate_table(db=session, table_name="events")
-
-
-def db_init_hypertable(session: sqlmodel.Session):
-    # events table needs to be empty when calling create_hypertable
-    session.execute("select create_hypertable('events', 'timestamp')")
-
-
-# @pytest.mark.skip(reason="timescaledb extension required")
 def test_event_query(session: sqlmodel.Session):
-    # db_truncate_events(session)
-    # db_init_hypertable(session)
-
     objects = [
         {
             "name": "entity.created",

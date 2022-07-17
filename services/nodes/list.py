@@ -2,12 +2,14 @@ import dataclasses
 import re
 import typing
 
+import datadog
 import neo4j
 import neo4j.graph
 import sqlmodel
 from sqlmodel.sql.expression import Select, SelectOfScalar
 
 import context
+import env
 import gql.types
 import log
 import services.graph.distance
@@ -42,6 +44,7 @@ class List:
 
         self._logger = log.init("service")
 
+    @datadog.statsd.timed("service", tags=[f"env:{env.name()}", f"service:{__name__}"])
     def call(self) -> Struct:
         struct = Struct(0, None, None, [], 0, [], 0, [])
 

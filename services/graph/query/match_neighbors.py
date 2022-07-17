@@ -1,6 +1,11 @@
+import datadog
+
+import env
+
 from .types import GraphQuery
 
 
+@datadog.statsd.timed("neo.reader", tags=[f"env:{env.name_random()}", f"reader:{__name__}"])
 def match_neighbors(src_label: str, src_id: str, max_hops: int, dst_label: str = None) -> GraphQuery:
     """find all node neighbors filtered by dst label and constrained by hops"""
     struct = GraphQuery("", {})
