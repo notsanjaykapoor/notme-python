@@ -11,8 +11,7 @@ import dot_init  # noqa: E402, F401
 import log  # noqa: E402
 import services.data_links  # noqa: E402
 import services.data_models  # noqa: E402
-import services.database.session  # noqa: E402
-import services.db  # noqa: E402
+import services.database  # noqa: E402
 import services.entities  # noqa: E402
 import services.entity_watches  # noqa: E402
 import services.graph.commands  # noqa: E402
@@ -84,8 +83,10 @@ def _db_sync(data_file: str, config_path: str):
         struct_links = services.data_links.Slurp(db=db, toml_file=f"{config_path}/data_links.toml").call()
         struct_watches = services.entity_watches.Slurp(db=db, toml_file=f"{config_path}/entity_watches.toml").call()
 
+        max_version = services.entities.get_max_version(db=db)
+
         # db entities
-        struct_entities = services.entities.Slurp(db=db, json_file=data_file).call()
+        struct_entities = services.entities.Slurp(db=db, json_file=data_file, version=max_version + 1).call()
 
         logger.info(f"[db-cli] imported cities {struct_cities.count}")
         logger.info(f"[db-cli] imported data models {struct_models.count}")
@@ -101,13 +102,13 @@ def _db_truncate():
     with services.database.session.get() as db, services.graph.session.get() as neo:
         services.graph.commands.truncate(neo)
 
-        services.db.truncate_table(db=db, table_name="entities")
-        services.db.truncate_table(db=db, table_name="entity_locations")
-        services.db.truncate_table(db=db, table_name="entity_watches")
-        services.db.truncate_table(db=db, table_name="events")
-        services.db.truncate_table(db=db, table_name="data_links")
-        services.db.truncate_table(db=db, table_name="data_models")
-        services.db.truncate_table(db=db, table_name="cities")
+        services.database.truncate_table(db=db, table_name="entities")
+        services.database.truncate_table(db=db, table_name="entity_locations")
+        services.database.truncate_table(db=db, table_name="entity_watches")
+        services.database.truncate_table(db=db, table_name="events")
+        services.database.truncate_table(db=db, table_name="data_links")
+        services.database.truncate_table(db=db, table_name="data_models")
+        services.database.truncate_table(db=db, table_name="cities")
 
         logger.info("[db-cli] db and graph truncated")
 

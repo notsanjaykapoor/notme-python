@@ -1,8 +1,9 @@
+import test
+
 import pytest
 import sqlmodel
 import ulid
 
-import models
 import services.entities
 
 
@@ -10,20 +11,12 @@ import services.entities
 def entity_id(session: sqlmodel.Session):
     entity_id = ulid.new().str
 
-    entity_params = {
-        "entity_id": entity_id,
-        "entity_name": "person",
-        "name": "test person foo",
-        "slug": "first_name",
-        "type_name": "string",
-        "type_value": "First",
-    }
+    entity = test.EntityFactory.build(
+        entity_id=entity_id,
+        name="test person foo",
+    )
 
-    services.entities.Create(
-        db=session,
-        objects=[entity_params],
-        data_models={"person:first_name": models.DataModel(object_node=0)},
-    ).call()
+    services.entities.Create(db=session, entities=[entity]).call()
 
     yield entity_id
 

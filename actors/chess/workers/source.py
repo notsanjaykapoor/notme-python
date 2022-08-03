@@ -2,7 +2,6 @@ import json
 import logging
 import re
 import typing
-
 from dataclasses import dataclass
 
 from models.actor import Actor
@@ -56,7 +55,7 @@ class WorkerSource:
     def _process(self, message_str: str) -> None:
         message_str_norm = message_str.strip()
 
-        if not message_str_norm in self._dict.keys():
+        if message_str_norm not in self._dict.keys():
             self._dict[message_str_norm] = 0
 
         self._dict[message_str_norm] = self._dict[message_str_norm] + 1

@@ -1,9 +1,10 @@
+import test
+
 import neo4j
 import pytest
 import sqlmodel
 import ulid
 
-import models
 import services.entities
 import services.entity_watches
 
@@ -11,22 +12,11 @@ import services.entity_watches
 class TestWatchTopic:
     @pytest.fixture()
     def entity_ids(self, session: sqlmodel.Session):
-        objects = [
-            {
-                "entity_id": ulid.new().str,
-                "entity_name": "any",
-                "name": "person 1",
-                "slug": "first_name",
-                "type_name": "string",
-                "type_value": "first",
-            },
-        ]
+        entity = test.EntityFactory.build(
+            entity_id=ulid.new().str,
+        )
 
-        struct_create = services.entities.Create(
-            db=session,
-            objects=objects,
-            data_models={"any:first_name": models.DataModel(object_node=0)},
-        ).call()
+        struct_create = services.entities.Create(db=session, entities=[entity]).call()
 
         assert struct_create.code == 0
 
@@ -72,22 +62,11 @@ class TestWatchTopic:
 class TestWatchQueryAll:
     @pytest.fixture()
     def entity_ids(self, session: sqlmodel.Session):
-        objects = [
-            {
-                "entity_id": ulid.new().str,
-                "entity_name": "any",
-                "name": "person 1",
-                "slug": "first_name",
-                "type_name": "string",
-                "type_value": "first",
-            },
-        ]
+        entity = test.EntityFactory.build(
+            entity_id=ulid.new().str,
+        )
 
-        struct_create = services.entities.Create(
-            db=session,
-            objects=objects,
-            data_models={"any:first_name": models.DataModel(object_node=0)},
-        ).call()
+        struct_create = services.entities.Create(db=session, entities=[entity]).call()
 
         assert struct_create.code == 0
 
@@ -130,22 +109,12 @@ class TestWatchQueryAll:
 class TestWatchQueryEntityName:
     @pytest.fixture()
     def entity_person_ids(self, session: sqlmodel.Session):
-        objects = [
-            {
-                "entity_id": ulid.new().str,
-                "entity_name": "person",
-                "name": "person 1",
-                "slug": "first_name",
-                "type_name": "string",
-                "type_value": "first",
-            },
-        ]
+        entity = test.EntityFactory.build(
+            entity_id=ulid.new().str,
+            entity_name="person",
+        )
 
-        struct_create = services.entities.Create(
-            db=session,
-            objects=objects,
-            data_models={"person:first_name": models.DataModel(object_node=0)},
-        ).call()
+        struct_create = services.entities.Create(db=session, entities=[entity]).call()
 
         assert struct_create.code == 0
 
@@ -155,24 +124,24 @@ class TestWatchQueryEntityName:
 
     @pytest.fixture()
     def entity_case_ids(self, session: sqlmodel.Session):
-        objects = [
-            {
-                "entity_id": ulid.new().str,
-                "entity_name": "case",
-                "name": "case 1",
-                "slug": "jacket_id",
-                "type_name": "string",
-                "type_value": "1",
-            },
-        ]
+        entity_id = ulid.new().str
+
+        entity = test.EntityFactory.build(
+            entity_id=entity_id,
+            entity_name="case",
+            name="case 1",
+            slug="jacket_id",
+            type_name="string",
+            type_value="1",
+        )
 
         struct_create = services.entities.Create(
             db=session,
-            objects=objects,
-            data_models={"case:jacket_id": models.DataModel(object_node=0)},
+            entities=[entity],
         ).call()
 
         assert struct_create.code == 0
+        assert struct_create.count == 1
 
         yield struct_create.ids
 
@@ -219,22 +188,11 @@ class TestWatchQueryEntityName:
 class TestWatchQueryGeoFence:
     @pytest.fixture()
     def entity_place_ids(self, session: sqlmodel.Session):
-        objects = [
-            {
-                "entity_id": ulid.new().str,
-                "entity_name": "place",
-                "name": "place 1",
-                "slug": "city",
-                "type_name": "string",
-                "type_value": "chicago",
-            },
-        ]
+        entity = test.EntityFactory.build(
+            entity_id=ulid.new().str,
+        )
 
-        struct_create = services.entities.Create(
-            db=session,
-            objects=objects,
-            data_models={"place:city": models.DataModel(object_node=0)},
-        ).call()
+        struct_create = services.entities.Create(db=session, entities=[entity]).call()
 
         assert struct_create.code == 0
 

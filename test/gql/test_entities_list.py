@@ -1,3 +1,5 @@
+import test
+
 import pytest
 import sqlmodel
 import strawberry
@@ -5,7 +7,6 @@ import strawberry.schema.config
 import ulid
 
 import gql
-import models
 import services.entities
 import services.graph
 import services.users
@@ -20,20 +21,11 @@ gql_schema = strawberry.Schema(
 def entity_id(session: sqlmodel.Session):
     entity_id = ulid.new().str
 
-    entity_params = {
-        "entity_id": entity_id,
-        "entity_name": "person",
-        "name": "test person foo",
-        "slug": "first_name",
-        "type_name": "string",
-        "type_value": "First",
-    }
+    entity = test.EntityFactory.build(
+        entity_id=entity_id,
+    )
 
-    struct_create = services.entities.Create(
-        db=session,
-        objects=[entity_params],
-        data_models={"person:first_name": models.DataModel(object_node=0)},
-    ).call()
+    struct_create = services.entities.Create(db=session, entities=[entity]).call()
 
     yield entity_id
 
@@ -57,8 +49,6 @@ def test_gql_entities_list(session: sqlmodel.Session, entity_id: str):
         variable_values={"query": ""},
         context_value={"db": session},
     )
-
-    print(f"result {result}")
 
     assert result.errors is None
 

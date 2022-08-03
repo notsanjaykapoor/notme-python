@@ -104,6 +104,9 @@ class List:
                 else:
                     # equal query
                     self._dataset = self._dataset.where(models.Entity.slug == value)
+            elif token["field"] == "state":
+                # match query
+                self._dataset = self._dataset.where(self._model.state == value)
             elif token["field"] == "tags":
                 # like query
                 value_format = f"|{value}|"

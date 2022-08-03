@@ -14,7 +14,6 @@ import kafka  # noqa: E402
 import log  # noqa: E402
 import models  # noqa: E402
 import services.database.session  # noqa: E402
-import services.db  # noqa: E402
 import services.entities  # noqa: E402
 import services.kafka.topics  # noqa: E402
 

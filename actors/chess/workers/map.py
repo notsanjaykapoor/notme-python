@@ -1,5 +1,4 @@
 import logging
-
 from dataclasses import dataclass
 
 from models.actor import Actor
@@ -25,10 +24,10 @@ class WorkerMap:
 
         try:
             self._logger.info(f"actor '{actor.name}' message {message}")
-        except:
+        except Exception as e:
             struct.code = 500
 
-            self._logger.error(f"actor '{actor.name}' exception")
+            self._logger.error(f"actor '{actor.name}' exception {e}")
 
         return struct
 

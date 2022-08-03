@@ -18,7 +18,7 @@ class Struct:
     errors: list[str]
 
 
-class Entity:
+class EntitySync:
     """
     sync entity to graph database
     """
@@ -45,6 +45,7 @@ class Entity:
             ).call()
 
             struct.nodes_created += struct_node_entity.nodes_created
+            struct.nodes += struct_node_entity.nodes
 
             struct_node_property = services.graph.sync.CreateNodeFromEntitySlug(
                 db=self._db,
@@ -53,17 +54,16 @@ class Entity:
             ).call()
 
             struct.nodes_created += struct_node_property.nodes_created
+            struct.nodes += struct_node_property.nodes
 
-            struct_node_links = services.graph.sync.CreateNodeEdgeFromDataLinks(
+            struct_nodes_from_data_links = services.graph.sync.CreateNodesFromDataLinks(
                 db=self._db,
                 neo=self._neo,
                 entity=entity,
             ).call()
 
-            struct.nodes_created += struct_node_links.nodes_created
-
-            struct.edges += struct_node_links.edges
-            struct.edges_created += struct_node_links.edges_created
+            struct.nodes_created += struct_nodes_from_data_links.nodes_created
+            struct.nodes += struct_nodes_from_data_links.nodes
 
             struct_edges_has = services.graph.sync.CreateEdgesHas(
                 db=self._db,
@@ -71,7 +71,21 @@ class Entity:
                 entity=entity,
             ).call()
 
-            struct.edges += struct_edges_has.edges
             struct.edges_created += struct_edges_has.edges_created
+            struct.edges += struct_edges_has.edges
+
+        # once nodes have been created, check entities for any nodes based on data links and create edges
+
+        for entity in entities:
+            struct_edges_from_links = services.graph.sync.CreateEdgesFromDataLinks(
+                db=self._db,
+                neo=self._neo,
+                entity=entity,
+            ).call()
+
+            struct.edges_created += struct_edges_from_links.edges_created
+            struct.edges += struct_edges_from_links.edges
+
+        # print(struct)  # xxx
 
         return struct

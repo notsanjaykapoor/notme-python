@@ -20,8 +20,8 @@ class Struct:
     errors: list[str]
 
 
-class Create:
-    """create entity"""
+class Replace:
+    """mark entity objects as replaced with a newer version"""
 
     def __init__(self, db: sqlmodel.Session, entities: list[models.Entity]):
         self._db = db
@@ -36,6 +36,7 @@ class Create:
 
         try:
             for entity in self._entities:
+                entity.state = models.entity.STATE_REPLACED
                 self._db.add(entity)
 
             self._db.commit()
@@ -47,14 +48,6 @@ class Create:
                     struct.entity_ids.add(entity.entity_id)
                     struct.entity_count = len(struct.entity_ids)
 
-            # create entity locations
-            struct_locations = services.entity_locations.Create(
-                db=self._db,
-                entity_ids=list(struct.ids),
-            ).call()
-
-            if struct_locations.code == 0:
-                struct.location_ids.append(struct_locations.id)
         except sqlalchemy.exc.IntegrityError as e:
             self._db.rollback()
             struct.code = 409

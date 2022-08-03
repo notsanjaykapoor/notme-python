@@ -1,7 +1,7 @@
 import sqlmodel
 
 import models
-import services.db
+import services.database
 
 
 def delete_by_id(db: sqlmodel.Session, ids: list[int]) -> int:
@@ -21,4 +21,4 @@ def delete_by_id(db: sqlmodel.Session, ids: list[int]) -> int:
 
 
 def truncate(db: sqlmodel.Session):
-    services.db.truncate_table(db=db, table_name="events")
+    services.database.truncate_table(db=db, table_name="events")

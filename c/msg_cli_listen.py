@@ -14,7 +14,6 @@ sys.path.insert(1, os.path.join(sys.path[0], ".."))
 import kafka  # noqa: E402
 import log  # noqa: E402
 import services.database.session  # noqa: E402
-import services.db  # noqa: E402
 import services.entities  # noqa: E402
 import services.kafka.topics  # noqa: E402
 import services.kafka.workers  # noqa: E402

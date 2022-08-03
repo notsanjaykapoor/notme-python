@@ -1,6 +1,5 @@
 import sqlmodel
 
-import services.db
 import services.events
 
 

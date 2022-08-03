@@ -14,6 +14,7 @@ import services.graph.sync
 class Struct:
     code: int
     edges_created: int
+    edges: list[dict]
     errors: list[str]
 
 
@@ -35,7 +36,7 @@ class CreateEdgesHas:
         self._logger = log.init("service")
 
     def call(self) -> Struct:
-        struct = Struct(0, 0, [])
+        struct = Struct(0, 0, [], [])
 
         # find all entity properties where node eq 1
         struct_entities = services.entities.List(
@@ -47,9 +48,8 @@ class CreateEdgesHas:
 
         for entity in struct_entities.objects:
             dst_id = str(entity.type_value)
-            # dst_id = services.entities.graph_value_store(entity.type_name, str(entity.type_value))
 
-            struct.edges_created += services.graph.sync.CreateEdge(
+            struct_edge = services.graph.sync.CreateEdge(
                 src_id=self._entity.entity_id,
                 src_label=self._entity.entity_name,
                 dst_id=f"{entity.slug}:{dst_id}",
@@ -57,6 +57,10 @@ class CreateEdgesHas:
                 edge_name=EDGE_NAME,
                 neo=self._neo,
             ).call()
+
+            struct.edges += struct_edge.edges
+
+        struct.edges_created = len(struct.edges)
 
         return struct
 

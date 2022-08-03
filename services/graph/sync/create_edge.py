@@ -1,3 +1,4 @@
+import dataclasses
 import typing
 
 import datadog
@@ -8,6 +9,14 @@ import log
 import services.entities
 import services.graph
 import services.graph.tx
+
+
+@dataclasses.dataclass
+class Struct:
+    code: int
+    edges_created: int
+    edges: list[dict]
+    errors: list[str]
 
 
 class CreateEdge:
@@ -31,7 +40,9 @@ class CreateEdge:
 
         self._logger = log.init("service")
 
-    def call(self) -> int:
+    def call(self) -> Struct:
+        struct = Struct(0, 0, [], [])
+
         query_exists = f"""
         match (a:{self._src_label})-[r:{self._edge_name}]-(b:{self._dst_label})
         where a.id = $src_id and b.id = $dst_id
@@ -43,11 +54,11 @@ class CreateEdge:
             "dst_id": self._dst_id,
         }
 
-        node_count = self._node_count(query_exists, params)
+        edge_count = self._edge_count(query_exists, params)
 
-        if node_count:
-            # node exists
-            return 0
+        if edge_count:
+            # edge exists
+            return struct
 
         query_create = f"""
         match (a:{self._src_label}), (b:{self._dst_label})
@@ -58,9 +69,14 @@ class CreateEdge:
         self._logger.info(f"{__name__} src {self._src_label}:{self._src_id} dst {self._dst_label}:{self._dst_id}")
 
         with datadog.statsd.timed("neo.writer", tags=[f"env:{env.name()}", f"writer:{__name__}"]):
-            self._neo.write_transaction(services.graph.tx.write, query_create, params)
-            return 1
+            summary = self._neo.write_transaction(services.graph.tx.write, query_create, params)
+            struct.edges_created = summary.counters.relationships_created
 
-    def _node_count(self, query: str, params: dict) -> int:
+            if summary.counters.relationships_created:
+                struct.edges.append({"s": self._src_id, "d": self._dst_id, "e": self._edge_name})
+
+            return struct
+
+    def _edge_count(self, query: str, params: dict) -> int:
         result = services.graph.query.execute(query, params, self._neo)
         return result[0]["count"]

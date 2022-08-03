@@ -25,7 +25,7 @@ def chess_zero_source(file: str):
     if not filter_uri:
         raise ValueError("missing uri")
 
-    logger.info(f"chess_zero_source starting")
+    logger.info("chess_zero_source starting")
 
     struct_socket = services.zero.sockets.Push(uri=filter_uri, mode="bind").call()
     socket_push = struct_socket.socket

@@ -1,5 +1,4 @@
 import dataclasses
-import sys
 import typing
 
 import shapely
@@ -11,6 +10,7 @@ import log
 import models
 import services.cities
 import services.entities
+import services.entity_locations
 
 
 @dataclasses.dataclass
@@ -31,7 +31,7 @@ class Struct:
 class Create:
     """create entity location from entity set"""
 
-    def __init__(self, db: sqlmodel.Session, entity_ids: list[str]):
+    def __init__(self, db: sqlmodel.Session, entity_ids: list[str, int]):
         self._db = db
         self._entity_ids = entity_ids
 
@@ -40,19 +40,31 @@ class Create:
     def call(self) -> Struct:
         struct = Struct(0, 0, 0, [])
 
-        self._logger.info(f"{__name__} {self._entity_ids}")
+        self._logger.info(f"{__name__} using entity ids {self._entity_ids}")
 
-        for entity_id in self._entity_ids:
-            entities = services.entities.get_all_by_id(db=self._db, id=entity_id)
+        # find all matching entities and group by entity_id
+        entity_list = services.entities.get_all_by_ids(db=self._db, ids=self._entity_ids)
+        entity_groups = self._entities_group(entity_list)
+
+        for entity_id in entity_groups.keys():
+            entities = entity_groups[entity_id]
+            entity = entities[0]
 
             # map entity set to an entity latlon
             entity_latlon = self._entity_latlon(entities)
 
             if entity_latlon.code != 0:
+                struct.code = 422
+                return struct
+
+            entity_locations = services.entity_locations.get_all_by_entity_ids(db=self._db, ids=[entity.entity_id])
+
+            if entity_locations:
+                # entity location exists
+                struct.code = 409
                 return struct
 
             try:
-                entity = entities[0]
                 point = f"Point({entity_latlon.lon} {entity_latlon.lat})"
 
                 db_object = models.EntityLocation(
@@ -67,14 +79,14 @@ class Create:
                     struct.id = db_object.id
                     struct.count += 1
 
-            except sqlalchemy.exc.IntegrityError:
+            except sqlalchemy.exc.IntegrityError as e:
                 self._db.rollback()
                 struct.code = 409
-                self._logger.error(f"{__name__} {sys.exc_info()[0]} error")
-            except Exception:
+                self._logger.error(f"{__name__} error {e}")
+            except Exception as e:
                 self._db.rollback()
                 struct.code = 500
-                self._logger.error(f"{__name__} {sys.exc_info()[0]} exception")
+                self._logger.error(f"{__name__} exception {e}")
 
         return struct
 
@@ -90,6 +102,18 @@ class Create:
             return None
 
         return struct_list.objects[0].point
+
+    def _entities_group(self, entities: list[models.Entity]) -> dict[str, list[models.Entity]]:
+        """group entities by entity id"""
+        group: dict[str, list[models.Entity]] = {}
+
+        for entity in entities:
+            if entity.entity_id not in group:
+                group[entity.entity_id] = []
+
+            group[entity.entity_id].append(entity)
+
+        return group
 
     def _entity_latlon(self, entities: list[models.Entity]) -> EntityLatLon:
         """map entity set to an entity latlon"""
