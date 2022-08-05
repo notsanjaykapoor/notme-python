@@ -45,8 +45,9 @@ class GraphHandler(kafka.Handler):
 
             if message_object["name"] == "entity.changed":
                 with services.database.session.get() as db, services.graph.session.get() as neo:
-                    # process message
-                    services.graph.sync.Entity(db=db, neo=neo, entity_id=message_object["id"]).call()
+                    # deperecated: process message
+                    # services.graph.sync.Entity(db=db, neo=neo, entity_id=message_object["id"]).call()
+                    pass
 
                 self._logger.info(f"actor '{task_name}' processed {message_object}")
             elif message_object["name"] == "entity.geo.changed":

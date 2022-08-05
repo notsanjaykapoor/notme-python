@@ -45,6 +45,7 @@ class GqlEntity:
     name: str
     node: int
     slug: str
+    state: str
     type_name: str
     type_value: str
 

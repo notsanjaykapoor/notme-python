@@ -32,7 +32,7 @@ class CreateEdgesHas:
         self._neo = neo
         self._entity = entity
 
-        self._entities_query = f"entity_id:{self._entity.entity_id} node:1"
+        self._entities_query = f"entity_id:{self._entity.entity_id} node:1 state:active"
         self._logger = log.init("service")
 
     def call(self) -> Struct:

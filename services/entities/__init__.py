@@ -4,7 +4,7 @@ from .count_slug_values import CountSlugValues  # noqa: F401
 from .create import Create  # noqa: F401
 from .delete import delete_by_id  # noqa: F401
 from .fingerprint import fingerprint_entities  # noqa: F401
-from .get import get_all_by_id, get_all_by_ids, get_random  # noqa: F401
+from .get import get_all_by_ids, get_random  # noqa: F401
 from .get_version import get_max_version  # noqa: F401
 from .list import List  # noqa: F401
 from .list_entity_names import ListEntityNames  # noqa: F401

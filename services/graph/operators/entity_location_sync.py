@@ -50,7 +50,7 @@ class EntityLocationSync:
             return struct
 
         # validate entity
-        entities = services.entities.get_all_by_id(db=self._db, id=self._entity_id)
+        entities = services.entities.get_all_by_ids(db=self._db, ids=[self._entity_id])
 
         if not entities:
             struct.code = 404
@@ -59,14 +59,14 @@ class EntityLocationSync:
         struct.geo = 1
 
         # update graph database
-        struct.nodes_updated += self._node_update(
+        struct.nodes_updated += self._node_geo_update(
             entity_name=entities[0].entity_name,
             entity_location=struct_list.objects[0],
         )
 
         return struct
 
-    def _node_update(self, entity_name: str, entity_location: models.EntityLocation) -> int:
+    def _node_geo_update(self, entity_name: str, entity_location: models.EntityLocation) -> int:
         query_update = f"""
         match(n:{entity_name} {{id: $id}}) set n.location = point({{latitude: $lat, longitude: $lon}})
         """

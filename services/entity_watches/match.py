@@ -8,6 +8,7 @@ import sqlmodel
 
 import log
 import models
+import services.entities
 import services.entity_watches
 import services.graph.distance
 import services.graph.query
@@ -73,7 +74,7 @@ class Match:
         entities = []
 
         for id in self._entity_ids:
-            entities += services.entities.get_all_by_id(db=self._db, id=id)
+            entities += services.entities.get_all_by_ids(db=self._db, ids=[id])
 
         return entities
 

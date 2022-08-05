@@ -83,16 +83,10 @@ def _db_sync(data_file: str, config_path: str):
         struct_links = services.data_links.Slurp(db=db, toml_file=f"{config_path}/data_links.toml").call()
         struct_watches = services.entity_watches.Slurp(db=db, toml_file=f"{config_path}/entity_watches.toml").call()
 
-        max_version = services.entities.get_max_version(db=db)
-
-        # db entities
-        struct_entities = services.entities.Slurp(db=db, json_file=data_file, version=max_version + 1).call()
-
         logger.info(f"[db-cli] imported cities {struct_cities.count}")
         logger.info(f"[db-cli] imported data models {struct_models.count}")
         logger.info(f"[db-cli] imported data links {struct_links.count}")
         logger.info(f"[db-cli] imported entity watches {struct_watches.count}")
-        logger.info(f"[db-cli] imported entities {struct_entities.count}")
 
         # publish messages bsased on db updates
         # _db_publish(struct_entities.entity_ids)

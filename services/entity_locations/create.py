@@ -31,7 +31,7 @@ class Struct:
 class Create:
     """create entity location from entity set"""
 
-    def __init__(self, db: sqlmodel.Session, entity_ids: list[str, int]):
+    def __init__(self, db: sqlmodel.Session, entity_ids: list[str | int]):
         self._db = db
         self._entity_ids = entity_ids
 

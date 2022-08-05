@@ -42,7 +42,7 @@ def change(
         if id == "random":
             entity = services.entities.get_random(db)
         else:
-            entities = services.entities.get_all_by_id(db, id)
+            entities = services.entities.get_all_by_ids(db, [id])
             entity = entities[0]
 
     if not entity:

@@ -64,7 +64,7 @@ class ObjectSync:
 
         if struct_resolve.code == 409:
             # entity exists
-            struct.ids = [entity.id for entity in struct_resolve.entities]
+            struct.ids = [entity.id for entity in struct_resolve.entities if entity.id]
             struct.entity_ids = set([entity.entity_id for entity in struct_resolve.entities])
             struct.code = 409
 
