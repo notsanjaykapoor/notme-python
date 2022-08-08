@@ -53,3 +53,7 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
         cursor = dbapi_connection.cursor()
         cursor.execute("pragma journal_mode=wal")
         cursor.close()
+
+
+def table_names() -> list[str]:
+    return sqlalchemy.inspect(engine).get_table_names()

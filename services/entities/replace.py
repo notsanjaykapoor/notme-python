@@ -5,8 +5,6 @@ import sqlmodel
 
 import log
 import models
-import services.entities
-import services.entity_locations
 
 
 @dataclasses.dataclass

@@ -1,5 +1,4 @@
 import dataclasses
-import json
 import os
 import sys
 import typing
@@ -27,10 +26,9 @@ class EntityImport:
     timely dataflow to import entities
     """
 
-    def __init__(self, file: str):
-        self._file = file
+    def __init__(self, input: typing.Callable):
+        self._input = input
 
-        self._epoch = 1
         self._logger = log.init("service")
 
     def call(self) -> Struct:
@@ -52,7 +50,7 @@ class EntityImport:
         flow_2 = bytewax.Dataflow()
         flow_2.capture()
 
-        output_1 = bytewax.run(flow_1, self._input())
+        output_1 = bytewax.run(flow_1, self._input)
 
         for epoch, item in bytewax.run(flow_2, output_1):
             self._logger.info(f"flow_2 epoch {epoch} item {item}")
@@ -95,12 +93,6 @@ class EntityImport:
                 object["edges_deleted"] = struct.edges_deleted
 
             return object
-
-    def _input(self) -> typing.Generator[tuple[int, dict], None, None]:
-        objects = json.load(open(self._file))
-
-        for object in objects:
-            yield self._epoch, object
 
     def _state_builder(self, key):
         self._logger.info(f"state_builder key {key}")
