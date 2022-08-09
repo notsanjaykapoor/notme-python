@@ -21,11 +21,6 @@ class Struct:
     errors: list[str]
 
 
-LABEL_ENTITY = "entity"
-LABEL_LINK = "link"
-LABEL_PROPERTY = "property"
-
-
 class PruneNodeEntity:
     """
     prune entity node edges
@@ -37,7 +32,7 @@ class PruneNodeEntity:
         self._entity = entity
 
         self._entity_id = self._entity.entity_id
-        self._entity_labels = f"{self._entity.entity_name}:{LABEL_ENTITY}"
+        self._entity_labels = f"{self._entity.entity_name}:{models.entity.LABEL_ENTITY}"
 
         self._logger = log.init("service")
 
@@ -60,8 +55,8 @@ class PruneNodeEntity:
         with datadog.statsd.timed("neo.writer", tags=[f"env:{env.name()}", f"writer:{__name__}"]):
             records = self._neo.read_transaction(services.graph.tx.read, graph_query.query, graph_query.params)
 
-        record_props = [record for record in records if LABEL_PROPERTY in record["node"].labels]
-        record_links = [record for record in records if LABEL_LINK in record["node"].labels]
+        record_props = [record for record in records if models.entity.LABEL_PROPERTY in record["node"].labels]
+        record_links = [record for record in records if models.entity.LABEL_LINK in record["node"].labels]
 
         # find entity properties that no longer exist
         record_props_deleted = [record for record in record_props if self._node_property_deleted(node=record["node"], entities=entities) == 1]

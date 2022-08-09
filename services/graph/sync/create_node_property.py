@@ -28,8 +28,6 @@ class Struct:
 
 ENTITY_SLUG_ID = "id"
 
-LABEL_PROPERTY = "property"
-
 
 class CreateNodeProperty:
     """
@@ -41,7 +39,7 @@ class CreateNodeProperty:
         self._neo = neo
         self._entity = entity
 
-        self._node_label = LABEL_PROPERTY
+        self._node_label = models.entity.LABEL_PROPERTY
         self._node_id = f"{self._entity.slug}:{self._entity.type_value}"
 
         self._logger = log.init("service")

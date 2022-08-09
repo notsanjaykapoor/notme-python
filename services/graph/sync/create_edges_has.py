@@ -18,7 +18,6 @@ class Struct:
     errors: list[str]
 
 
-DST_LABEL_NAME = "property"
 EDGE_NAME = "has"
 
 
@@ -53,7 +52,7 @@ class CreateEdgesHas:
                 src_id=self._entity.entity_id,
                 src_label=self._entity.entity_name,
                 dst_id=f"{entity.slug}:{dst_id}",
-                dst_label=DST_LABEL_NAME,
+                dst_label=models.entity.LABEL_PROPERTY,
                 edge_name=EDGE_NAME,
                 neo=self._neo,
             ).call()

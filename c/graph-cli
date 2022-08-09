@@ -3,7 +3,6 @@
 import graph_cli_constraints
 import graph_cli_indexes
 import graph_cli_match
-import graph_cli_sync
 import typer
 
 import dot_init  # noqa: F401
@@ -18,7 +17,6 @@ app = typer.Typer()
 app.add_typer(graph_cli_constraints.app, name="constraints")
 app.add_typer(graph_cli_indexes.app, name="indexes")
 app.add_typer(graph_cli_match.app, name="match")
-app.add_typer(graph_cli_sync.app, name="sync")
 
 import services.database.session  # noqa: E402
 

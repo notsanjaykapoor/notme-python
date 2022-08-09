@@ -12,6 +12,7 @@ import context
 import env
 import gql.types
 import log
+import models
 import services.graph.distance
 import services.graph.query
 import services.graph.tx
@@ -140,6 +141,7 @@ class List:
         return struct
 
     def _gql_node(self, node: neo4j.graph.Node, nid: typing.Optional[str] = None) -> gql.types.GqlNode:
+        """convert neo4j node to gql node object returned to caller"""
         point = node.get("location", None)
 
         if point:
@@ -154,9 +156,15 @@ class List:
             labels=sorted([label for label in node.labels]),
             lat=lat,
             lon=lon,
-            name=node.get("name", ""),
+            name=node.get("name", self._gql_node_name(node)),
             nid=nid or node.id,
         )  # type: ignore
+
+    def _gql_node_name(self, node: neo4j.graph.Node) -> str:
+        if models.entity.LABEL_PROPERTY in node.labels:
+            return node.get("id")
+        else:
+            return ""
 
     def _nodes_match_all_no_edges(self) -> list[neo4j.Record]:
         """find all nodes without edges"""
@@ -334,7 +342,7 @@ class List:
     def _result_object_sort(self, object: gql.types.GqlNode) -> str:
         if object.name:
             return object.name
-        elif "property" in object.labels:
+        elif models.entity.LABEL_PROPERTY in object.labels:
             return f"za{object.eid}"
         else:
             return f"zz{object.eid}"

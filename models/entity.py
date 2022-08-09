@@ -2,6 +2,10 @@ import typing
 
 from sqlmodel import Field, SQLModel, UniqueConstraint
 
+LABEL_ENTITY = "entity"
+LABEL_LINK = "link"
+LABEL_PROPERTY = "property"
+
 STATE_ACTIVE = "active"
 STATE_DELETED = "deleted"
 STATE_REPLACED = "replaced"

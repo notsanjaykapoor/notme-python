@@ -20,10 +20,6 @@ class Struct:
     errors: list[str]
 
 
-LABEL_LINK = "link"
-LABEL_PROPERTY = "property"
-
-
 class PruneNodeUnconnected:
     """
     prune nodes with no edges
