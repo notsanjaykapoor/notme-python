@@ -5,6 +5,7 @@ import services.data_models
 import services.database
 import services.entity_watches
 import services.graph.commands
+import services.graph.indexes
 import services.graph.session
 
 
@@ -19,6 +20,7 @@ def reset(config_path: str = "./data/notme/config"):
 
     with services.database.session.get() as db, services.graph.session.get() as neo:
         services.graph.commands.truncate(neo)
+        services.graph.indexes.create(neo)
 
         services.database.truncate_all(db=db)
 

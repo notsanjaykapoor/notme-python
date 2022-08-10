@@ -1,1 +1,1 @@
-from .truncate import truncate
+from .truncate import truncate  # noqa: F401
