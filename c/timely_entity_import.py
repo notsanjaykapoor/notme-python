@@ -12,9 +12,10 @@ import dot_init  # noqa: E402, F401
 import log  # noqa: E402
 import services.boot  # noqa: E402
 import services.database  # noqa: E402
-import services.entities.input.stream_file  # noqa: E402
-import services.entities.input.stream_random  # noqa: E402
+import services.database.session  # noqa: E402
+import services.entities.input  # noqa: E402
 import services.entities.operators  # noqa: E402
+import services.graph.session  # noqa: E402
 import services.timely.flows  # noqa: E402
 
 logger = log.init("cli")
@@ -52,12 +53,13 @@ def output_builder(worker_index, worker_count):
 
 @app.command()
 def file():
-    services.boot.reset()
+    with services.database.session.get() as db, services.graph.session.get() as neo:
+        services.boot.reset(db=db, neo=neo)
 
     time_start = time.monotonic()
 
     services.timely.flows.EntityImport(
-        input=services.entities.input.stream_file(file=file_path),
+        input=services.entities.input.stream_json(file=file_path),
     ).call()
 
     logger.info(f"{__name__} duration {time.monotonic() - time_start} seconds")
@@ -65,7 +67,8 @@ def file():
 
 @app.command()
 def random(count: int = typer.Option(..., "--count")):
-    services.boot.reset()
+    with services.database.session.get() as db, services.graph.session.get() as neo:
+        services.boot.reset(db=db, neo=neo)
 
     time_start = time.monotonic()
 

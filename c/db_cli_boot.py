@@ -32,7 +32,8 @@ def reset(
     data_file: str = typer.Option(..., "--file", "-f", help="toml data file"),
     config_path: str = typer.Option("./data/notme/config", "--config-path", help="config path"),
 ):
-    services.boot.reset()
+    with services.database.session.get() as db, services.graph.session.get() as neo:
+        services.boot.reset(db=db, neo=neo)
 
     os.system("./c/graph-cli sync geo")
 

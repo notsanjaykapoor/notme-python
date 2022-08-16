@@ -51,7 +51,7 @@ class List:
             if token["field"] == "id":
                 # match query
                 self._dataset = self._dataset.where(self._model.id == value)
-            elif token["field"] == ["object_name", "name"]:
+            elif token["field"] in ["object_name", "name"]:
                 match = re.match(r"^~", value)
 
                 if match:

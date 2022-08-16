@@ -21,9 +21,9 @@ class Struct:
     errors: list[str]
 
 
-class EntitySync:
+class GraphSync:
     """
-    sync entity to graph database
+    sync entity database object to graph database
     """
 
     def __init__(self, db: sqlmodel.Session, neo: neo4j.Session, entity_id: str, entity_code: int):

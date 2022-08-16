@@ -4,6 +4,7 @@ from .actor_message import ActorMessage  # noqa: F401
 from .city import City  # noqa: F401
 from .credential import Credential  # noqa: F401
 from .data_link import DataLink  # noqa: F401
+from .data_mapping import DataMapping  # noqa: F401
 from .data_model import DataModel  # noqa: F401
 from .entity import Entity  # noqa: F401
 from .entity_location import EntityLocation  # noqa: F401

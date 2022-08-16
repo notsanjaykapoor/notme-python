@@ -12,38 +12,8 @@ import services.entity_locations
 @pytest.fixture()
 def data_models(session: sqlmodel.Session):
     """create base data models used to validate data links"""
-    objects = [
-        {
-            "object_name": "person",
-            "object_node": 0,
-            "object_slug": "first_name",
-            "object_type": "string",
-        },
-        {
-            "object_name": "person",
-            "object_node": 1,
-            "object_slug": "id",
-            "object_type": "string",
-        },
-        {
-            "object_name": "person",
-            "object_node": 0,
-            "object_slug": "last_name",
-            "object_type": "string",
-        },
-        {
-            "object_name": "person",
-            "object_node": 0,
-            "object_slug": "lat",
-            "object_type": "string",
-        },
-        {
-            "object_name": "person",
-            "object_node": 0,
-            "object_slug": "lon",
-            "object_type": "string",
-        },
-    ]
+    data_file = "./test/data/data_models/data_model_person.json"
+    objects = json.load(open(data_file))
 
     struct_create = services.data_models.Create(
         db=session,
@@ -56,7 +26,7 @@ def data_models(session: sqlmodel.Session):
 
 
 def test_sync_basic(session: sqlmodel.Session, data_models: list[int]):
-    data_file = "./test/data/entities__basic.json"
+    data_file = "./test/data/entities/entities__basic.json"
 
     objects = json.load(open(data_file))
 
@@ -82,7 +52,7 @@ def test_sync_basic(session: sqlmodel.Session, data_models: list[int]):
 
 
 def test_sync_basic_geo(session: sqlmodel.Session, data_models: list[int]):
-    data_file = "./test/data/entities__basic_geo.json"
+    data_file = "./test/data/entities/entities__basic_geo.json"
 
     objects = json.load(open(data_file))
 
@@ -104,7 +74,7 @@ def test_sync_basic_geo(session: sqlmodel.Session, data_models: list[int]):
 
 
 def test_sync_basic_update(session: sqlmodel.Session, data_models: list[int]):
-    data_file = "./test/data/entities__basic.json"
+    data_file = "./test/data/entities/entities__basic.json"
 
     objects = json.load(open(data_file))
 
@@ -122,7 +92,7 @@ def test_sync_basic_update(session: sqlmodel.Session, data_models: list[int]):
 
     # sync existing entity with changes
 
-    data_file = "./test/data/entities__basic_update.json"
+    data_file = "./test/data/entities/entities__basic_update.json"
 
     objects = json.load(open(data_file))
 

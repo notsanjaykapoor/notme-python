@@ -64,7 +64,7 @@ class EntityImport:
     def _entity_sync(self, object: dict) -> dict:
         with services.database.session.get() as db:
             struct = services.entities.operators.ObjectSync(db=db, object=object).call()
-            return {"entity_id": list(struct.entity_ids)[0], "entity_code": struct.code}
+            return {"entity_id": list(struct.entity_ids)[0], "code": struct.code}
 
     def _graph_geo_sync(self, object: dict) -> dict:
         with services.database.session.get() as db, services.graph.session.get() as neo:
@@ -79,12 +79,12 @@ class EntityImport:
         object["edges_deleted"] = 0
 
         with services.database.session.get() as db, services.graph.session.get() as neo:
-            if object["entity_code"] in [200, 201]:
-                struct = services.graph.operators.EntitySync(
+            if object["code"] in [200, 201]:
+                struct = services.graph.operators.GraphSync(
                     db=db,
                     neo=neo,
                     entity_id=object["entity_id"],
-                    entity_code=object["entity_code"],
+                    entity_code=object["code"],
                 ).call()
 
                 object["nodes_created"] = struct.nodes_created

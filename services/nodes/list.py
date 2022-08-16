@@ -13,6 +13,7 @@ import env
 import gql.types
 import log
 import models
+import services.cities
 import services.graph.distance
 import services.graph.query
 import services.graph.tx
@@ -61,9 +62,24 @@ class List:
 
         query_fields = [token["field"] for token in tokens]
 
-        if "node" in query_fields:
+        if "city" in query_fields:
+            # e.g. city:chicago radius:3mi
+
+            if "radius" not in query_fields:
+                # invalid query
+                struct.code = 422
+                return struct
+
+            city = self._tokens_match_city(tokens=tokens)
+
+            if not city:
+                struct.code = 404
+                return struct
+
+            records = self._search_around_city(city=city, tokens=tokens)
+        elif "node" in query_fields:
             # e.g. node:person+1 radius:3h
-            records = self._nodes_match_start(tokens=tokens)
+            records = self._tokens_match_node(tokens=tokens)
 
             if not len(records):
                 struct.code = 404
@@ -81,7 +97,7 @@ class List:
             struct.node_start = self._gql_node(node=node)
 
             if "radius" in query_fields:
-                records += self._nodes_search(node, tokens)
+                records += self._search_around_node(node, tokens)
         elif "path" in query_fields:
             # e.g. path:person+1,person+2
             records = self._nodes_match_paths(tokens=tokens)
@@ -233,63 +249,6 @@ class List:
 
         return []
 
-    def _nodes_match_start(self, tokens: list[dict]) -> list[neo4j.Record]:
-        """find start node"""
-        assert len(tokens)
-
-        for token in tokens:
-            field = token["field"]
-            value = token["value"]
-
-            if field == "node":
-                return self._nodes_match_id(id=value)
-
-        return []
-
-    def _nodes_search(self, node: neo4j.graph.Node, tokens: list[dict]) -> list[neo4j.Record]:
-        assert len(tokens)
-
-        for token in tokens:
-            field = token["field"]
-            value = token["value"]
-
-            if field == "radius":
-                match = re.match(r"^(\d+)(ho|mi?)$", value)
-
-                if not match:
-                    raise ValueError("invalid radius")
-
-                num = int(match[1])
-                unit = match[2]
-
-                node_labels = ":".join([label for label in node.labels])
-
-                struct_graph: services.graph.query.types.GraphQuery
-
-                if unit == "ho":
-                    struct_graph = services.graph.query.match_neighbors(
-                        src_label=node_labels,
-                        src_id=node.get("id"),
-                        max_hops=num,
-                    )
-                else:
-                    # map "3mi" to meters
-                    meters = services.graph.distance.meters(value)
-
-                    struct_graph = services.graph.query.match_geo_all_from_node(
-                        src_label=node_labels,
-                        src_id=node.get("id"),
-                        meters=meters,
-                    )
-
-                self._logger.info(f"{context.rid_get()} {__name__} neo query '{struct_graph.query}' params {struct_graph.params}")
-
-                records = self._neo.read_transaction(services.graph.tx.read, struct_graph.query, struct_graph.params)
-
-                return records
-
-        return []
-
     def _path_edges_by_node_ids(self, records: neo4j.Record) -> dict[str, neo4j.graph.Relationship]:
         """map path records to hash of edges indexed by node [start, end] ids"""
 
@@ -346,3 +305,115 @@ class List:
             return f"za{object.eid}"
         else:
             return f"zz{object.eid}"
+
+    def _search_around_city(self, city: models.City, tokens: list[dict]) -> list[neo4j.Record]:
+        assert len(tokens)
+
+        records = []
+
+        for token in tokens:
+            field = token["field"]
+            value = token["value"]
+
+            if field == "radius":
+                match = re.match(r"^(\d+)(ho|mi?)$", value)
+
+                if not match:
+                    raise ValueError("invalid radius")
+
+                unit = match[2]
+
+                if unit == "mi":
+                    # map "3mi" to meters
+                    meters = services.graph.distance.meters(value)
+
+                    struct_graph = services.graph.query.match_geo_all_from_point(
+                        lat=city.point.y,
+                        lon=city.point.x,
+                        meters=meters,
+                    )
+                else:
+                    raise ValueError("invalid radius")
+
+                self._logger.info(f"{context.rid_get()} {__name__} neo query '{struct_graph.query}' params {struct_graph.params}")
+
+                records += self._neo.read_transaction(services.graph.tx.read, struct_graph.query, struct_graph.params)
+
+        return records
+
+    def _search_around_node(self, node: neo4j.graph.Node, tokens: list[dict]) -> list[neo4j.Record]:
+        assert len(tokens)
+
+        records = []
+
+        for token in tokens:
+            field = token["field"]
+            value = token["value"]
+
+            if field == "radius":
+                match = re.match(r"^(\d+)(ho|mi?)$", value)
+
+                if not match:
+                    raise ValueError("invalid radius")
+
+                num = int(match[1])
+                unit = match[2]
+
+                node_labels = ":".join([label for label in node.labels])
+
+                struct_graph: services.graph.query.types.GraphQuery
+
+                if unit == "ho":
+                    struct_graph = services.graph.query.match_neighbors(
+                        src_label=node_labels,
+                        src_id=node.get("id"),
+                        max_hops=num,
+                    )
+                elif unit == "mi":
+                    # map "3mi" to meters
+                    meters = services.graph.distance.meters(value)
+
+                    struct_graph = services.graph.query.match_geo_all_from_node(
+                        src_label=node_labels,
+                        src_id=node.get("id"),
+                        meters=meters,
+                    )
+                else:
+                    raise ValueError("invalid radius")
+
+                self._logger.info(f"{context.rid_get()} {__name__} neo query '{struct_graph.query}' params {struct_graph.params}")
+
+                records += self._neo.read_transaction(services.graph.tx.read, struct_graph.query, struct_graph.params)
+
+        return records
+
+    def _tokens_match_city(self, tokens: list[dict]) -> typing.Optional[models.City]:
+        """find city token and map to a city object"""
+        assert len(tokens)
+
+        for token in tokens:
+            field = token["field"]
+
+            if field == "city":
+                struct_list = services.cities.List(
+                    db=self._db,
+                    query=f"name:{token['value']}",
+                    offset=0,
+                    limit=1,
+                ).call()
+
+                return struct_list.objects[0]
+
+        return None
+
+    def _tokens_match_node(self, tokens: list[dict]) -> list[neo4j.Record]:
+        """find node token and map to a set of records"""
+        assert len(tokens)
+
+        for token in tokens:
+            field = token["field"]
+
+            if field == "node":
+                return self._nodes_match_id(id=token["value"])
+
+        return []

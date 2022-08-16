@@ -1,13 +1,12 @@
 import geoalchemy2
 import shapely.geometry
 import sqlalchemy
-from sqlalchemy.ext.declarative import declarative_base
 
-Base = declarative_base()
+Base = sqlalchemy.ext.declarative.declarative_base()
 
 
 class EntityLocation(Base):  # type: ignore
-    """use sqlalchemy orm instead of sqlmodel"""
+    """sqlalchemy orm instead of sqlmodel"""
 
     __tablename__ = "entity_locations"
 

@@ -1,0 +1,11 @@
+[
+  {
+    "model_name": "person",
+    "obj_mapping": {
+      "email": "email",
+      "name": "name"
+    },
+    "obj_name": "user",
+    "obj_pks": "email"
+  }
+]

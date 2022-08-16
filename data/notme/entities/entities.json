@@ -55,8 +55,6 @@
     "properties": [
       { "slug": "age", "type": "integer", "value": 11 },
       { "slug": "city", "type": "string", "value": "chicago" },
-      { "slug": "eye_color", "type": "string", "value": "green" },
-      { "slug": "hair_color", "type": "string", "value": "grey" },
       { "slug": "id", "type": "string", "value": "01G523AGR6RZ22QGYJXYCZYZHV" },
       { "slug": "first_name", "type": "string", "value": "person" },
       { "slug": "last_name", "type": "string", "value": "1" },
@@ -71,8 +69,6 @@
     "properties": [
       { "slug": "age", "type": "integer", "value": 22 },
       { "slug": "city", "type": "string", "value": "chicago" },
-      { "slug": "eye_color", "type": "string", "value": "green" },
-      { "slug": "hair_color", "type": "string", "value": "grey" },
       { "slug": "id", "type": "string", "value": "01G523AP9CA3P6ZXY5JEVQG916" },
       { "slug": "first_name", "type": "string", "value": "person" },
       { "slug": "last_name", "type": "string", "value": "2" },
@@ -87,8 +83,6 @@
     "properties": [
       { "slug": "age", "type": "integer", "value": 33 },
       { "slug": "city", "type": "string", "value": "philadelphia" },
-      { "slug": "eye_color", "type": "string", "value": "brown" },
-      { "slug": "hair_color", "type": "string", "value": "grey" },
       { "slug": "id", "type": "string", "value": "01G5386HVMP79PKM21YJGMFG5K" },
       { "slug": "first_name", "type": "string", "value": "person" },
       { "slug": "last_name", "type": "string", "value": "3" },
@@ -103,8 +97,6 @@
     "properties": [
       { "slug": "age", "type": "integer", "value": 44 },
       { "slug": "city", "type": "string", "value": "philadelphia" },
-      { "slug": "eye_color", "type": "string", "value": "brown" },
-      { "slug": "hair_color", "type": "string", "value": "grey" },
       { "slug": "id", "type": "string", "value": "01G5386T0RDJVF85QXMWB0DSXZ" },
       { "slug": "first_name", "type": "string", "value": "person" },
       { "slug": "last_name", "type": "string", "value": "4" },
@@ -119,8 +111,6 @@
     "properties": [
       { "slug": "age", "type": "integer", "value": 55 },
       { "slug": "city", "type": "string", "value": "philadelphia" },
-      { "slug": "eye_color", "type": "string", "value": "brown" },
-      { "slug": "hair_color", "type": "string", "value": "grey" },
       { "slug": "id", "type": "string", "value": "01G57P3WYJE3KWQH810J5M64DC" },
       { "slug": "first_name", "type": "string", "value": "person" },
       { "slug": "last_name", "type": "string", "value": "5" },

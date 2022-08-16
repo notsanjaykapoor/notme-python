@@ -9,6 +9,7 @@ import sqlmodel.pool
 
 import dot_init  # noqa: F401
 import models
+import services.boot
 
 test_db_name = os.environ.get("DATABASE_TEST_URL")
 connect_args: dict = {}
@@ -34,6 +35,9 @@ def database_tables_create(engine: sqlalchemy.future.Engine):
     if not sqlalchemy.inspect(engine).has_table(models.City.__tablename__):
         models.City.__table__.create(engine)
 
+    if not sqlalchemy.inspect(engine).has_table(models.DataMapping.__tablename__):
+        models.DataMapping.__table__.create(engine)
+
     if not sqlalchemy.inspect(engine).has_table(models.EntityLocation.__tablename__):
         models.EntityLocation.__table__.create(engine)
 
@@ -43,6 +47,9 @@ def database_tables_drop(engine: sqlalchemy.future.Engine):
 
     if sqlalchemy.inspect(engine).has_table(models.City.__tablename__):
         models.City.__table__.drop(engine)
+
+    if sqlalchemy.inspect(engine).has_table(models.DataMapping.__tablename__):
+        models.DataMapping.__table__.drop(engine)
 
     if sqlalchemy.inspect(engine).has_table(models.EntityLocation.__tablename__):
         models.EntityLocation.__table__.drop(engine)
@@ -101,4 +108,4 @@ def neo_session_fixture():
 
     yield session
 
-    # todo: cleanup
+    services.boot.reset_graph(session)

@@ -1,0 +1,73 @@
+import os
+import sys
+import time
+
+sys.path.insert(1, os.path.join(sys.path[0], ".."))
+
+import typer  # noqa: E402
+
+import dot_init  # noqa: E402, F401
+import log  # noqa: E402
+import services.boot  # noqa: E402
+import services.data_mappings  # noqa: E402
+import services.data_models  # noqa: E402
+import services.database.session  # noqa: E402
+import services.entities.input  # noqa: E402
+import services.entities.operators  # noqa: E402
+import services.graph.session  # noqa: E402
+import services.timely.flows  # noqa: E402
+import services.timely.inputs  # noqa: E402
+
+logger = log.init("cli")
+
+app = typer.Typer()
+
+
+@app.command()
+def file(file_path="./data/notme/data_streams/user_1.csv", mapping_name="user"):
+    with services.database.session.get() as db, services.graph.session.get() as neo:
+        services.boot.reset(db=db, neo=neo)
+
+    time_start = time.monotonic()
+
+    with services.database.session.get() as db:
+        struct_data_mappings = services.data_mappings.List(
+            db=db,
+            query=f"name:{mapping_name}",
+            offset=0,
+            limit=1,
+        ).call()
+
+        if not len(struct_data_mappings.objects):
+            # no data mapping
+            pass
+
+        data_mapping = struct_data_mappings.objects[0]
+
+        struct_data_models = services.data_models.List(
+            db=db,
+            query=f"obj_name:{data_mapping.model_name}",
+            offset=0,
+            limit=1024,
+        ).call()
+
+        if not len(struct_data_models.objects):
+            # no data models
+            pass
+
+        data_models = struct_data_models.objects
+
+    struct_flow = services.timely.flows.StreamCsv(
+        input=services.timely.inputs.stream_csv(file=file_path),
+        data_mapping=data_mapping,
+        data_models=data_models,
+    ).call()
+
+    for epoch, item in struct_flow.output:
+        logger.info(f"flow epoch {epoch} item {item}")
+
+    logger.info(f"{__name__} duration {time.monotonic() - time_start} seconds")
+
+
+if __name__ == "__main__":
+    app()

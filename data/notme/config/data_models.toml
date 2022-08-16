@@ -85,19 +85,13 @@ type = "string"
 [[person]]
 
 node = 0
-slug = "eye_color"
+slug = "email"
 type = "string"
 
 [[person]]
 
 node = 0
 slug = "first_name"
-type = "string"
-
-[[person]]
-
-node = 0
-slug = "hair_color"
 type = "string"
 
 [[person]]

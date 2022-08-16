@@ -19,7 +19,7 @@ class Struct:
 
 class ObjectSync:
     """
-    sync object to postgres database
+    timely operator to sync object to postgres database
     """
 
     def __init__(self, db: sqlmodel.Session, object: dict):

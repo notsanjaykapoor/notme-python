@@ -37,6 +37,9 @@ def _migrate_sqlalchemy():
     if not sqlalchemy.inspect(engine).has_table(models.City.__tablename__):
         models.City.__table__.create(engine)
 
+    if not sqlalchemy.inspect(engine).has_table(models.DataMapping.__tablename__):
+        models.DataMapping.__table__.create(engine)
+
     if not sqlalchemy.inspect(engine).has_table(models.EntityLocation.__tablename__):
         models.EntityLocation.__table__.create(engine)
 

@@ -1,0 +1,38 @@
+[
+  {
+    "object_name": "person",
+    "object_node": 0,
+    "object_slug": "first_name",
+    "object_type": "string"
+  },
+  {
+    "object_name": "person",
+    "object_node": 0,
+    "object_slug": "email",
+    "object_type": "string"
+  },
+  {
+    "object_name": "person",
+    "object_node": 1,
+    "object_slug": "id",
+    "object_type": "string"
+  },
+  {
+    "object_name": "person",
+    "object_node": 0,
+    "object_slug": "last_name",
+    "object_type": "string"
+  },
+  {
+    "object_name": "person",
+    "object_node": 0,
+    "object_slug": "lat",
+    "object_type": "string"
+  },
+  {
+    "object_name": "person",
+    "object_node": 0,
+    "object_slug": "lon",
+    "object_type": "string"
+  }
+]
