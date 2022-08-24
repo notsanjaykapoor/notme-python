@@ -47,7 +47,7 @@ def data_models(session: sqlmodel.Session):
 
 
 def test_flow_json(session: sqlmodel.Session, neo_session: neo4j.Session, data_models: list[int], data_mappings: list[int]):
-    entities_file = "./test/data/entities/entities__basic.json"
+    json_file = "./test/data/entities/entities__basic.json"
 
     struct_data_mappings = services.data_mappings.List(
         db=session,
@@ -63,89 +63,22 @@ def test_flow_json(session: sqlmodel.Session, neo_session: neo4j.Session, data_m
         limit=1024,
     ).call()
 
-    struct_flow_input = services.timely.flows.StreamJson(
-        input=services.timely.inputs.stream_json(file=entities_file),
+    struct_json_input = services.timely.flows.StreamJson(
+        input=services.timely.inputs.input_json(file=json_file),
         data_mappings=struct_data_mappings.objects,
         data_models=struct_data_models.objects,
     ).call()
 
-    for epoch, item in struct_flow_input.output:
+    for epoch, item in struct_json_input.output:
         print(f"{__name__} flow 1 epoch {epoch} item {item}")
 
     struct_flow_db_sync = services.timely.flows.EntityDbSync(
-        input=struct_flow_input.output,
+        input=struct_json_input.output,
         db=session,
     ).call()
 
     for epoch, item in struct_flow_db_sync.output:
         print(f"{__name__} flow 2 epoch {epoch} item {item}")
-
-    struct_flow_graph_sync = services.timely.flows.EntityGraphSync(
-        input=struct_flow_db_sync.output,
-        db=session,
-        neo=neo_session,
-    ).call()
-
-    for epoch, item in struct_flow_graph_sync.output:
-        print(f"{__name__} flow 3 epoch {epoch} item {item}")
-
-    services.database.truncate_table(db=session, table_name="entities")
-
-
-def test_flow_csv_user(session: sqlmodel.Session, neo_session: neo4j.Session, data_models: list[int], data_mappings: list[int]):
-    user_file = "./test/data/data_streams/user_1.csv"
-
-    struct_data_mappings = services.data_mappings.List(
-        db=session,
-        query=f"id:{data_mappings[0]}",
-        offset=0,
-        limit=1,
-    ).call()
-
-    assert len(struct_data_mappings.objects) == 1
-
-    data_mapping_user = struct_data_mappings.objects[0]
-
-    # data_model maps user to person
-    assert data_mapping_user.model_name == "person"
-    assert data_mapping_user.obj_name == "user"
-
-    struct_data_models = services.data_models.List(
-        db=session,
-        query=f"obj_name:{data_mapping_user.model_name}",
-        offset=0,
-        limit=1024,
-    ).call()
-
-    assert len(struct_data_models.objects) == 6
-
-    data_models_person = struct_data_models.objects
-
-    struct_flow_input = services.timely.flows.StreamCsv(
-        input=services.timely.inputs.stream_csv(file=user_file),
-        data_mapping=data_mapping_user,
-        data_models=data_models_person,
-    ).call()
-
-    for epoch, item in struct_flow_input.output:
-        print(f"{__name__} flow 1 epoch {epoch} item {item}")
-
-    struct_flow_db_sync = services.timely.flows.EntityDbSync(
-        input=struct_flow_input.output,
-        db=session,
-    ).call()
-
-    for epoch, item in struct_flow_db_sync.output:
-        print(f"{__name__} flow 2 epoch {epoch} item {item}")
-
-    _ = services.entities.List(
-        db=session,
-        query="",
-        offset=0,
-        limit=1024,
-    ).call()
-
-    # assert len(struct_entities.objects) == 15
 
     struct_flow_graph_sync = services.timely.flows.EntityGraphSync(
         input=struct_flow_db_sync.output,

@@ -1,8 +1,10 @@
+#!/usr/bin/env python
+
 import os
 import sys
 import time
 
-sys.path.insert(1, os.path.join(sys.path[0], ".."))
+sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import bytewax  # noqa: E402
 import bytewax.inputs  # noqa: E402
@@ -52,22 +54,8 @@ def output_builder(worker_index, worker_count):
     return output_handler
 
 
-@app.command()  # original version
+@app.command()
 def file():
-    with services.database.session.get() as db, services.graph.session.get() as neo:
-        services.boot.reset(db=db, neo=neo)
-
-    time_start = time.monotonic()
-
-    services.timely.flows.EntityImport(
-        input=services.entities.input.stream_json(file=file_path),
-    ).call()
-
-    logger.info(f"{__name__} duration {time.monotonic() - time_start} seconds")
-
-
-@app.command()  # new version
-def json():
     with services.database.session.get() as db, services.graph.session.get() as neo:
         services.boot.reset(db=db, neo=neo)
 
@@ -114,22 +102,8 @@ def json():
 
 @app.command()
 def random(count: int = typer.Option(..., "--count")):
-    with services.database.session.get() as db, services.graph.session.get() as neo:
-        services.boot.reset(db=db, neo=neo)
+    csv_file = "./test/data/data_streams/user_random_1.csv"
 
-        time_start = time.monotonic()
-
-        services.timely.flows.EntityImport(
-            input=services.entities.input.stream_random(records=count),
-        ).call()
-
-        time_end = time.monotonic()
-
-    logger.info(f"{__name__} duration {time_end - time_start} seconds")
-
-
-@app.command()
-def random_new(count: int = typer.Option(..., "--count")):
     with services.database.session.get() as db, services.graph.session.get() as neo:
         services.boot.reset(db=db, neo=neo)
 
@@ -149,18 +123,14 @@ def random_new(count: int = typer.Option(..., "--count")):
             limit=1024,
         ).call()
 
-        # services.timely.flows.EntityImport(
-        #     input=services.entities.input.stream_random(records=count),
-        # ).call()
-
-        struct_json_input = services.timely.flows.StreamJson(
-            input=services.entities.input.stream_random(records=count),
-            data_mappings=struct_data_mappings.objects,
+        struct_csv_input = services.timely.flows.StreamCsv(
+            input=services.timely.inputs.input_csv_random(file=csv_file, count=count),
+            data_mapping=struct_data_mappings.objects[0],
             data_models=struct_data_models.objects,
         ).call()
 
         struct_db_sync = services.timely.flows.EntityDbSync(
-            input=struct_json_input.output,
+            input=struct_csv_input.output,
             db=db,
         ).call()
 

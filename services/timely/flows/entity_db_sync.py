@@ -51,10 +51,12 @@ class EntityDbSync:
         return struct
 
     def _entity_id_key(self, object: dict) -> str:
+        """returns entity id.key, e.g. person.id, vehicle.id"""
         entity_name = self._entity_name(object)
         return f"{entity_name}._id"
 
     def _entity_name(self, object: dict) -> str:
+        """returns object entity_name, e.g. person, vehicle"""
         object_keys = list(object.keys())
         entity_name, _ = object_keys[0].split(".")
         return entity_name
@@ -65,18 +67,20 @@ class EntityDbSync:
 
         entity_id_key = self._entity_id_key(object)
 
-        object[entity_id_key] = {
-            "value": struct_resolve.id,
-            "type": "string",
-            "code": struct_resolve.code,
-        }
+        object[entity_id_key] = [
+            {
+                "value": struct_resolve.id,
+                "type": "string",
+                "code": struct_resolve.code,
+            }
+        ]
 
         return object
 
     def _map_entity_build(self, object: dict) -> dict:
         entity_id_key = self._entity_id_key(object)
 
-        object_id = object[entity_id_key]
+        object_id = object[entity_id_key][0]
 
         if object_id["code"] in [200, 409]:
             entity_id = object_id["value"]

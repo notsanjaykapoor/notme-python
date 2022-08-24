@@ -23,7 +23,7 @@ class Struct:
 
 class EntityImport:
     """
-    timely dataflow to import entities
+    deprecated - timely dataflow to import entities
     """
 
     def __init__(self, input: typing.Callable):

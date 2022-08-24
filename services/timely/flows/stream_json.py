@@ -61,10 +61,24 @@ class StreamJson:
           - output: {'person.email': {'type': 'string', 'value': 'user@gmail.com'}}
         """
 
-        object_normalized = {}
+        object_normalized: dict[str, list[dict]] = {}
 
         model = object["model"]
         props = object["properties"]
+        name = object.get("name", None)
+
+        if name:
+            # set 'model'.name attribute
+            model_field = f"{model}.name"
+            object_map = {
+                "value": name,
+                "type": "string",
+            }
+
+            if model_field not in object_normalized:
+                object_normalized[model_field] = []
+
+            object_normalized[model_field].append(object_map)
 
         for prop in props:
             slug = prop["slug"]
@@ -79,6 +93,9 @@ class StreamJson:
             if (slug in ["_id", "id"]) or ("pk" in prop):
                 object_map["pk"] = 1
 
-            object_normalized[model_field] = object_map
+            if model_field not in object_normalized:
+                object_normalized[model_field] = []
+
+            object_normalized[model_field].append(object_map)
 
         return object_normalized

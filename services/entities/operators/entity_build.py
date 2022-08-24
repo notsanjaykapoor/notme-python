@@ -32,7 +32,12 @@ class EntityBuild:
         struct = Struct(0, [], [])
 
         try:
-            entity_id = self._object[self._entity_id_key]["value"]
+            # construct entity values that are common for this entity:
+            #   - entity_id, e.g. 'ulid'
+            #   - entity_key, e.g. 'notme-ulid'
+            #   - entity_name, e.g. 'person', 'vehicle'
+            #   - name (object_name), e.g. 'person 1'
+            entity_id = self._object[self._entity_id_key][0]["value"]
             entity_key = f"notme-{entity_id}"
 
             object_name = self._object_name()
@@ -44,7 +49,7 @@ class EntityBuild:
         # cache data_models with node eq 1
         dm_nodes = self._dm_nodes_eq_1()
 
-        for key, value in self._object.items():
+        for key, values_list in self._object.items():
             slug = self._object_slug(key)
             node = 0
 
@@ -52,20 +57,21 @@ class EntityBuild:
             if slug in dm_nodes:
                 node = 1
 
-            entity = models.Entity(
-                entity_id=entity_id,
-                entity_key=entity_key,
-                entity_name=self._entity_name,  # e.g. case, person, vehicle
-                name=object_name,
-                node=node,
-                slug=slug,
-                state=models.entity.STATE_ACTIVE,
-                type_name=value["type"],
-                type_value=value["value"],
-                version=0,
-            )
+            for value in values_list:
+                entity = models.Entity(
+                    entity_id=entity_id,
+                    entity_key=entity_key,
+                    entity_name=self._entity_name,  # e.g. case, person, vehicle
+                    name=object_name,
+                    node=node,
+                    slug=slug,
+                    state=models.entity.STATE_ACTIVE,
+                    type_name=value["type"],
+                    type_value=value["value"],
+                    version=0,
+                )
 
-            struct.entities.append(entity)
+                struct.entities.append(entity)
 
         # add entity fingerprint
 
@@ -91,7 +97,7 @@ class EntityBuild:
         key = f"{self._entity_name}.name"
 
         if key in self._object:
-            return self._object[key]["value"]
+            return self._object[key][0]["value"]
 
         return self._object_name_default()
 

@@ -34,5 +34,11 @@
     "object_node": 0,
     "object_slug": "lon",
     "object_type": "string"
+  },
+  {
+    "object_name": "person",
+    "object_node": 1,
+    "object_slug": "record_id",
+    "object_type": "integer"
   }
 ]

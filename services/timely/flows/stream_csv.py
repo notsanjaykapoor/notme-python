@@ -89,30 +89,42 @@ class StreamCsv:
         return object
 
     def _map_transform(self, object: dict) -> dict:
-        """map object fields based on data_mapping and data_models"""
-        object_mapped = {}
+        """map object fields based on data_mapping and data_models to normal form"""
+        object_normal = {}
 
         for key, key_mapped in self._obj_mapping.items():
             # find matching data_model
             name_slug = self._build_name_slug(name=self._model_name, slug=key_mapped)
             data_model = self._data_models_by_name_slug.get(name_slug, None)
 
-            value_dict = {"value": object[key]}
-
-            if not data_model:
-                # check static fields
-                if key_mapped in self._data_models_static.keys():
-                    value_dict["type"] = self._data_models_static[key_mapped]["type"]
-                else:
-                    # data_model field not mapped
-                    value_dict["type"] = "unmapped"
+            # multi-value keys - normalize key value to a list
+            if isinstance(object[key], list):
+                key_values = object[key]
             else:
-                value_dict["type"] = data_model.object_type
+                key_values = [object[key]]
 
-                # check pk field
-                if key in self._obj_pks_list:
-                    value_dict["pk"] = 1
+            values = []
 
-            object_mapped[name_slug] = value_dict
+            # multi-value keys
+            for key_value in key_values:
+                value_object = {"value": key_value}
 
-        return object_mapped
+                if not data_model:
+                    # check static fields
+                    if key_mapped in self._data_models_static.keys():
+                        value_object["type"] = self._data_models_static[key_mapped]["type"]
+                    else:
+                        # data_model field not mapped
+                        value_object["type"] = "unmapped"
+                else:
+                    value_object["type"] = data_model.object_type
+
+                    # check pk field
+                    if key in self._obj_pks_list:
+                        value_object["pk"] = 1
+
+                values.append(value_object)
+
+            object_normal[name_slug] = values
+
+        return object_normal

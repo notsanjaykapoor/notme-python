@@ -1,8 +1,10 @@
+#!/usr/bin/env python
+
 import os
 import sys
 import time
 
-sys.path.insert(1, os.path.join(sys.path[0], ".."))
+sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import typer  # noqa: E402
 
@@ -24,7 +26,7 @@ app = typer.Typer()
 
 
 @app.command()
-def file(file_path="./data/notme/data_streams/user_1.csv", mapping_name="user"):
+def file(file_path="./data/notme/data_streams/user_stream_1.csv", mapping_name="user"):
     with services.database.session.get() as db, services.graph.session.get() as neo:
         services.boot.reset(db=db, neo=neo)
 
@@ -58,7 +60,7 @@ def file(file_path="./data/notme/data_streams/user_1.csv", mapping_name="user"):
         data_models = struct_data_models.objects
 
     struct_flow = services.timely.flows.StreamCsv(
-        input=services.timely.inputs.stream_csv(file=file_path),
+        input=services.timely.inputs.input_csv(file=file_path),
         data_mapping=data_mapping,
         data_models=data_models,
     ).call()

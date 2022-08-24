@@ -3,7 +3,8 @@
     "model_name": "person",
     "obj_mapping": {
       "email": "email",
-      "name": "name"
+      "name": "name",
+      "record_id": "record_id"
     },
     "obj_name": "user",
     "obj_pks": "email"

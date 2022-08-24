@@ -1,0 +1,11 @@
+#!/Users/sanjay/.pyenv/shims/python
+
+import os
+import subprocess
+import sys
+
+sys.path.insert(1, os.path.join(sys.path[0], ".."))
+
+import dot_init  # noqa: E402, F401
+
+subprocess.run(["psql", os.environ.get("DATABASE_URL")])

@@ -27,17 +27,26 @@ class IdResolve:
     def call(self) -> Struct:
         struct = Struct(0, "", [])
 
-        # find fields that are marked as pk, note that this can be a composite field
-        entity_pks = [key for key in self._object.keys() if self._object[key].get("pk", 0) == 1]
+        entity_pk_keys = self._entity_pk_keys()
 
-        entity_klass, _ = entity_pks[0].split(".")
-        entity_query = [f"entity_name:{entity_klass}"]
+        if len(entity_pk_keys) > 1:
+            # todo: support compose keys
+            struct.code = 422
+            return struct
 
-        for entity_pk in entity_pks:
-            _, entity_slug = entity_pk.split(".")
-            entity_value = self._object[entity_pk]["value"]
+        entity_pk_key = entity_pk_keys[0]
 
-            entity_query.append(f"slug:{entity_slug}")
+        if len(self._object[entity_pk_key]) > 1:
+            # error, can't have multiple values for primary key
+            struct.code = 422
+            return struct
+
+        entity_klass, entity_slug = entity_pk_key.split(".")
+        entity_query = [f"entity_name:{entity_klass}", f"slug:{entity_slug}"]
+
+        for entity_pk in self._object[entity_pk_key]:
+            entity_value = entity_pk["value"]
+
             entity_query.append(f"type_value:{entity_value}")
 
         struct_entities = services.entities.List(
@@ -60,3 +69,15 @@ class IdResolve:
         struct.code = 201
 
         return struct
+
+    def _entity_pk_keys(self) -> list[str]:
+        """
+        return list of keys that make up the entity pk, note that this can be multiple in the case of a composite key
+        """
+        keys = []
+
+        for key, object_list in self._object.items():
+            if any(object_dict.get("pk", 0) == 1 for object_dict in object_list):
+                keys.append(key)
+
+        return keys
