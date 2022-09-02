@@ -2,13 +2,14 @@ version: "3"
 services:
   neo4j:
     image: "arm64v8/neo4j:enterprise"
-    container_name: notme_neo
+    container_name: notme-neo
+    hostname: notme-neo
     ports:
       - "13687:7687"
       - "13474:7474"
     volumes:
-      - ./data/neo4j:/data
-      - ./logs/neo4j:/logs
+      - ~/data/neo4j:/data
+      - ~/logs/neo4j:/logs
     environment:
       - NEO4J_dbms_memory_pagecache_size=1G
       - NEO4J_dbms.memory.heap.initial_size=1G

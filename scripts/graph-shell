@@ -1,0 +1,27 @@
+#!/usr/bin/env python
+
+import os
+import subprocess
+import sys
+
+sys.path.insert(1, os.path.join(sys.path[0], ".."))
+
+import typer  # noqa: E402
+
+import dot_init  # noqa: E402, F401
+
+app = typer.Typer()
+
+
+@app.command()
+def dev():
+    """use dev env settings"""
+    neo_usr = os.environ.get("NEO4J_USER")
+    neo_pwd = os.environ.get("NEO4J_PASSWORD")
+    neo_url = os.environ.get("NEO4J_HOST_URL")
+
+    subprocess.run(["cypher-shell", "-u", neo_usr, "-p", neo_pwd, "-a", neo_url])
+
+
+if __name__ == "__main__":
+    app()

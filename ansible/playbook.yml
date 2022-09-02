@@ -2,9 +2,11 @@
 - name: start containers
   hosts: localhost
   roles:
-    - role: ./roles/datadog_container
+    # - role: ./roles/datadog_container
+    - role: ./roles/ksqldb_container
     - role: ./roles/neo_container
     # - role: ./roles/neo_cluster_container
+    - role: ./roles/pgsodium_container
     - role: ./roles/postgres_container
     - role: ./roles/redpanda_container
 
@@ -21,3 +23,9 @@
     - ./roles/postgres/vars.yml
   roles:
     - role: ./roles/postgres
+
+- name: initialize pgsodium database
+  gather_facts: no
+  hosts: pgsodium
+  roles:
+    - role: ./roles/pgsodium

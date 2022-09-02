@@ -1,0 +1,26 @@
+version: "3"
+services:
+  notme-kql-srv:
+    container_name: notme-ksql-server
+    hostname: notme-kql-server
+    image: confluentinc/ksqldb-server:0.27.2
+    depends_on:
+      - notme-redpanda
+    ports:
+      - "8088:8088"
+    environment:
+      KSQL_LISTENERS: "http://0.0.0.0:8088"
+      KSQL_BOOTSTRAP_SERVERS: "notme-redpanda:29092"
+      KSQL_KSQL_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+      KSQL_KSQL_LOGGING_PROCESSING_STREAM_AUTO_CREATE: "true"
+      KSQL_KSQL_LOGGING_PROCESSING_TOPIC_AUTO_CREATE: "true" 
+
+  notme-kql-cli:
+    container_name: notme-ksql-client
+    image: confluentinc/ksqldb-cli:0.27.2
+    entrypoint: /bin/sh
+    tty: true
+    depends_on:
+      - notme-redpanda
+      - notme-ksql-server
+  

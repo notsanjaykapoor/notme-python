@@ -1,27 +1,34 @@
 localhost ansible_connection=local ansible_python_interpreter="/usr/bin/env python"
 
 [all]
-notme-neo ansible_connection=docker ansible_host=notme_neo
-notme-postgres ansible_connection=docker ansible_host=notme_postgres
-notme-redpanda ansible_connection=docker ansible_host=notme_redpanda
+notme-neo ansible_connection=docker ansible_host=notme-neo
+notme-pgsodium ansible_connection=docker ansible_host=notme-pgsodium
+notme-postgres ansible_connection=docker ansible_host=notme-postgres
+notme-redpanda ansible_connection=docker ansible_host=notme-redpanda
 
 [all:vars]
 ansible_python_interpreter=/usr/bin/python3
 
 [neo]
-notme-neo ansible_connection=docker ansible_host=notme_neo
+notme-neo ansible_connection=docker ansible_host=notme-neo
 
 [neo:vars]
 ansible_python_interpreter=/usr/bin/python3
 
+[pgsodium]
+notme-pgsodium ansible_connection=docker ansible_host=notme-pgsodium
+
+[pgsodium:vars]
+ansible_python_interpreter=/usr/bin/python3
+
 [postgres]
-notme-postgres ansible_connection=docker ansible_host=notme_postgres
+notme-postgres ansible_connection=docker ansible_host=notme-postgres
 
 [postgres:vars]
 ansible_python_interpreter=/usr/bin/python3
 
 [redpanda]
-notme-redpanda ansible_connection=docker ansible_host=notme_redpanda
+notme-redpanda ansible_connection=docker ansible_host=notme-redpanda
 
 [redpanda:vars]
 ansible_python_interpreter=/usr/bin/python3

@@ -60,7 +60,9 @@ def database_tables_drop(engine: sqlalchemy.future.Engine):
 def database_tables_init(engine: sqlalchemy.future.Engine):
     # initialize hypertables
     session = sqlmodel.Session(engine)
-    session.execute("select create_hypertable('events', 'timestamp')")
+
+    # note: requires timescaledb support
+    # session.execute("select create_hypertable('events', 'timestamp')")
 
 
 # Set up the database once

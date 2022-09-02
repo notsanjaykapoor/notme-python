@@ -1,0 +1,38 @@
+- name: configure postgres
+  template:
+    src: ./templates/postgresql.conf.j2
+    dest: /var/lib/postgresql/data/postgresql.conf
+    owner: postgres
+    group: postgres
+  tags:
+    - db
+
+- name: check postgres port
+  wait_for:
+    host: "localhost"
+    port: 5432
+  register: container
+  tags:
+    - postgres
+
+- name: create default databases
+  postgresql_db:
+    state: present
+    name: "{{item}}"
+    encoding: UTF-8
+  become: no
+  loop:
+    - "notme_dev"
+    - "notme_tst"
+  tags:
+    - postgres
+
+- name: check/create pgsodium schema
+  postgresql_query:
+    db: notme_dev
+    query: "{{item}}"
+  loop:
+    - "create schema if not exists pgsodium"
+    - "create extension if not exists pgsodium with schema pgsodium"
+  tags:
+    - postgres

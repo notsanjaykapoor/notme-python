@@ -1,0 +1,9 @@
+version: "3"
+services:
+  vector:
+    image: "timberio/vector:0.22.2-debian"
+    container_name: notme_vector
+    ports:
+      - "8383:8383"
+    volumes:
+      - ./vector.toml:/etc/vector/vector.toml:ro

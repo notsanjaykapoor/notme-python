@@ -1,4 +1,4 @@
-#!/Users/sanjay/.pyenv/shims/python
+#!/usr/bin/env python
 
 import os
 import subprocess
@@ -6,6 +6,30 @@ import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
+import typer  # noqa: E402
+
 import dot_init  # noqa: E402, F401
 
-subprocess.run(["psql", os.environ.get("DATABASE_URL")])
+app = typer.Typer()
+
+
+@app.command()
+def dev():
+    """use dev env settings"""
+    subprocess.run(["psql", os.environ.get("DATABASE_URL")])
+
+
+@app.command()
+def sodium():
+    """use sodium env settings"""
+    subprocess.run(["psql", os.environ.get("DATABASE_SODIUM_URL")])
+
+
+@app.command()
+def uri(uri: str = typer.Option(..., "--uri")):
+    """use specific uri settings, e.g. 'postgresql://user:password@host:port/db_name'"""
+    subprocess.run(["psql", uri])
+
+
+if __name__ == "__main__":
+    app()

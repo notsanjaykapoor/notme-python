@@ -1,6 +1,6 @@
 - name: start container
   docker_container:
-    name: notme_neo
+    name: notme-neo
     image: "arm64v8/neo4j:enterprise"
     state: started
     healthcheck:

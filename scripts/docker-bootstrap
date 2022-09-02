@@ -1,0 +1,31 @@
+#!/usr/bin/env python
+
+import os
+import subprocess
+import sys
+
+sys.path.insert(1, os.path.join(sys.path[0], ".."))
+
+print("notme-postgres create container")
+subprocess.run(["docker-compose", "-p", "notme", "-f", "docker-compose/notme-postgres.yml", "up", "-d"])
+# eval "docker-compose -p notme -f docker-compose-notme-postgres.yml up -d"
+
+print("notme-neo4j create container")
+subprocess.run(["docker-compose", "-p", "notme", "-f", "docker-compose/notme-neo4j.yml", "up", "-d"])
+# eval "docker-compose -p notme -f docker-compose-notme-neo4j.yml up -d"
+
+print("notme-neo4j create dbs")
+for db_name in ["notme.dev", "notme.tst"]:
+    print(f"notme-neo4j create db {db_name}")
+    subprocess.run(["cypher-shell", "-a", "neo4j://localhost:13687", "-u", "neo4j", "-p", "development", f"create database {db_name} if not exists;"])
+
+print("notme-redpanda create container")
+subprocess.run(["docker-compose", "-p", "notme", "-f", "docker-compose/notme-redpanda.yml", "up", "-d"])
+# eval "docker-compose -p notme -f docker-compose-notme-redpanda.yml up -d"
+
+print("notme-redpanda create topics - todo")
+
+# print("notme-ksql create container")
+# subprocess.run(["docker-compose", "-p", "notme", "-f", "docker-compose/notme-ksql.yml", "up", "-d"])
+
+print("completed")

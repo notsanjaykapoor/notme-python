@@ -1,6 +1,6 @@
 - name: start container
   docker_container:
-    name: notme_redpanda
+    name: notme-redpanda
     image: redpanda-python:latest
     state: started
     healthcheck:
@@ -9,6 +9,8 @@
       timeout: 10s
       retries: 3
       start_period: 15s
+    networks:
+      - name: notme
     ports:
       - "8081:8081"
       - "8082:8082"
@@ -31,18 +33,18 @@
       - --kafka-addr
       - PLAINTEXT://0.0.0.0:29092,OUTSIDE://0.0.0.0:9092
       - --advertise-kafka-addr
-      - PLAINTEXT://redpanda:29092,OUTSIDE://localhost:9092
+      - PLAINTEXT://notme-redpanda:29092,OUTSIDE://localhost:9092
       - --pandaproxy-addr
       - PLAINTEXT://0.0.0.0:28082,OUTSIDE://0.0.0.0:8082
       - --advertise-pandaproxy-addr
-      - PLAINTEXT://redpanda:28082,OUTSIDE://localhost:8082
+      - PLAINTEXT://notme-redpanda:28082,OUTSIDE://localhost:8082
   tags:
     - redpanda
     - container
 
 - name: check container
   docker_container_info:
-    name: notme_redpanda
+    name: notme-redpanda
   register: container
   tags:
     - redpanda

@@ -1,8 +1,10 @@
+import pytest
 import sqlmodel
 
 import services.events
 
 
+@pytest.mark.skip(reason="timescaledb support required")
 def test_event_query(session: sqlmodel.Session):
     objects = [
         {

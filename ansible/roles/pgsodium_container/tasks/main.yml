@@ -1,21 +1,21 @@
 - name: start container
   docker_container:
-    name: notme-postgres
-    image: arm64v8/postgres
+    name: notme-pgsodium
+    image: pgsodium
     state: started
     healthcheck:
-      test: ["CMD", "curl", "--fail", "http://localhost:13432"]
+      test: ["CMD", "curl", "--fail", "http://localhost:15432"]
       interval: 2m
       timeout: 10s
       retries: 3
       start_period: 15s
     ports:
-      - "13432:5432"
+      - "15432:5432"
     env:
       POSTGRES_PASSWORD: "development"
       POSTGRES_USER: "postgres"
     volumes:
-      - ~/data/postgres:/var/lib/postgresql/data
+      - ~/data/pgsodium:/var/lib/postgresql/data
   tags:
     - db
     - container
@@ -23,7 +23,7 @@
 - name: check container
   wait_for:
     host: "localhost"
-    port: 13432
+    port: 15432
   register: container
   tags:
     - db
