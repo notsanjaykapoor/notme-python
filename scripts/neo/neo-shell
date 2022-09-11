@@ -1,0 +1,39 @@
+#!/usr/bin/env python
+
+import os
+import subprocess
+import sys
+
+sys.path.insert(1, os.path.join(sys.path[0], "../.."))
+
+import typer  # noqa: E402
+
+import dot_init  # noqa: E402, F401
+
+app = typer.Typer()
+
+
+@app.command()
+def shell(uri: str = typer.Option(None, "--uri")):
+    """use dev env settings"""
+
+    if not uri:
+        uri = cypher_env_uri()
+
+    subprocess.run(["cypher-shell", "-a", uri])
+
+
+def cypher_env_uri() -> str:
+    """build cypher uri from env vars"""
+    neo_usr = os.environ["NEO4J_USER"]
+    neo_pwd = os.environ["NEO4J_PASSWORD"]
+    neo_url = os.environ["NEO4J_HOST_URL"]
+
+    # neo_url should be in format host:port(/database) with no leading protocol
+    neo_url = neo_url.replace("neo4j://", "")
+
+    return f"neo4j://{neo_usr}:{neo_pwd}@{neo_url}"
+
+
+if __name__ == "__main__":
+    app()

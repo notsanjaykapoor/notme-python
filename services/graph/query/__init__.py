@@ -14,4 +14,5 @@ from .match_geo import (  # noqa: F401
 )
 from .match_neighbors import match_neighbors  # noqa: F401
 from .match_node import match_node  # noqa: F401
+from .match_random import match_random  # noqa: F401
 from .match_shortest_path import match_shortest_path  # noqa: F401

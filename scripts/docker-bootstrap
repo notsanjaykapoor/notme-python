@@ -3,29 +3,80 @@
 import os
 import subprocess
 import sys
+import time
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
-print("notme-postgres create container")
-subprocess.run(["docker-compose", "-p", "notme", "-f", "docker-compose/notme-postgres.yml", "up", "-d"])
-# eval "docker-compose -p notme -f docker-compose-notme-postgres.yml up -d"
+import typer  # noqa: E402, F401
 
-print("notme-neo4j create container")
-subprocess.run(["docker-compose", "-p", "notme", "-f", "docker-compose/notme-neo4j.yml", "up", "-d"])
-# eval "docker-compose -p notme -f docker-compose-notme-neo4j.yml up -d"
+import dot_init  # noqa: E402, F401
 
-print("notme-neo4j create dbs")
-for db_name in ["notme.dev", "notme.tst"]:
-    print(f"notme-neo4j create db {db_name}")
-    subprocess.run(["cypher-shell", "-a", "neo4j://localhost:13687", "-u", "neo4j", "-p", "development", f"create database {db_name} if not exists;"])
+app = typer.Typer()
 
-print("notme-redpanda create container")
-subprocess.run(["docker-compose", "-p", "notme", "-f", "docker-compose/notme-redpanda.yml", "up", "-d"])
-# eval "docker-compose -p notme -f docker-compose-notme-redpanda.yml up -d"
 
-print("notme-redpanda create topics - todo")
+@app.command()
+def default(neo: str = typer.Option("single", "--neo")):
+    """create default docker containers"""
 
-# print("notme-ksql create container")
-# subprocess.run(["docker-compose", "-p", "notme", "-f", "docker-compose/notme-ksql.yml", "up", "-d"])
+    print("notme-postgres create container")
+    subprocess.run(["docker-compose", "-p", "notme", "-f", "docker-compose/notme-postgres.yml", "up", "-d"])
 
-print("completed")
+    print(f"notme-neo4j {neo} create container(s)")
+
+    if neo == "single":
+        subprocess.run(["docker-compose", "-p", "notme", "-f", "docker-compose/notme-neo4j.yml", "up", "-d"])
+    else:
+        subprocess.run(["./docker-compose/notme-neo4j-cluster-boot"])
+
+    neo4j_url = os.environ["NEO4J_HOST_URL"]
+    neo4j_user = os.environ["NEO4J_USER"]
+    neo4j_password = os.environ["NEO4J_PASSWORD"]
+
+    print(f"notme-neo4j checking {neo4j_url}")
+
+    wait_seconds = 0
+    sleep_seconds = 10
+
+    while wait_seconds < 60:
+        if _cypher_shell(uri=neo4j_url, usr=neo4j_user, pwd=neo4j_password, cmd="show databases;") == 0:
+            break
+
+        print(f"notme-neo4j waiting {neo4j_url}")
+
+        time.sleep(sleep_seconds)
+        wait_seconds += sleep_seconds
+
+    print("notme-neo4j create dbs")
+    for db_name in ["notme.dev", "notme.tst"]:
+        print(f"notme-neo4j create db {db_name}")
+        _cypher_shell(
+            uri=neo4j_url,
+            usr=neo4j_user,
+            pwd=neo4j_password,
+            cmd=f"create database {db_name} if not exists;",
+        )
+
+    print("notme-redpanda create container")
+    subprocess.run(["docker-compose", "-p", "notme", "-f", "docker-compose/notme-redpanda.yml", "up", "-d"])
+
+    print("notme-redpanda create topics - todo")
+
+    # print("notme-ksql create container")
+    # subprocess.run(["docker-compose", "-p", "notme", "-f", "docker-compose/notme-ksql.yml", "up", "-d"])
+
+    print("completed")
+
+
+def _cypher_shell(uri: str, usr: str, pwd: str, cmd: str) -> int:
+    """connect and execute cypher shell cmd"""
+    try:
+        subprocess.run(["cypher-shell", "-a", uri, "-u", usr, "-p", pwd, cmd], check=True)
+
+        return 0
+    except Exception as e:
+        print(f"exception {e}")
+        return 1
+
+
+if __name__ == "__main__":
+    app()
