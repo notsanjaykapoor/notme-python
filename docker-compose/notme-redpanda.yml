@@ -19,6 +19,9 @@ services:
       - PLAINTEXT://0.0.0.0:29092,OUTSIDE://0.0.0.0:9092
       - --advertise-kafka-addr
       - PLAINTEXT://notme-redpanda:29092,OUTSIDE://localhost:9092
+      - --set redpanda.cluster_id=notme_cluster
+      - --set redpanda.enable_idempotence=true
+      - --set redpanda.enable_transactions=true
     ports:
       - 8081:8081
       - 8082:8082

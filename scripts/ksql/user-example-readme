@@ -1,0 +1,26 @@
+#! /bin/bash
+
+echo "ksql server info and health:"
+echo "bash> curl --http1.1 -sX GET http://localhost:8088/healthcheck"
+echo "bash> curl --http1.1 -sX GET http://localhost:8088/info"
+
+echo ""
+echo "ksql cli connect:"
+echo "bash> docker exec -it notme-ksql-client ksql http://notme-ksql-server:8088"
+
+echo ""
+echo "create stream:"
+echo "ksql> create stream users (user_id VARCHAR, city VARCHAR) WITH (kafka_topic='users', value_format='json');"
+
+echo ""
+echo "create table:"
+echo "ksql> create table users_now as
+  select user_id,
+         latest_by_offset(city) AS city
+  from users
+  goup by user_id
+  emit CHANGES;"
+
+echo ""
+echo "insert stream data:"
+echo "ksql> insert into users (user_id, city) values ('user-1', 'paris');"
