@@ -114,7 +114,7 @@ def api_ping():
 def user_create(user_id: str, db: sqlmodel.Session = Depends(get_db)):
     logger.info(f"{context.rid_get()} api.users.create")
 
-    struct = services.users.Create(db, user_id).call()
+    struct = services.users.Create(db, user_id, params={}).call()
 
     return struct.id
 

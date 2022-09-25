@@ -118,6 +118,7 @@ class Complete:
 
         struct_create = services.users.Create(
             user_id=self._user_id,
+            params={},
             db=self._db,
         ).call()
 

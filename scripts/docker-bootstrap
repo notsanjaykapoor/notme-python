@@ -15,7 +15,11 @@ app = typer.Typer()
 
 
 @app.command()
-def default(neo: str = typer.Option("single", "--neo"), ksql: bool = typer.Option(False, "--ksql")):
+def default(
+    neo: str = typer.Option("single", "--neo"),
+    ksql: bool = typer.Option(False, "--ksql"),
+    typesense: bool = typer.Option(False, "--typesense"),
+):
     """create default docker containers"""
 
     print("notme-postgres create container")
@@ -64,6 +68,10 @@ def default(neo: str = typer.Option("single", "--neo"), ksql: bool = typer.Optio
     if ksql:
         print("notme-ksql create container")
         subprocess.run(["docker-compose", "-p", "notme", "-f", "docker-compose/notme-ksql.yml", "up", "-d"])
+
+    if typesense:
+        print("notme-typesense create container")
+        subprocess.run(["docker-compose", "-p", "notme", "-f", "docker-compose/notme-typesense.yml", "up", "-d"])
 
     print("completed")
 

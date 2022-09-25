@@ -17,7 +17,8 @@ gql_schema = strawberry.Schema(
 @pytest.fixture()
 def user_id(session: sqlmodel.Session):
     user_id = f"user-{random.randint(1,100)}"
-    struct_create = services.users.Create(db=session, user_id=user_id).call()
+    user_params = {"state": "enabled"}
+    struct_create = services.users.Create(db=session, user_id=user_id, params=user_params).call()
     assert struct_create.code == 0
     assert struct_create.id
 

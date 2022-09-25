@@ -16,10 +16,10 @@ class Struct:
 
 
 class Create:
-    def __init__(self, db: sqlmodel.Session, user_id: str, mobile: typing.Optional[str] = None):
+    def __init__(self, db: sqlmodel.Session, user_id: str, params: dict):
         self._db = db
         self._user_id = user_id
-        self._mobile = mobile
+        self._params = params
 
         self._logger = log.init("service")
 
@@ -29,14 +29,21 @@ class Create:
         self._logger.info(f"{context.rid_get()} {__name__} user_id {self._user_id}")
 
         db_object = models.User(
-            mobile=self._mobile,
-            state="enabled",
+            city=self._params.get("city"),
+            email=self._params.get("email"),
+            mobile=self._params.get("mobile"),
+            state=self._params.get("state"),
             user_id=self._user_id,
         )
 
-        self._db.add(db_object)
-        self._db.commit()
+        try:
+            self._db.add(db_object)
+            self._db.commit()
 
-        struct.id = db_object.id
+            struct.id = db_object.id
+        except Exception as e:
+            self._db.rollback()
+            self._logger.error(f"{context.rid_get()} {__name__} exception {e}")
+            raise e
 
         return struct

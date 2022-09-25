@@ -179,7 +179,7 @@ def user_create(name: str = typer.Option(...)):
         if struct_create.code == 0:
             logger.info(f"cli result user {name} created")
 
-        return struct_create.user_id
+        return struct_create.id
 
 
 @app.command()

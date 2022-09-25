@@ -6,7 +6,11 @@ import services.users
 
 @pytest.fixture
 def user_id(session: sqlmodel.Session):
-    struct_create = services.users.Create(db=session, user_id="user-1", mobile="+14085551212").call()
+    params = {
+        "mobile": "+14085551212",
+        "state": "enabled",
+    }
+    struct_create = services.users.Create(db=session, user_id="user-1", params=params).call()
     assert struct_create.code == 0
     assert struct_create.id
 

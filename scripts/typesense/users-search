@@ -1,0 +1,42 @@
+#!/usr/bin/env python
+
+import os
+import sys
+
+sys.path.insert(1, os.path.join(sys.path[0], "../.."))
+
+import typer  # noqa: E402
+
+import dot_init  # noqa: E402, F401
+import log  # noqa: E402
+import models  # noqa: E402
+import typesearch  # noqa: E402
+
+logger = log.init("cli")
+
+app = typer.Typer()
+
+
+@app.command()
+def search(
+    query: str = typer.Option("*", "--query"),
+    query_by: str = typer.Option("", "--query-by"),
+):
+    client = typesearch.client(
+        uri=os.environ["TYPESENSE_URL"],
+        api_key=os.environ["TYPESENSE_API_KEY"],
+    )
+
+    search_params = {
+        "q": query,
+        "query_by": query_by,
+    }
+
+    search_results = client.collections[models.User.typesense_collection()].documents.search(search_params)
+
+    for search_object in search_results["hits"]:
+        print(search_object)
+
+
+if __name__ == "__main__":
+    app()
