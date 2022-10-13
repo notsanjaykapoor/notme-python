@@ -4,7 +4,6 @@ import datadog
 import neo4j
 import neo4j.graph
 
-import env
 import log
 import models
 import services.graph.query

@@ -4,7 +4,6 @@ import datadog
 import neo4j
 import sqlmodel
 
-import env
 import log
 import models
 import services.data_links
