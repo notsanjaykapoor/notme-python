@@ -5,7 +5,6 @@ import neo4j
 import neo4j.graph
 import sqlmodel
 
-import env
 import log
 import models
 import services.graph.query
@@ -52,7 +51,7 @@ class PruneNodeEntity:
 
         graph_query = self._query_node_edges()
 
-        with datadog.statsd.timed("neo.writer", tags=[f"env:{env.name()}", f"writer:{__name__}"]):
+        with datadog.statsd.timed("neo.writer", tags=[f"writer:{__name__}"]):
             records = self._neo.read_transaction(services.graph.tx.read, graph_query.query, graph_query.params)
 
         record_props = [record for record in records if models.entity.LABEL_PROPERTY in record["node"].labels]
@@ -74,14 +73,14 @@ class PruneNodeEntity:
         for record in record_props_deleted:
             graph_query = self._query_edge_delete(node=record["node"])
 
-            with datadog.statsd.timed("neo.writer", tags=[f"env:{env.name()}", f"writer:{__name__}"]):
+            with datadog.statsd.timed("neo.writer", tags=[f"writer:{__name__}"]):
                 summary = self._neo.write_transaction(services.graph.tx.write, graph_query.query, graph_query.params)
                 struct.edges_deleted += summary.counters.relationships_deleted
 
         for record in record_links_deleted:
             graph_query = self._query_edge_delete(node=record["node"])
 
-            with datadog.statsd.timed("neo.writer", tags=[f"env:{env.name()}", f"writer:{__name__}"]):
+            with datadog.statsd.timed("neo.writer", tags=[f"writer:{__name__}"]):
                 summary = self._neo.write_transaction(services.graph.tx.write, graph_query.query, graph_query.params)
                 struct.edges_deleted += summary.counters.relationships_deleted
 

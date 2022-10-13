@@ -1,11 +1,9 @@
 import datadog
 
-import env
-
 from .types import GraphQuery
 
 
-@datadog.statsd.timed("neo.reader", tags=[f"env:{env.name_random()}", f"reader:{__name__}"])
+@datadog.statsd.timed("neo.reader", tags=[f"reader:{__name__}"])
 def match_random(limit: int) -> GraphQuery:
     """query random node set"""
     struct = GraphQuery("", {})

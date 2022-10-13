@@ -5,7 +5,6 @@ import datadog
 import sqlmodel
 
 import context
-import env
 import log
 import models
 
@@ -25,7 +24,7 @@ class Get:
         self._model = models.User
         self._logger = log.init("service")
 
-    @datadog.statsd.timed("service", tags=[f"env:{env.name()}", f"service:{__name__}"])
+    @datadog.statsd.timed("service", tags=[f"service:{__name__}"])
     def call(self) -> Struct:
         struct = Struct(0, None, [])
 

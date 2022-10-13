@@ -83,7 +83,7 @@ class CreateNodesLink:
 
         params = {"id": self._node_id(data_link)}
 
-        with datadog.statsd.timed("neo.writer", tags=[f"env:{env.name()}", f"writer:{__name__}"]):
+        with datadog.statsd.timed("neo.writer", tags=[f"writer:{__name__}"]):
             summary = self._neo.write_transaction(services.graph.tx.write, query, params)
 
             node_struct.nodes_created += summary.counters.nodes_created

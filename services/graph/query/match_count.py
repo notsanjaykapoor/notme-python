@@ -2,12 +2,10 @@ import typing
 
 import datadog
 
-import env
-
 from .types import GraphQuery
 
 
-@datadog.statsd.timed("neo.reader", tags=[f"env:{env.name_random()}", f"reader:{__name__}"])
+@datadog.statsd.timed("neo.reader", tags=[f"reader:{__name__}"])
 def match_edges_count(names: typing.Optional[str] = None) -> GraphQuery:
     """query total edges count"""
     struct = GraphQuery("", {})
@@ -20,7 +18,7 @@ def match_edges_count(names: typing.Optional[str] = None) -> GraphQuery:
     return struct
 
 
-@datadog.statsd.timed("neo.reader", tags=[f"env:{env.name_random()}", f"reader:{__name__}"])
+@datadog.statsd.timed("neo.reader", tags=[f"reader:{__name__}"])
 def match_node_count() -> GraphQuery:
     """query total node count"""
     struct = GraphQuery("", {})
@@ -30,7 +28,7 @@ def match_node_count() -> GraphQuery:
     return struct
 
 
-@datadog.statsd.timed("neo.reader", tags=[f"env:{env.name_random()}", f"reader:{__name__}"])
+@datadog.statsd.timed("neo.reader", tags=[f"reader:{__name__}"])
 def match_node_label_count(label: str, id: typing.Optional[str]) -> GraphQuery:
     """query total node count filtered by label and optional id"""
     struct = GraphQuery("", {})
@@ -47,7 +45,7 @@ def match_node_label_count(label: str, id: typing.Optional[str]) -> GraphQuery:
     return struct
 
 
-@datadog.statsd.timed("neo.reader", tags=[f"env:{env.name_random()}", f"reader:{__name__}"])
+@datadog.statsd.timed("neo.reader", tags=[f"reader:{__name__}"])
 def match_node_label_group_count() -> GraphQuery:
     """query distinct labels grouped by count"""
     struct = GraphQuery("", {})

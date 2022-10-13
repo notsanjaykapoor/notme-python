@@ -6,7 +6,6 @@ import sqlmodel
 from sqlmodel.sql.expression import Select, SelectOfScalar
 
 import context
-import env
 import log
 import models
 import services.mql
@@ -35,7 +34,7 @@ class List:
         self._dataset = sqlmodel.select(models.City)  # default database query
         self._logger = log.init("service")
 
-    @datadog.statsd.timed("service", tags=[f"env:{env.name()}", f"service:{__name__}"])
+    @datadog.statsd.timed("service", tags=[f"service:{__name__}"])
     def call(self) -> Struct:
         struct = Struct(0, [], 0, [])
 

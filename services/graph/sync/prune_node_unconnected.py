@@ -36,7 +36,7 @@ class PruneNodeUnconnected:
 
         graph_query = self._query_node_delete()
 
-        with datadog.statsd.timed("neo.writer", tags=[f"env:{env.name()}", f"writer:{__name__}"]):
+        with datadog.statsd.timed("neo.writer", tags=[f"writer:{__name__}"]):
             summary = self._neo.write_transaction(services.graph.tx.write, graph_query.query, graph_query.params)
             struct.nodes_deleted += summary.counters.nodes_deleted
 
