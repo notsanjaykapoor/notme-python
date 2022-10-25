@@ -1,0 +1,100 @@
+import datetime
+import random
+
+import sqlmodel
+import typesense
+
+import models
+import services.time
+import services.variants
+import services.variants.search
+
+
+def test_search__prule_with_dispensary_class(session: sqlmodel.Session, typesense_session: typesense.client.Client):
+    # variant setup
+
+    variant_1 = models.Variant(
+        name="Variant 1",
+        price=1.00,
+        product_id=0,  # todo
+        sku="sku1",
+        status="enabled",
+        stock_location_ids=[],
+    )
+
+    session.add(variant_1)
+    session.commit()
+
+    # price rule with dispensary_class conditions
+
+    rule_1 = models.VariantPrule(
+        category_id=None,
+        dispensary_class_id=1,
+        effect_amount=10,
+        effect_operator="-",
+        effect_unit="%",
+        enabled=True,
+        override=False,
+        scope="item",
+        stock_location_id=None,
+        trigger_amount=5,
+        trigger_operator="ge",
+        trigger_unit="quantity",
+        variant_id=variant_1.id,
+        version=1,
+    )
+
+    session.add(rule_1)
+    session.commit()
+
+    # create index
+
+    services.variants.search.Create(search_client=typesense_session).call()
+
+    # index objects
+
+    struct_index = services.variants.search.Index(db=session, search_client=typesense_session).call()
+
+    assert struct_index.count == 1
+
+    # search with dispensary_class match
+
+    filter_by_terms = (
+        services.variants.search.filter_terms_default() + services.variants.search.filter_terms_rule_quantity(q=5) + ["rule_dispensary_class_ids:[1]"]
+    )
+
+    search_params = {
+        "q": "*",
+        "filter_by": services.variants.search.filter_terms(filter_by_terms),
+    }
+
+    search_results = services.variants.search.query(
+        search_client=typesense_session,
+        search_collection=models.VariantPruleSchema.typesense_collection(),
+        search_params=search_params,
+    )
+
+    assert search_results["found"] == 1
+
+    # search with dispensary_class that does not match
+
+    filter_by_terms = (
+        services.variants.search.filter_terms_default()
+        + services.variants.search.filter_terms_rule_quantity(q=5)
+        + [f"rule_dispensary_class_ids:[{random.randint(2, 2**32)}]"]
+    )
+
+    search_params = {
+        "q": "*",
+        "filter_by": services.variants.search.filter_terms(filter_by_terms),
+    }
+
+    search_results = services.variants.search.query(
+        search_client=typesense_session,
+        search_collection=models.VariantPruleSchema.typesense_collection(),
+        search_params=search_params,
+    )
+
+    assert search_results["found"] == 0
+
+    services.variants.truncate(db=session)
