@@ -7,8 +7,9 @@ DEFAULT_ALL = [0]
 
 
 class VariantVruleDocument:
-    def __init__(self, variant: models.Variant, vrule: typing.Optional[models.VariantVrule]):
+    def __init__(self, variant: models.Variant, product: models.Product, vrule: typing.Optional[models.VariantVrule]):
         self._variant = variant
+        self._product = product
         self._vrule = vrule
 
     def document(self) -> dict:
@@ -32,7 +33,7 @@ class VariantVruleDocument:
             "variant_sku": self._variant.sku,
             "variant_status": self._variant.status,
             "variant_stock_quantity": self._variant_stock_quantity(),
-            "vendor_id": self._variant.vendor_id,
+            "vendor_id": self._product.vendor_id,
         }
 
     def _rule_category_ids(self) -> list[int]:

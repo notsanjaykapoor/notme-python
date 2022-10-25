@@ -13,10 +13,30 @@ import services.variants.search
 def test_search__prule_with_dispensary_class(session: sqlmodel.Session, typesense_session: typesense.client.Client):
     # variant setup
 
+    vendor_1 = models.Vendor(
+        name="Vendor 1",
+        slug="vendor-1",
+    )
+
+    session.add(vendor_1)
+    session.commit()
+
+    product_1 = models.Product(
+        category_ids=[],
+        description="",
+        name="Product 1",
+        price=1.00,
+        status="enabled",
+        vendor_id=vendor_1.id,
+    )
+
+    session.add(product_1)
+    session.commit()
+
     variant_1 = models.Variant(
         name="Variant 1",
         price=1.00,
-        product_id=0,  # todo
+        product_id=product_1.id,
         sku="sku1",
         status="enabled",
         stock_location_ids=[],
@@ -41,6 +61,7 @@ def test_search__prule_with_dispensary_class(session: sqlmodel.Session, typesens
         trigger_operator="ge",
         trigger_unit="quantity",
         variant_id=variant_1.id,
+        vendor_id=vendor_1.id,
         version=1,
     )
 
@@ -55,7 +76,7 @@ def test_search__prule_with_dispensary_class(session: sqlmodel.Session, typesens
 
     struct_index = services.variants.search.Index(db=session, search_client=typesense_session).call()
 
-    assert struct_index.count == 1
+    assert struct_index.count == 2
 
     # search with dispensary_class match
 

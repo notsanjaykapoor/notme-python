@@ -17,6 +17,18 @@ def test_search__prule_with_stock_location(session: sqlmodel.Session, typesense_
     session.add(vendor_1)
     session.commit()
 
+    product_1 = models.Product(
+        category_ids=[],
+        description="",
+        name="Product 1",
+        price=1.00,
+        status="enabled",
+        vendor_id=vendor_1.id,
+    )
+
+    session.add(product_1)
+    session.commit()
+
     stock_boston = models.VendorStockLocation(
         name="Boston",
         vendor_id=vendor_1.id,
@@ -34,7 +46,7 @@ def test_search__prule_with_stock_location(session: sqlmodel.Session, typesense_
     variant_1 = models.Variant(
         name="Variant 1",
         price=1.00,
-        product_id=0,  # todo
+        product_id=product_1.id,
         sku="sku1",
         status="enabled",
         stock_location_ids=[stock_boston.id, stock_chicago.id],
@@ -60,6 +72,7 @@ def test_search__prule_with_stock_location(session: sqlmodel.Session, typesense_
         trigger_operator="ge",
         trigger_unit="quantity",
         variant_id=variant_1.id,
+        vendor_id=vendor_1.id,
         version=1,
     )
 
@@ -74,7 +87,7 @@ def test_search__prule_with_stock_location(session: sqlmodel.Session, typesense_
 
     struct_index = services.variants.search.Index(db=session, search_client=typesense_session).call()
 
-    assert struct_index.count == 1
+    assert struct_index.count == 2
 
     # search with location and trigger_amount matches
 
