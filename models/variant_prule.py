@@ -31,5 +31,5 @@ class VariantPrule(sqlmodel.SQLModel, table=True):  # type: ignore
     trigger_operator: str = sqlmodel.Field(index=False, nullable=False)  # e.g. 'ge', 'gt', 'le', lt'
     trigger_unit: str = sqlmodel.Field(index=False, nullable=False)  # e.g. 'amount', 'quantity'
     variant_id: int = sqlmodel.Field(index=False, nullable=True)
-    vendor_id: int = sqlmodel.Field(index=False, nullable=True)  # ui ?
+    vendor_id: int = sqlmodel.Field(index=False, nullable=False)
     version: int = sqlmodel.Field(index=False, nullable=False)

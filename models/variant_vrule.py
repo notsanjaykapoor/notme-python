@@ -24,5 +24,5 @@ class VariantVrule(sqlmodel.SQLModel, table=True):  # type: ignore
     stock_location_id: int = sqlmodel.Field(index=False, nullable=True)
     variant_id: int = sqlmodel.Field(index=False, nullable=True)
     visibility: str = sqlmodel.Field(index=False, nullable=False)  # 'enabled', 'private', 'disabled'
-    vendor_id: int = sqlmodel.Field(index=False, nullable=True)  # ui ?
+    vendor_id: int = sqlmodel.Field(index=False, nullable=False)
     version: int = sqlmodel.Field(index=False, nullable=False)

@@ -88,6 +88,7 @@ def test_search__prule_with_category(session: sqlmodel.Session, typesense_sessio
         trigger_operator="ge",
         trigger_unit="quantity",
         variant_id=variant_1.id,
+        vendor_id=vendor_1.id,
         version=1,
     )
 
@@ -102,7 +103,7 @@ def test_search__prule_with_category(session: sqlmodel.Session, typesense_sessio
 
     struct_index = services.variants.search.Index(db=session, search_client=typesense_session).call()
 
-    assert struct_index.count == 1
+    assert struct_index.count == 2
 
     # search with category match
 

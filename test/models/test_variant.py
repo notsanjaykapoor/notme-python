@@ -68,21 +68,4 @@ def test_variant(session: sqlmodel.Session):
     assert variant_1.sku == "sku1"
     assert variant_1.stock_location_ids == [stock_1.id]
 
-    price_rule = models.VariantPrule(
-        effect_amount=10.0,
-        effect_operator="=",
-        effect_unit="$",
-        enabled=True,
-        override=False,
-        scope="item",
-        trigger_amount=10,
-        trigger_operator="ge",
-        trigger_unit="quantity",
-        variant_id=variant_1.id,
-        version=1,
-    )
-
-    session.add(price_rule)
-    session.commit()
-
     services.variants.truncate(db=session)

@@ -4,6 +4,8 @@ import typing
 import pydantic
 import sqlmodel
 
+import models
+
 
 class Variant(sqlmodel.SQLModel, table=True):  # type: ignore
     __tablename__ = "variants"
@@ -19,7 +21,3 @@ class Variant(sqlmodel.SQLModel, table=True):  # type: ignore
     sku: str = sqlmodel.Field(index=True, nullable=False)
     status: str = sqlmodel.Field(index=True, nullable=False)
     stock_location_ids: list[int] = sqlmodel.Field(sa_column=sqlmodel.Column(sqlmodel.ARRAY(sqlmodel.INT)), default=[])
-
-    @property
-    def vendor_id(self):
-        return 0  #

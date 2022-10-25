@@ -11,8 +11,9 @@ DEFAULT_ALL = [0]
 
 
 class VariantPruleDocument:
-    def __init__(self, variant: models.Variant, prule: models.VariantPrule):
+    def __init__(self, variant: models.Variant, product: models.Product, prule: models.VariantPrule):
         self._variant = variant
+        self._product = product
         self._prule = prule
 
     def document(self) -> dict:
@@ -56,7 +57,7 @@ class VariantPruleDocument:
             "variant_sku": self._variant.sku,
             "variant_status": "enabled",
             "variant_stock_quantity": self._variant_stock_quantity(),
-            "vendor_id": self._variant.vendor_id,
+            "vendor_id": self._product.vendor_id,
         }
 
     def _rule_category_ids(self) -> list[int]:
