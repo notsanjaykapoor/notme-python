@@ -10,6 +10,10 @@ import sqlmodel.pool
 import dot_init  # noqa: F401
 import models
 import services.boot
+import typesearch
+
+# set app env
+os.environ["APP_ENV"] = "tst"
 
 test_db_name = os.environ.get("DATABASE_TEST_URL")
 connect_args: dict = {}
@@ -111,3 +115,17 @@ def neo_session_fixture():
     yield session
 
     services.boot.reset_graph(session)
+
+
+@pytest.fixture(name="typesense_session")
+def typesense_session_fixture():
+    client = typesearch.client(
+        uri=os.environ.get("TYPESENSE_URL"),
+        api_key=os.environ.get("TYPESENSE_API_KEY"),
+    )
+
+    yield client
+
+    # cleanup typesense collections
+    for collection in client.collections.retrieve():
+        client.collections[collection["name"]].delete()
