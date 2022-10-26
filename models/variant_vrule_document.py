@@ -5,6 +5,8 @@ import services.time
 
 DEFAULT_ALL = [0]
 
+DEFAULT_BATCH_ID = 0
+
 
 class VariantVruleDocument:
     def __init__(self, variant: models.Variant, product: models.Product, vrule: typing.Optional[models.VariantVrule]):
@@ -15,6 +17,7 @@ class VariantVruleDocument:
     def document(self) -> dict:
         return {
             "id": self._typesense_id(),
+            "batch_id": DEFAULT_BATCH_ID,
             "product_id": self._variant.product_id,
             "rule_category_ids": self._rule_category_ids(),
             "rule_dispensary_class_ids": self._rule_dispensary_class_ids(),
@@ -25,7 +28,7 @@ class VariantVruleDocument:
             "rule_start_unix": services.time.unix_zero(),
             "rule_type": self._rule_type(),
             "rule_variant_ids": [self._variant.id],
-            "rule_vendor_ids": DEFAULT_ALL,
+            "rule_vendor_id": self._product.vendor_id,
             "rule_version": self._rule_version(),
             "rule_visibility": self._rule_visibility(),
             "tags": self._tags(),
@@ -33,7 +36,6 @@ class VariantVruleDocument:
             "variant_sku": self._variant.sku,
             "variant_status": self._variant.status,
             "variant_stock_quantity": self._variant_stock_quantity(),
-            "vendor_id": self._product.vendor_id,
         }
 
     def _rule_category_ids(self) -> list[int]:

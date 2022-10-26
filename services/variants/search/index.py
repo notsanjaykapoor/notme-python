@@ -1,4 +1,5 @@
 import dataclasses
+import typing
 
 import sqlmodel
 import typesense
@@ -45,24 +46,22 @@ class Index:
 
             for rule in rules:
                 if not rule.variant_id:
-                    # todo - expand to variant ids
-                    pass
+                    if rule.product_id:
+                        variant_ids = self._vendor_variant_ids(vendor_id=rule.vendor_id, product_id=rule.product_id)
+                    else:
+                        variant_ids = [0]
                 else:
                     variant_ids = [rule.variant_id]
 
-                variants = self._db.exec(sqlmodel.select(models.Variant).where(models.Variant.id.in_(variant_ids))).all()
+                document = models.VariantPruleDocument(vendor_id=rule.vendor_id, variant_ids=variant_ids, prule=rule).document()
 
-                for variant in variants:
-                    product = self._db.exec(sqlmodel.select(models.Product).where(models.Product.id == variant.product_id)).first()
-                    document = models.VariantPruleDocument(variant, product, rule).document()
+                self._search_client.collections[collection_name].documents.create(document)
 
-                    self._search_client.collections[collection_name].documents.create(document)
+                count += 1
 
-                    count += 1
-
-                    self._logger.info(
-                        f"{context.rid_get()} {__name__} collection {collection_name} variant {variant.id} prule {rule.id} version {rule.version}"
-                    )
+                self._logger.info(
+                    f"{context.rid_get()} {__name__} collection {collection_name} prule {rule.id} variant_ids {variant_ids} version {rule.version}"
+                )
 
         return count
 
@@ -79,8 +78,7 @@ class Index:
 
             for rule in rules:
                 if not rule.variant_id:
-                    # todo - expand to variant ids
-                    pass
+                    variant_ids = self._vendor_variant_ids(vendor_id=rule.vendor_id, product_id=rule.product_id)
                 else:
                     variant_ids = [rule.variant_id]
 
@@ -137,8 +135,11 @@ class Index:
 
         return self._db.exec(dataset).all()
 
-    def _vendor_variant_ids(self, vendor_id: int) -> list[int]:
-        product_ids = self._vendor_product_ids(vendor_id=vendor_id)
+    def _vendor_variant_ids(self, vendor_id: int, product_id: typing.Optional[int] = None) -> list[int]:
+        if product_id:
+            product_ids = [product_id]
+        else:
+            product_ids = self._vendor_product_ids(vendor_id=vendor_id)
 
         dataset = (
             sqlmodel.select(

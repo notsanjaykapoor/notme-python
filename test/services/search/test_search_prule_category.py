@@ -87,7 +87,7 @@ def test_search__prule_with_category(session: sqlmodel.Session, typesense_sessio
         trigger_amount=5,
         trigger_operator="ge",
         trigger_unit="quantity",
-        variant_id=variant_1.id,
+        variant_id=None,
         vendor_id=vendor_1.id,
         version=1,
     )

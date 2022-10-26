@@ -98,7 +98,7 @@ def test_search__vrule_with_dispensary_class(session: sqlmodel.Session, typesens
     search_params = {
         "facet_by": "tags",
         "filter_by": services.variants.search.filter_terms(filter_by_terms),
-        "q": "variant 1",
+        "q": "1",
         "query_by": "variant_name",
         "sort_by": "rule_priority:desc",
     }

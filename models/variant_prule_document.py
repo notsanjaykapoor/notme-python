@@ -11,9 +11,9 @@ DEFAULT_ALL = [0]
 
 
 class VariantPruleDocument:
-    def __init__(self, variant: models.Variant, product: models.Product, prule: models.VariantPrule):
-        self._variant = variant
-        self._product = product
+    def __init__(self, vendor_id: int, variant_ids: list[int], prule: models.VariantPrule):
+        self._vendor_id = vendor_id
+        self._variant_ids = variant_ids
         self._prule = prule
 
     def document(self) -> dict:
@@ -32,9 +32,6 @@ class VariantPruleDocument:
 
         return {
             "id": self._typesense_id(),
-            "product_id": self._variant.product_id,
-            "product_name": "product name",
-            "product_status": "enabled",
             "rule_category_ids": self._rule_category_ids(),
             "rule_dispensary_class_ids": self._rule_dispensary_class_ids(),
             "rule_enabled": self._prule.enabled,
@@ -49,15 +46,12 @@ class VariantPruleDocument:
             "rule_scope": "item",
             "rule_start_unix": 0,
             "rule_stock_location_ids": self._rule_stock_location_ids(),
-            "rule_variant_ids": [self._variant.id],
-            "rule_vendor_ids": DEFAULT_ALL,
+            "rule_variant_ids": self._variant_ids,
+            "rule_vendor_id": self._vendor_id,
             "rule_version": self._prule.version,
             "tags": self._tags(),
-            "variant_name": self._variant.name,
-            "variant_sku": self._variant.sku,
             "variant_status": "enabled",
             "variant_stock_quantity": self._variant_stock_quantity(),
-            "vendor_id": self._product.vendor_id,
         }
 
     def _rule_category_ids(self) -> list[int]:
@@ -118,11 +112,10 @@ class VariantPruleDocument:
     def _tags(self) -> list[str]:
         return [
             f"prule-{self._prule.id}",
-            f"variant-{self._variant.id}",
         ]
 
     def _typesense_id(self) -> str:
-        return f"v:{self._variant.id}:prule:{self._prule.id}"
+        return f"prule:{self._prule.id}"
 
     def _variant_stock_quantity(self) -> int:
         return 1
