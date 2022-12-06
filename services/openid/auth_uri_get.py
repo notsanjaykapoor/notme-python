@@ -33,7 +33,7 @@ class AuthUriGet:
 
         self._logger.info(f"{context.rid_get()} {__name__} idp {self._idp} try")
 
-        if not re.match(self._idp, IDP_REGEX):
+        if not re.match(IDP_REGEX, self._idp):
             struct.code = 422
             struct.errors.append(IDP_ERROR)
             return struct

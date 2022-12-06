@@ -144,7 +144,7 @@ def openid_login(
         if struct_list.code != 0:
             return {"code": 409, "errors": ["user not found"]}
 
-        idp = struct_list.user.idp
+        idp = struct_list.objects[0].idp
 
     if not idp:
         return {"code": 422, "errors": ["idp is required"]}

@@ -44,7 +44,10 @@ class List:
         for token in struct_tokens.tokens:
             value = token["value"]
 
-            if token["field"] == "user_id":
+            if token["field"] == "email":
+                # match query
+                self._dataset = self._dataset.where(self._model.email == value)
+            elif token["field"] == "user_id":
                 if re.match(r"^~", value):
                     # like query
                     value_normal = re.sub(r"~", "", value)
