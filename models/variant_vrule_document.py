@@ -14,6 +14,8 @@ class VariantVruleDocument:
         self._product = product
         self._vrule = vrule
 
+        self._vendor_id = self._product.vendor_id
+
     def document(self) -> dict:
         return {
             "id": self._typesense_id(),
@@ -28,7 +30,7 @@ class VariantVruleDocument:
             "rule_start_unix": services.time.unix_zero(),
             "rule_type": self._rule_type(),
             "rule_variant_ids": [self._variant.id],
-            "rule_vendor_id": self._product.vendor_id,
+            "rule_vendor_id": self._vendor_id,
             "rule_version": self._rule_version(),
             "rule_visibility": self._rule_visibility(),
             "tags": self._tags(),
