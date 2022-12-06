@@ -16,6 +16,7 @@ app = typer.Typer()
 
 @app.command()
 def default(
+    authentik: bool = typer.Option(False, "--authentik"),
     neo: str = typer.Option("single", "--neo"),
     ksql: bool = typer.Option(False, "--ksql"),
     typesense: bool = typer.Option(False, "--typesense"),
@@ -24,6 +25,10 @@ def default(
 
     print("notme-postgres create container")
     subprocess.run(["docker-compose", "-p", "notme", "-f", "docker-compose/notme-postgres.yml", "up", "-d"])
+
+    if authentik:
+        print("notme-authentik create container")
+        subprocess.run(["docker-compose", "-p", "notme", "-f", "docker-compose/notme-authentik.yml", "up", "-d"])
 
     print(f"notme-neo4j {neo} create container(s)")
 
@@ -64,6 +69,9 @@ def default(
     subprocess.run(["docker-compose", "-p", "notme", "-f", "docker-compose/notme-redpanda.yml", "up", "-d"])
 
     print("notme-redpanda create topics - todo")
+
+    print("notme-datadog create container")
+    subprocess.run(["docker-compose", "-p", "notme", "-f", "docker-compose/notme-datadog.yml", "up", "-d"])
 
     if ksql:
         print("notme-ksql create container")

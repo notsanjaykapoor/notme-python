@@ -31,6 +31,7 @@ class Create:
         db_object = models.User(
             city=self._params.get("city"),
             email=self._params.get("email"),
+            idp=self._params.get("idp", ""),
             mobile=self._params.get("mobile"),
             state=self._params.get("state"),
             user_id=self._user_id,

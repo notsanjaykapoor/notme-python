@@ -1,0 +1,77 @@
+---
+version: '3.4'
+services:
+  redis:
+    image: docker.io/library/redis:alpine
+    command: --save 60 1 --loglevel warning
+    restart: unless-stopped
+    container_name: notme-redis
+    hostname: notme-redis
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      start_period: 20s
+      interval: 30s
+      retries: 5
+      timeout: 3s
+    volumes:
+      - ~/data/postgres:/data
+  authentik:
+    image: ${AUTHENTIK_IMAGE:-ghcr.io/goauthentik/server}:latest
+    restart: unless-stopped
+    command: server
+    container_name: notme-authentik
+    hostname: notme-authentik
+    environment:
+      AUTHENTIK_LOG_LEVEL: info
+      AUTHENTIK_REDIS__HOST: redis
+      AUTHENTIK_POSTGRESQL__HOST: notme-postgres
+      AUTHENTIK_POSTGRESQL__PORT: 5432
+      AUTHENTIK_POSTGRESQL__USER: postgres
+      AUTHENTIK_POSTGRESQL__NAME: ${PG_DB:-authentik}
+      AUTHENTIK_POSTGRESQL__PASSWORD: development
+      AUTHENTIK_SECRET_KEY: SfV8KlkbjWzfCKhlNU/LK+XUmNfItJp/MP0b6Fc65eC+dFNc
+      # AUTHENTIK_ERROR_REPORTING__ENABLED: "true"
+    volumes:
+      - ./media:/media
+      - ./custom-templates:/templates
+      # - geoip:/geoip
+    # env_file:
+    #   - .env
+    ports:
+      - "0.0.0.0:${AUTHENTIK_PORT_HTTP:-9000}:9000"
+      - "0.0.0.0:${AUTHENTIK_PORT_HTTPS:-9443}:9443"
+  authentic-worker:
+    image: ${AUTHENTIK_IMAGE:-ghcr.io/goauthentik/server}:latest
+    restart: unless-stopped
+    command: worker
+    container_name: notme-authentik-worker
+    hostname: notme-authentik-worker
+    environment:
+      AUTHENTIK_REDIS__HOST: notme-redis
+      AUTHENTIK_POSTGRESQL__HOST: notme-postgres
+      AUTHENTIK_POSTGRESQL__PORT: 5432
+      AUTHENTIK_POSTGRESQL__USER: postgres
+      AUTHENTIK_POSTGRESQL__NAME: ${PG_DB:-authentik}
+      AUTHENTIK_POSTGRESQL__PASSWORD: development
+      AUTHENTIK_SECRET_KEY: SfV8KlkbjWzfCKhlNU/LK+XUmNfItJp/MP0b6Fc65eC+dFNc
+      # AUTHENTIK_ERROR_REPORTING__ENABLED: "true"
+    # This is optional, and can be removed. If you remove this, the following will happen
+    # - The permissions for the /media folders aren't fixed, so make sure they are 1000:1000
+    # - The docker socket can't be accessed anymore
+    user: root
+    volumes:
+      - ./media:/media
+      - ./certs:/certs
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./custom-templates:/templates
+      # - geoip:/geoip
+    # env_file:
+    #   - .env
+
+# volumes:
+#   database:
+#     driver: local
+#   redis:
+#     driver: local
+#   geoip:
+#     driver: local

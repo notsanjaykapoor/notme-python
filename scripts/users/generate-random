@@ -35,6 +35,7 @@ def create(count: int = typer.Option(..., "--count")):
             user_params = {
                 "city": cities[random.randrange(len(cities))],
                 "email": fake.email(),
+                "idp": "default",
                 "mobile": mobile,
                 "state": "enabled",
             }

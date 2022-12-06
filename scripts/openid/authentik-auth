@@ -1,0 +1,43 @@
+#!/usr/bin/env python
+
+import os
+import sys
+
+import ulid
+
+sys.path.insert(1, os.path.join(sys.path[0], "../.."))
+
+import requests_oauthlib  # noqa: E402
+import typer  # noqa: E402
+
+import dot_init  # noqa: E402, F401
+import log
+
+logger = log.init("cli")
+
+app = typer.Typer()
+
+
+@app.command()
+def login(email: str = typer.Option("", "--email")):
+    client_id = os.environ.get("OPENID_AUTHENTIK_CLIENT_ID")
+    oauth_uri = os.environ.get("OPENID_AUTHENTIK_AUTH_URI")
+    redirect_uri = os.environ.get("OPENID_AUTHENTIK_REDIRECT_URI")
+    client_state = ulid.new().str
+
+    oauth_scope = [
+        "openid email",
+    ]
+
+    oauth_session = requests_oauthlib.OAuth2Session(client_id, redirect_uri=redirect_uri, scope=oauth_scope)
+
+    authorization_url, state = oauth_session.authorization_url(
+        oauth_uri,
+        state=client_state,
+    )
+
+    logger.info(f"authorize access url:\n{authorization_url}\n")
+
+
+if __name__ == "__main__":
+    app()

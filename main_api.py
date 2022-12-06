@@ -1,9 +1,15 @@
+import json
+import os
+import typing
+
 import datadog
+import requests_oauthlib
 import sqlmodel
-import strawberry  # noqa: E402
-import ulid  # noqa: E402
+import strawberry
+import ulid
 from fastapi import APIRouter, Depends, FastAPI, Request  # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.sessions import SessionMiddleware
 
 # from sqlmodel import Session  # noqa: E402
 from strawberry.fastapi import GraphQLRouter  # noqa: E402
@@ -16,6 +22,7 @@ import log  # noqa: E402
 import models  # noqa: E402
 import services.database.session  # noqa: E402
 import services.entities  # noqa: E402
+import services.openid
 import services.users  # noqa: E402
 import services.webauthn.auth
 import services.webauthn.register
@@ -67,6 +74,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.add_middleware(SessionMiddleware, secret_key=os.environ.get("FASTAPI_SESSION_KEY"), max_age=None)
+
 
 @app.on_event("startup")
 def on_startup():
@@ -100,12 +109,85 @@ def entities_list(query: str = "", offset: int = 0, limit: int = 100, db: sqlmod
     return struct.objects
 
 
+# kubernetes inspired health probes
+@app.get("/health")
+@app.get("/health/live")
+@app.get("/health/ready")
+@app.get("/health/startup")
+def api_health():
+    return {
+        "api": "up",
+    }
+
+
 @datadog.statsd.timed("api.ping", tags=["env:dev", "api:rest"])
 @app.get("/ping")
 def api_ping():
     return {
         "code": 0,
         "message": "pong",
+    }
+
+
+@app.get("/openid/auth")
+def openid_login(
+    db: sqlmodel.Session = Depends(get_db),
+    email: typing.Optional[str] = "",
+    idp: typing.Optional[str] = "",
+):
+    logger.info(f"{context.rid_get()} openid.auth")
+
+    if email:
+        # map email to idp
+        struct_list = services.users.List(db=db, query=f"email:{email}", offset=0, limit=1).call()
+
+        if struct_list.code != 0:
+            return {"code": 409, "errors": ["user not found"]}
+
+        idp = struct_list.user.idp
+
+    if not idp:
+        return {"code": 422, "errors": ["idp is required"]}
+
+    # map idp to auth uri
+
+    struct_auth = services.openid.AuthUriGet(idp=idp).call()
+
+    if struct_auth.code != 0:
+        return {"code": struct_auth.code, "errors": struct_auth.errors}
+
+    return {"code": 0, "uri": struct_auth.uri, "idp": idp}
+
+
+@app.get("/openid/authentik/callback")
+def openid_authentik_callback(request: Request, state: str, code: str):
+    logger.info(f"{context.rid_get()} openid.authentik.callback try")
+
+    struct_auth = services.openid.AuthCallback(idp="authentik", code=code, state=state).call()
+
+    if struct_auth.code == 0:
+        request.session["user_jwt"] = struct_auth.token
+        request.session["user_email"] = struct_auth.email
+
+    logger.info(f"{context.rid_get()} openid.authentik.callback completed")
+
+    return {
+        "code": struct_auth.code,
+        "errors": struct_auth.errors,
+    }
+
+
+@app.get("/openid/google/callback")
+def openid_google_callback(request: Request, state: str, code: str):
+    logger.info(f"{context.rid_get()} openid.google.callback try")
+
+    struct_auth = services.openid.AuthCallback(idp="google", code=code, state=state).call()
+
+    logger.info(f"{context.rid_get()} openid.google.callback completed")
+
+    return {
+        "code": struct_auth.code,
+        "errors": struct_auth.errors,
     }
 
 

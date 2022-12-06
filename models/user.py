@@ -21,6 +21,7 @@ class User(sqlmodel.SQLModel, table=True):  # type: ignore
     credentials_count: int = sqlmodel.Field(index=True, default=0)
     email: str = sqlmodel.Field(index=True, nullable=True)
     exported_at: datetime.datetime = sqlmodel.Field(nullable=True)  # syncing with search
+    idp: str = sqlmodel.Field(index=True, default="")  # identity provider, e.g. 'authentik', 'google'
     mobile: str = sqlmodel.Field(index=True, nullable=True)
     state: str = sqlmodel.Field(index=True, nullable=False)
     updated_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.utcnow, nullable=False)
