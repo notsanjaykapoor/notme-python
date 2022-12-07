@@ -9,9 +9,10 @@ DEFAULT_BATCH_ID = 0
 
 
 class VariantVruleDocument:
-    def __init__(self, variant: models.Variant, product: models.Product, vrule: typing.Optional[models.VariantVrule]):
+    def __init__(self, variant: models.Variant, product: models.Product, dispensary_class_id: int, vrule: typing.Optional[models.VariantVrule]):
         self._variant = variant
         self._product = product
+        self._dispensary_class_id = dispensary_class_id
         self._vrule = vrule
 
         self._vendor_id = self._product.vendor_id
@@ -34,6 +35,7 @@ class VariantVruleDocument:
             "rule_version": self._rule_version(),
             "rule_visibility": self._rule_visibility(),
             "tags": self._tags(),
+            "variant_id": self._variant.id,
             "variant_name": self._variant.name,
             "variant_sku": self._variant.sku,
             "variant_status": self._variant.status,
@@ -47,10 +49,7 @@ class VariantVruleDocument:
         return [self._vrule.category_id]
 
     def _rule_dispensary_class_ids(self) -> int:
-        if not self._vrule or not self._vrule.dispensary_class_id:
-            return DEFAULT_ALL
-
-        return [self._vrule.dispensary_class_id]
+        return [self._dispensary_class_id]
 
     def _rule_enabled(self) -> int:
         if not self._vrule:
@@ -96,7 +95,7 @@ class VariantVruleDocument:
         ]
 
     def _typesense_id(self) -> str:
-        return f"v:{self._variant.id}:vrule:{self._rule_id()}"
+        return f"v:{self._variant.id}:dc:{self._dispensary_class_id}:vrule:{self._rule_id()}"
 
     def _variant_stock_quantity(self) -> int:
         return 1

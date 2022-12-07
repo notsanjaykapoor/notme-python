@@ -22,10 +22,7 @@ def search(
     query: str = typer.Option("*", "--query"),
     query_by: str = typer.Option("", "--query-by"),
 ):
-    client = typesearch.client(
-        uri=os.environ["TYPESENSE_URL"],
-        api_key=os.environ["TYPESENSE_API_KEY"],
-    )
+    client = typesearch.client_default()
 
     search_params = {
         "q": query,

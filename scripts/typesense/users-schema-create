@@ -19,10 +19,7 @@ app = typer.Typer()
 
 @app.command()
 def create():
-    client = typesearch.client(
-        uri=os.environ.get("TYPESENSE_URL"),
-        api_key=os.environ.get("TYPESENSE_API_KEY"),
-    )
+    client = typesearch.client_default()
 
     collections = client.collections.retrieve()
     names = [collection["name"] for collection in collections]

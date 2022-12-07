@@ -19,8 +19,6 @@ class Create:
     def __init__(self, search_client: typesense.client.Client):
         self._search_client = search_client
 
-        self._collection_name = models.VariantPruleSchema.typesense_collection()
-        self._collection_schema = models.VariantPruleSchema.typesense_schema()
         self._logger = log.init("service")
 
     def call(self) -> Struct:

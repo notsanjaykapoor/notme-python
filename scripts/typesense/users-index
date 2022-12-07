@@ -27,10 +27,7 @@ app = typer.Typer()
 
 @app.command()
 def index():
-    client = typesearch.client(
-        uri=os.environ.get("TYPESENSE_URL"),
-        api_key=os.environ.get("TYPESENSE_API_KEY"),
-    )
+    client = typesearch.client_default()
 
     collection_name = models.User.typesense_collection()
 
