@@ -1,4 +1,5 @@
 import os
+import re
 
 import neo4j
 import pytest
@@ -10,6 +11,7 @@ import sqlmodel.pool
 import dot_init  # noqa: F401
 import models
 import services.boot
+import services.variants
 import typesearch
 
 # set app env
@@ -128,4 +130,93 @@ def typesense_session_fixture():
 
     # cleanup typesense collections
     for collection in client.collections.retrieve():
-        client.collections[collection["name"]].delete()
+        name = collection["name"]
+
+        if re.search("notme-tst", name):
+            client.collections[name].delete()
+
+
+@pytest.fixture(name="variant_session")
+def variant_session_fixture(session: sqlmodel.Session):
+    vendor_1 = models.Vendor(
+        name="Vendor 1",
+        slug="vendor-1",
+    )
+
+    session.add(vendor_1)
+    session.commit()
+
+    product_1 = models.Product(
+        category_ids=[],
+        description="",
+        name="Product 1",
+        price=1.00,
+        status="enabled",
+        vendor_id=vendor_1.id,
+    )
+
+    session.add(product_1)
+    session.commit()
+
+    variant_1 = models.Variant(
+        name="Variant 1",
+        price=1.00,
+        product_id=product_1.id,
+        sku="sku1",
+        status="private",  # private variant
+        stock_location_ids=[],
+    )
+
+    session.add(variant_1)
+    session.commit()
+
+    variant_2 = models.Variant(
+        name="Variant 2",
+        price=1.00,
+        product_id=product_1.id,
+        sku="sku1",
+        status="private",  # private variant
+        stock_location_ids=[],
+    )
+
+    session.add(variant_2)
+    session.commit()
+
+    rule_1 = models.VariantVrule(
+        category_id=None,
+        dispensary_class_id=None,
+        enabled=True,
+        override=False,
+        stock_location_id=None,
+        variant_id=variant_2.id,
+        vendor_id=vendor_1.id,
+        version=1,
+        visibility="enabled",
+    )
+
+    session.add(rule_1)
+    session.commit()
+
+    rule_2 = models.VariantVrule(
+        category_id=None,
+        dispensary_class_id=1,
+        enabled=True,
+        override=False,
+        stock_location_id=None,
+        variant_id=None,
+        vendor_id=vendor_1.id,
+        version=1,
+        visibility="enabled",
+    )
+
+    session.add(rule_2)
+    session.commit()
+
+    yield {
+        "vendors": [vendor_1],
+        "products": [product_1],
+        "variants": [variant_1, variant_2],
+        "rules": [rule_1],
+    }
+
+    services.variants.truncate(db=session)

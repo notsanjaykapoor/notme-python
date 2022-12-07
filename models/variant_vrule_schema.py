@@ -28,6 +28,7 @@ class VariantVruleSchema:
                 {"name": "rule_version", "type": "int64"},
                 {"name": "rule_visibility", "type": "string"},
                 {"name": "tags", "type": "string[]", "facet": True},
+                {"name": "variant_id", "type": "int64"},
                 {"name": "variant_name", "type": "string"},
                 {"name": "variant_sku", "type": "string"},
                 {"name": "variant_status", "type": "string"},  # 'enabled', 'private', 'disabled'

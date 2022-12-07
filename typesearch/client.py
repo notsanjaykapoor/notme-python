@@ -1,3 +1,5 @@
+import os
+
 import typesense
 
 
@@ -20,3 +22,14 @@ def client(uri: str, api_key: str) -> typesense.Client:
     )
 
     return client
+
+
+def client_default() -> typesense.Client:
+    return client(
+        uri=client_default_uri(),
+        api_key=os.environ.get("TYPESENSE_API_KEY"),
+    )
+
+
+def client_default_uri() -> str:
+    return os.environ.get("TYPESENSE_URL")
