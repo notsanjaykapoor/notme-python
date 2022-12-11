@@ -1,3 +1,4 @@
+from .consumer import consumer  # noqa: F401
 from .handler import Handler  # noqa: F401
 from .reader import Reader  # noqa: F401
 from .scheduler import Scheduler  # noqa: F401

@@ -16,14 +16,14 @@ class Struct:
 
 
 class Reader:
+    """reader class to consume kafka messages and call handler to process each message"""
+
     def __init__(self, topic: str, group: str, handler: kafka.Handler):
         self._topic = topic
         self._group = group
         self._handler = handler
 
-        kafka.config.config_reader["group.id"] = self._group
-
-        self._consumer = confluent_kafka.Consumer(kafka.config.config_reader)
+        self._consumer = confluent_kafka.Consumer(kafka.config.config_reader(group_id=self._group))
         self._timeout = 1.0
         self._topics = [self._topic]
         self._logger = log.init("service")
