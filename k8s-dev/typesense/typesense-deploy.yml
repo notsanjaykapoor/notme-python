@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notme-typesense
+  namespace: default
+  labels:
+    app: notme-typesense
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notme-typesense
+  template:
+    metadata:
+      labels:
+        app: notme-typesense
+    spec:
+      containers:
+      - name: notme-typesense
+        image: typesense/typesense:0.23.1
+        imagePullPolicy: Always
+        env:
+          - name: TYPESENSE_API_KEY
+            value: xyz
+          - name: TYPESENSE_DATA_DIR
+            value: /host-data/typesense # host file system
+        volumeMounts:
+          - mountPath: /host-data
+            name: host-volume
+      volumes:
+      - name: host-volume
+        hostPath:
+          path: /host-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: notme-typesense
+  name: notme-typesense
+spec:
+  ports:
+  - port: 8108
+    protocol: TCP
+  selector:
+    app: notme-typesense
+  type: NodePort
