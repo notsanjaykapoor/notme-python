@@ -18,7 +18,7 @@ class Writer:
     def __init__(self, topic: str):
         self._topic = topic
 
-        self._producer = confluent_kafka.Producer(kafka.config.config_writer)
+        self._producer = confluent_kafka.Producer(kafka.config.config_writer())
         self._logger = log.init("service")
 
     def call(self, key: str, message: typing.Union[dict, str]):

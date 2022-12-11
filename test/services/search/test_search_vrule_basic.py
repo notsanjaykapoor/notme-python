@@ -36,7 +36,7 @@ def test_search(session: sqlmodel.Session, typesense_session: typesense.client.C
         search_params=search_params,
     )
 
-    print(search_results)
+    # print(search_results)
 
     assert search_results["found"] == 1
 
@@ -56,6 +56,6 @@ def test_search(session: sqlmodel.Session, typesense_session: typesense.client.C
         search_params=search_params,
     )
 
-    print(search_results)
+    # print(search_results)
 
     assert search_results["found"] == 2
