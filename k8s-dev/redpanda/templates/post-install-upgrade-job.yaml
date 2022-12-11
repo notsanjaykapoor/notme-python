@@ -1,0 +1,49 @@
+---
+# Source: redpanda/templates/post-install-upgrade-job.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: redpanda-post-install
+  namespace: "default"
+  labels:
+    helm.sh/chart: redpanda-2.3.15
+    app.kubernetes.io/name: redpanda
+    app.kubernetes.io/instance: "redpanda"
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/component: redpanda
+  annotations:
+    # This is what defines this resource as a hook. Without this line, the
+    # job is considered part of the release.
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation
+    "helm.sh/hook-weight": "-10"
+spec:
+  template:
+    metadata:
+      generateName: "redpanda-post-"
+      labels:
+        app.kubernetes.io/name: redpanda
+        app.kubernetes.io/instance: "redpanda"
+        app.kubernetes.io/component: redpanda
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: redpanda-post-install
+        image: vectorized/redpanda:v22.3.5
+        command:
+            - bash
+            - -c
+        args:
+          - |
+            set -e
+        volumeMounts:
+          - name: redpanda
+            mountPath: /tmp/base-config
+          - name: config
+            mountPath: /etc/redpanda
+      volumes:
+        - name: redpanda
+          configMap:
+            name: redpanda
+        - name: config
+          emptyDir: {}

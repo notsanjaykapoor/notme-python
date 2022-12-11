@@ -1,0 +1,47 @@
+---
+# Source: redpanda/templates/post-upgrade.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: redpanda-post-upgrade
+  namespace: "default"
+  labels:
+    helm.sh/chart: redpanda-2.3.15
+    app.kubernetes.io/name: redpanda
+    app.kubernetes.io/instance: "redpanda"
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/component: redpanda
+  annotations:
+    # This is what defines this resource as a hook. Without this line, the
+    # job is considered part of the release.
+    "helm.sh/hook": post-upgrade
+    "helm.sh/hook-weight": "-5"
+spec:
+  template:
+    metadata:
+      name: "redpanda"
+      labels:
+        app.kubernetes.io/name: redpanda
+        app.kubernetes.io/instance: "redpanda"
+        app.kubernetes.io/component: redpanda
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: redpanda-post-upgrade
+        image: vectorized/redpanda:v22.3.5
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            rpk cluster config import -f /tmp/base-config/bootstrap.yaml --brokers redpanda-0.redpanda.default.svc.cluster.local.:9093,redpanda-1.redpanda.default.svc.cluster.local.:9093,redpanda-2.redpanda.default.svc.cluster.local.:9093 --api-urls redpanda-0.redpanda.default.svc.cluster.local.:9644  
+            rpk cluster config set storage_min_free_bytes 1073741824 --brokers redpanda-0.redpanda.default.svc.cluster.local.:9093,redpanda-1.redpanda.default.svc.cluster.local.:9093,redpanda-2.redpanda.default.svc.cluster.local.:9093 --api-urls redpanda-0.redpanda.default.svc.cluster.local.:9644  
+        volumeMounts:
+          - name: redpanda
+            mountPath: /tmp/base-config
+          - name: config
+            mountPath: /etc/redpanda
+      volumes:
+        - name: redpanda
+          configMap:
+            name: redpanda
+        - name: config
+          emptyDir: {}

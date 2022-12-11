@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notme-postgres
+  namespace: default
+  labels:
+    app: notme-postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notme-postgres
+  template:
+    metadata:
+      labels:
+        app: notme-postgres
+    spec:
+      containers:
+      - name: notme-postgres
+        image: notme-postgres:latest
+        imagePullPolicy: Never # use minikube registry
+        env:
+          - name: POSTGRES_PASSWORD
+            value: development
+          - name: POSTGRES_USER
+            value: postgres
+          - name: PGDATA
+            value: /host-data/postgres # host file system
+        volumeMounts:
+          - mountPath: /host-data
+            name: host-volume
+      volumes:
+      - name: host-volume
+        hostPath:
+          path: /host-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: notme-postgres
+  name: notme-postgres
+spec:
+  ports:
+  - port: 5432
+    protocol: TCP
+  selector:
+    app: notme-postgres
+  type: NodePort
