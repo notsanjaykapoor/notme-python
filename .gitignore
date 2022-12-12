@@ -9,3 +9,5 @@ sqlite*
 
 env/
 logs/
+.snaplet/snapshots
+.snaplet/structure.d.ts
