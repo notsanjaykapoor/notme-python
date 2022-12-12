@@ -18,7 +18,7 @@ spec:
       containers:
       - name: notme-neo
         image: arm64v8/neo4j:enterprise
-        imagePullPolicy: Always
+        imagePullPolicy: Never # use minikube registry
         env:
           - name: NEO4J_ACCEPT_LICENSE_AGREEMENT
             value: "yes"
