@@ -5,7 +5,6 @@ import typing
 import confluent_kafka
 
 import kafka.config
-import log
 
 
 @dataclasses.dataclass
@@ -19,7 +18,6 @@ class Writer:
         self._topic = topic
 
         self._producer = confluent_kafka.Producer(kafka.config.config_writer())
-        self._logger = log.init("service")
 
     def call(self, key: str, message: typing.Union[dict, str]):
         struct = Struct(0, [])
@@ -30,8 +28,6 @@ class Writer:
             value_str = message
         else:
             raise ValueError("invalid message")
-
-        self._logger.info(f"{__name__} topic '{self._topic}' message {value_str}")
 
         self._producer.produce(self._topic, key=key, value=value_str)
         self._producer.flush()
