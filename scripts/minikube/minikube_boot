@@ -1,0 +1,196 @@
+#!/usr/bin/env python
+
+import os
+import re
+import socket
+import subprocess
+import sys
+
+sys.path.insert(1, os.path.join(sys.path[0], "../.."))
+
+import dot_init
+import log
+
+logger = log.init("console")
+
+MINIKUBE_NAME = "minikube"
+
+MINIKUBE_MOUNT_STRING = "--mount-string=/Users/sanjaykapoor/data:/host-data"
+MINIKUBE_PORT_STRING = "--extra-config=apiserver.service-node-port-range=1-65535"
+
+
+def k8s_check(cluster_name: str) -> int:
+    try:
+        subprocess.run(["kubectl", "cluster-info", "--cluster", cluster_name], check=True)
+
+        logger.info(f"k8s {cluster_name} ok")
+
+        return 0
+    except Exception as e:
+        logger.error(f"k8s {cluster_name} exception {e}")
+        return 1
+
+
+def k8s_create(cluster_name: str) -> int:
+    logger.info(f"k8s cluster {cluster_name} creating ...")
+
+    try:
+        subprocess.run(["minikube", "start", "--mount=true", MINIKUBE_MOUNT_STRING, MINIKUBE_PORT_STRING], check=True)
+
+        logger.info(f"k8s cluster {cluster_name} created")
+
+        return 0
+    except Exception as e:
+        logger.error(f"k8s cluster {cluster_name} exception {e}")
+        return 1
+
+
+def k8s_pod_check(name: str) -> str:
+    result = subprocess.check_output(["kubectl", "get", "po", "--cluster", MINIKUBE_NAME])
+
+    lines = result.decode().split("\n")[1:]
+
+    for line in lines:
+        if re.search(name, line):
+            return name
+
+    return ""
+
+
+def k8s_services_start(cluster_name: str, service_name: str) -> int:
+    k8s_dirs = [
+        "k8s-dev/neo4j",
+        "k8s-dev/postgres",
+        "k8s-dev/redpanda/install",
+        "k8s-dev/typesense",
+    ]
+
+    for k8s_dir in k8s_dirs:
+        if not re.search(service_name, k8s_dir):
+            continue
+
+        try:
+            subprocess.run(["kubectl", "apply", "-k", k8s_dir], check=True)
+        except Exception as e:
+            logger.error(f"k8s deploy exception {k8s_dir} error {e}")
+            return 1
+
+    return 0
+
+
+def neo_check(uri: str, service: str = "neo") -> int:
+    try:
+        host, port = re.search("neo4j:\/\/(.*):(\d*)", uri).groups()
+
+        s = socket.socket()
+        s.connect((host, int(port)))
+        s.close()
+
+        logger.info(f"{service} ok")
+    except Exception as e:
+        logger.error(f"{service} exception {e}")
+        return 1
+
+    # initialize neo4j databases
+
+    for db in ["notme.dev", "notme.tst"]:
+        logger.info(f"{service} checking database {db}")
+
+        try:
+            subprocess.run(["cypher-shell", "-a", uri, f"create database {db} if not exists;"], check=True)
+        except Exception as e:
+            logger.error(f"{service} exception {e}")
+
+    return 0
+
+
+def postgres_check(uri: str, service: str = "postgres") -> int:
+    try:
+        m = re.search("postgresql:\/\/.*:.*@(.*):(\d*)\/.*", uri)
+
+        if not m:
+            logger.error(f"{service} connection string is invalid")
+            return 1
+
+        host = m[1]
+        port = int(m[2])
+
+        s = socket.socket()
+        s.connect((host, port))
+        s.close()
+
+        logger.info(f"{service} ok")
+
+        return 0
+    except Exception as e:
+        logger.error(f"{service} exception {e}")
+        return 1
+
+
+def redpanda_check(uri: str, service: str = "redpanda") -> int:
+    try:
+        m = re.search("(.*):(\d*)", uri)
+
+        if not m:
+            logger.error(f"{service} connection string is invalid")
+            return 1
+
+        host = m[1]
+        port = int(m[2])
+
+        s = socket.socket()
+        s.connect((host, port))
+        s.close()
+
+        logger.info(f"{service} ok")
+
+        return 0
+    except Exception as e:
+        logger.error(f"{service} exception {e}")
+        return 1
+
+
+def typesense_check(uri: str, service: str = "typesense") -> int:
+    try:
+        m = re.search("https?:\/\/(.*):(\d*)", uri)
+
+        if not m:
+            logger.error(f"{service} connection string is invalid")
+            return 1
+
+        host = m[1]
+        port = int(m[2])
+
+        s = socket.socket()
+        s.connect((host, port))
+        s.close()
+
+        logger.info(f"{service} ok")
+
+        return 0
+    except Exception as e:
+        logger.error(f"{service} exception {e}")
+        return 1
+
+
+if __name__ == "__main__":
+    if k8s_check(MINIKUBE_NAME) != 0:
+        # start minikube
+        if k8s_create(MINIKUBE_NAME) != 0:
+            exit(-1)
+
+    # check deployments
+    for service in ["postgres", "redpanda", "typesense", "neo"]:
+        pod_name = k8s_pod_check(name=service)
+
+        if pod_name:
+            logger.info(f"{service} deploy found")
+        else:
+            logger.info(f"{service} deploy starting ...")
+            k8s_services_start(cluster_name=MINIKUBE_NAME, service_name=service)
+
+    # check services
+    postgres_check(uri=os.environ["DATABASE_URL"])
+    neo_check(uri=os.environ["NEO4J_HOST_URL"])
+    redpanda_check(uri=os.environ["KAFKA_BROKERS"])
+    typesense_check(uri=os.environ["TYPESENSE_URL"])

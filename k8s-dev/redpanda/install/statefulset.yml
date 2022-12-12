@@ -42,6 +42,7 @@ spec:
               mountPath: /var/lib/redpanda/data
         - name: redpanda-configurator
           image: vectorized/redpanda:v22.3.5
+          imagePullPolicy: Never # use minikube registry
           command: ["/bin/sh", "-c"]
           env:
             - name: SERVICE_NAME
@@ -83,6 +84,8 @@ spec:
       containers:
         - name: redpanda
           image: vectorized/redpanda:v22.3.5
+          imagePullPolicy: Never # use minikube registry
+
           env:
             - name: SERVICE_NAME
               valueFrom:
