@@ -15,25 +15,27 @@ import log
 import services.kafka
 import services.tasks
 
-logger = log.init("cli")
-
 
 @prefect.flow()
 def rp_up_flow() -> int:
-    logger.info(f"rp_up_flow starting")
+    logger = prefect.get_run_logger()
 
     topic = services.kafka.topic_up()
+    key = ulid.new().str
 
-    key = services.tasks.rp_up_send_task(topic=topic)
+    logger.info(f"sending topic '{topic}' key '{key}'")
 
-    logger.info(f"rp_up_flow sent key {key}")
+    services.tasks.rp_up_send_task(topic=topic, key=key)
+
+    logger.info(f"checking topic '{topic}' key '{key}'")
 
     code = services.tasks.rp_up_consume_task(topic=topic, group="group-0", key=key)
 
-    logger.info(f"rp_up_flow completed key {key} code {code}")
-
     if code != 0:
+        logger.error(f"error topic '{topic}' key '{key}' code {code}")
         return prefect.orion.schemas.states.Failed(message=f"rp_up_flow error with code {code}")
+
+    logger.info(f"received topic '{topic}' key '{key}' code {code}")
 
     return code
 

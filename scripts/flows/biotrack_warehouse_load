@@ -1,0 +1,78 @@
+#!/usr/bin/env python
+
+import os
+import re
+import subprocess
+import sys
+
+sys.path.insert(1, os.path.join(sys.path[0], "../.."))
+
+import prefect
+import prefect.orion.schemas.states
+
+import dot_init  # noqa: E402, F401
+
+
+@prefect.flow()
+def biotrack_warehouse_load_flow(warehouse_uri: str, dump_dir: str) -> int:
+    logger = prefect.get_run_logger()
+    logger.info(f"loading source dir '{dump_dir}' to warehouse' {warehouse_uri}'")
+
+    biotrack_warehouse_drop_create(warehouse_uri)
+
+    for dump_file in os.listdir(dump_dir):
+        biotrack_warehouse_load_table(warehouse_uri=warehouse_uri, dump_dir=dump_dir, dump_file=dump_file)
+
+
+@prefect.task()
+def biotrack_warehouse_drop_create(warehouse_uri: str) -> int:
+    logger = prefect.get_run_logger()
+    logger.info(f"reset warehouse '{warehouse_uri}'")
+
+    # parse warehouse uri into db uri and name
+    db_uri, db_name = re.search("(.*\/\/.*)\/(.*)", warehouse_uri).groups()
+
+    try:
+        subprocess.run(["psql", db_uri, "-c", f"drop database {db_name}"], check=True)
+    except Exception as e:
+        logger.error(f"exception {e}")
+
+    try:
+        subprocess.run(["psql", db_uri, "-c", f"create database {db_name}"], check=True)
+    except Exception as e:
+        logger.error(f"exception {e}")
+
+    return 0
+
+
+@prefect.task()
+def biotrack_warehouse_load_table(warehouse_uri: str, dump_dir: str, dump_file: str) -> int:
+    logger = prefect.get_run_logger()
+    logger.info(f"loading source file '{dump_file}' to warehouse '{warehouse_uri}'")
+
+    # table_name = re.search(".*\.(.*)\.dump", dump_file).groups()
+
+    dump_path = f"{dump_dir}/{dump_file}"
+
+    # load table in sections; section post-data includes indexex, triggers, rules
+    for section in ["pre-data", "data"]:
+        try:
+            logger.info(f"loading source file '{dump_file}' section '{section}'")
+
+            if section == "post-data":
+                subprocess.run(
+                    ["pg_restore", "-d", warehouse_uri, f"--section={section}", "--no-owner", "-S", "postgres", "--disable-triggers", dump_path],
+                    check=True,
+                )
+            else:
+                subprocess.run(["pg_restore", "-d", warehouse_uri, f"--section={section}", "--no-owner", dump_path], check=True)
+
+        except Exception as e:
+            logger.error(f"exception {e}")
+            return 1
+
+    return 0
+
+
+if __name__ == "__main__":
+    biotrack_warehouse_load_flow(warehouse_uri=os.environ["BIOTRACK_WAREHOUSE_URI"], dump_dir="./data/biotrack")

@@ -1,0 +1,37 @@
+#!/usr/bin/env python
+
+import os
+import subprocess
+import sys
+
+sys.path.insert(1, os.path.join(sys.path[0], "../.."))
+
+import prefect
+import prefect.orion.schemas.states
+
+import dot_init  # noqa: E402, F401
+
+
+@prefect.flow()
+def biotrack_source_download_flow(biotrack_uri: str, table_name: str) -> int:
+    logger = prefect.get_run_logger()
+    logger.info(f"flow starting")
+
+    try:
+        # subprocess.run(["pg_dump", "-d", biotrack_uri, "-t", "inventory", "-v", ">", "biotrack.inventory.sql"], check=True)
+        subprocess.run(["pg_dump", "-Fc", "-d", biotrack_uri, "-t", "inventory", "--no-acl", "-v", ">", f"biotrack.{table_name}.dump"], check=True)
+
+        return 0
+    except Exception as e:
+        logger.error(f"flow exception {e}")
+        return 1
+
+
+if __name__ == "__main__":
+    biotrack_uri = os.environ["BIOTRACK_SOURCE_URI"]
+
+    table_names = [
+        "bmsi_labresults_potency_analysis",  # permission denied for sequence bmsi_labresults_potency_analysis_id_seq
+        "bmsi_labresults_samples",
+        "inventory",
+    ]

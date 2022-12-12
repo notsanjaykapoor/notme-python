@@ -1,11 +1,10 @@
 import prefect
-import ulid
 
 import kafka
 import models
 
 
-@prefect.task()
+@prefect.task(log_prints=True)
 def rp_up_consume_task(topic: str, group: str, key: str) -> int:
     """consume redpanda up message"""
 
@@ -13,6 +12,7 @@ def rp_up_consume_task(topic: str, group: str, key: str) -> int:
 
     consumer = kafka.consumer(topic=topic, group=group)
 
+    # wait up to 20 seconds for message
     consumer_timeout = 2.0
     consumer_exhausted = 20.0
     consumer_waited = 0.0
@@ -24,10 +24,11 @@ def rp_up_consume_task(topic: str, group: str, key: str) -> int:
             consumer_waited += consumer_timeout
 
             if consumer_waited >= consumer_exhausted:
-                code = 404
+                code = 408
+                print(f"topic '{topic}' group '{group}' timeout")
                 break
 
-            print(f"rp_up_consume_task topic {topic} group {group} waiting")
+            print(f"topic '{topic}' group '{group}' polling")
 
             continue
 
@@ -46,16 +47,15 @@ def rp_up_consume_task(topic: str, group: str, key: str) -> int:
 
 
 @prefect.task()
-def rp_up_send_task(topic: str) -> str:
+def rp_up_send_task(topic: str, key: str) -> int:
     """send redpanda up message"""
 
     writer = kafka.Writer(topic=topic)
-    key = ulid.new().str
+
     message = {
         "name": "up_check",
     }
 
-    # write message to kafka stream
     writer.call(key=key, message=message)
 
-    return key
+    return 0
