@@ -1,0 +1,18 @@
+#!/bin/sh
+
+usage()
+{
+  echo "Usage: $0 [-d database-url] [-p restore-path]"
+  exit 2
+}
+
+while getopts d:p:?h flag
+do
+    case "${flag}" in
+        d) db=${OPTARG};;
+        p) path=${OPTARG};;
+        h|?) usage ;;
+    esac
+done
+
+SNAPLET_DATABASE_URL=$db snaplet snapshot restore $path

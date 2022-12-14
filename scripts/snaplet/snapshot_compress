@@ -1,0 +1,17 @@
+#!/bin/sh
+
+usage()
+{
+  echo "Usage: $0 [-p snapshots-path]"
+  exit 2
+}
+
+while getopts d:p:?h flag
+do
+    case "${flag}" in
+        p) path=${OPTARG};;
+        h|?) usage ;;
+    esac
+done
+
+tar --zstd -cf snapshots.tar.zst $path

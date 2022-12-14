@@ -13,7 +13,7 @@ import log
 
 logger = log.init("console")
 
-MINIKUBE_NAME = "minikube"
+MINIKUBE = "minikube"
 
 MINIKUBE_MOUNT_STRING = "--mount-string=/Users/sanjaykapoor/data:/host-data"
 MINIKUBE_PORT_STRING = "--extra-config=apiserver.service-node-port-range=1-65535"
@@ -23,30 +23,41 @@ def k8s_check(cluster_name: str) -> int:
     try:
         subprocess.run(["kubectl", "cluster-info", "--cluster", cluster_name], check=True)
 
-        logger.info(f"k8s {cluster_name} ok")
+        logger.info(f"{cluster_name} started")
 
         return 0
     except Exception as e:
-        logger.error(f"k8s {cluster_name} exception {e}")
+        logger.error(f"{cluster_name} exception {e}")
         return 1
 
 
 def k8s_create(cluster_name: str) -> int:
-    logger.info(f"k8s cluster {cluster_name} creating ...")
+    logger.info(f"cluster {cluster_name} creating ...")
 
     try:
-        subprocess.run(["minikube", "start", "--mount=true", MINIKUBE_MOUNT_STRING, MINIKUBE_PORT_STRING], check=True)
+        subprocess.run(
+            [
+                "minikube",
+                "start",
+                "--cpus=4",
+                "--memory=6g",
+                "--mount=true",
+                MINIKUBE_MOUNT_STRING,
+                MINIKUBE_PORT_STRING,
+            ],
+            check=True,
+        )
 
-        logger.info(f"k8s cluster {cluster_name} created")
+        logger.info(f"cluster {cluster_name} created")
 
         return 0
     except Exception as e:
-        logger.error(f"k8s cluster {cluster_name} exception {e}")
+        logger.error(f"cluster {cluster_name} exception {e}")
         return 1
 
 
 def k8s_pod_check(name: str) -> str:
-    result = subprocess.check_output(["kubectl", "get", "po", "--cluster", MINIKUBE_NAME])
+    result = subprocess.check_output(["kubectl", "get", "po", "--cluster", MINIKUBE])
 
     lines = result.decode().split("\n")[1:]
 
@@ -70,7 +81,7 @@ def k8s_services_start(cluster_name: str, service_name: str) -> int:
             continue
 
         try:
-            subprocess.run(["kubectl", "apply", "-k", k8s_dir], check=True)
+            subprocess.run(["kubectl", "apply", "-k", k8s_dir, "--cluster", MINIKUBE], check=True)
         except Exception as e:
             logger.error(f"k8s deploy exception {k8s_dir} error {e}")
             return 1
@@ -174,23 +185,23 @@ def typesense_check(uri: str, service: str = "typesense") -> int:
 
 
 if __name__ == "__main__":
-    if k8s_check(MINIKUBE_NAME) != 0:
+    if k8s_check(MINIKUBE) != 0:
         # start minikube
-        if k8s_create(MINIKUBE_NAME) != 0:
+        if k8s_create(MINIKUBE) != 0:
             exit(-1)
 
     # check deployments
-    for service in ["postgres", "redpanda", "typesense", "neo"]:
+    for service in ["postgres", "redpanda", "typesense"]:  # neo
         pod_name = k8s_pod_check(name=service)
 
         if pod_name:
             logger.info(f"{service} deploy found")
         else:
             logger.info(f"{service} deploy starting ...")
-            k8s_services_start(cluster_name=MINIKUBE_NAME, service_name=service)
+            k8s_services_start(cluster_name=MINIKUBE, service_name=service)
 
     # check services
     postgres_check(uri=os.environ["DATABASE_URL"])
-    neo_check(uri=os.environ["NEO4J_HOST_URL"])
+    # neo_check(uri=os.environ["NEO4J_HOST_URL"])
     redpanda_check(uri=os.environ["KAFKA_BROKERS"])
     typesense_check(uri=os.environ["TYPESENSE_URL"])

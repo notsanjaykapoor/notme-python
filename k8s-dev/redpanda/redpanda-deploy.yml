@@ -1,33 +1,27 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: notme-postgres
+  name: notme-redpanda
   namespace: default
   labels:
-    app: notme-postgres
+    app: notme-redpanda
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: notme-postgres
+      app: notme-redpanda
   template:
     metadata:
       labels:
-        app: notme-postgres
+        app: notme-redpanda
     spec:
       containers:
-      - name: notme-postgres
-        image: notme-postgres:latest
+      - name: notme-redpanda
+        image: notme-redpanda:1.0
         imagePullPolicy: Never # use local registry
-        env:
-          - name: POSTGRES_PASSWORD
-            value: development
-          - name: POSTGRES_USER
-            value: postgres
-          - name: PGDATA
-            value: /host-data/postgres # host file system
+        command: ["/bin/sh", "-c", "rpk redpanda start --overprovisioned --smp 1 --kafka-addr PLAINTEXT://0.0.0.0:29092,OUTSIDE://0.0.0.0:9092 --advertise-kafka-addr PLAINTEXT://notme-redpanda:9092,OUTSIDE://notme-redpanda:9092"]
         ports:
-          - containerPort: 5432
+          - containerPort: 9092
             protocol: TCP
         volumeMounts:
           - mountPath: /host-data
@@ -41,13 +35,13 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: notme-postgres
-  name: notme-postgres
+    app: notme-redpanda
+  name: notme-redpanda
 spec:
   ports:
-    - port: 5433 # port exposed to external users
+    - port: 9092 # port exposed to external users
       protocol: TCP
-      targetPort: 5432
+      targetPort: 9092
   selector:
-    app: notme-postgres
+    app: notme-redpanda
   type: NodePort
