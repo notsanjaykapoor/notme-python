@@ -5,7 +5,7 @@ import models
 
 
 @prefect.task(log_prints=True)
-def rp_up_consume_task(topic: str, group: str, key: str) -> int:
+def rp_up_consume(topic: str, group: str, key: str) -> int:
     """consume redpanda up message"""
 
     code = -1
@@ -47,7 +47,7 @@ def rp_up_consume_task(topic: str, group: str, key: str) -> int:
 
 
 @prefect.task()
-def rp_up_send_task(topic: str, key: str) -> int:
+def rp_up_send(topic: str, key: str) -> int:
     """send redpanda up message"""
 
     writer = kafka.Writer(topic=topic)

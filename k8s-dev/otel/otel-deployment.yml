@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: opentelemetrycollector
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: opentelemetrycollector
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: opentelemetrycollector
+    spec:
+      containers:
+      - name: otelcol
+        args:
+        - --config=/conf/otel-collector.props.secret.yml
+        image: otel/opentelemetry-collector-contrib:0.67.0 # contrib image includes datadog exporter
+        volumeMounts:
+        - mountPath: /conf
+          name: otel-collector-config
+      volumes:
+      - configMap:
+          items:
+          - key: otel-collector.props.secret.yml
+            path: otel-collector.props.secret.yml
+          name: otel-collector-config
+        name: otel-collector-config

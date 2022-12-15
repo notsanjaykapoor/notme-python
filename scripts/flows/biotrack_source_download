@@ -13,7 +13,7 @@ import dot_init  # noqa: E402, F401
 
 
 @prefect.flow()
-def biotrack_source_download_flow(biotrack_uri: str, table_name: str) -> int:
+def biotrack_source_download(biotrack_uri: str, table_name: str) -> int:
     logger = prefect.get_run_logger()
     logger.info(f"flow starting")
 

@@ -9,5 +9,6 @@ sqlite*
 
 env/
 logs/
+**/*secret*.yml
 .snaplet/snapshots
 .snaplet/structure.d.ts

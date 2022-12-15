@@ -72,7 +72,7 @@ def k8s_services_start(cluster_name: str, service_name: str) -> int:
     k8s_dirs = [
         "k8s-dev/neo4j",
         "k8s-dev/postgres",
-        "k8s-dev/redpanda/install",
+        "k8s-dev/redpanda",
         "k8s-dev/typesense",
     ]
 

@@ -1,0 +1,32 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+      http:
+processors:
+  batch:
+    # Datadog APM Intake limit is 3.2MB, lets be conservative
+    send_batch_max_size: 1000
+    send_batch_size: 100
+    timeout: 10s
+exporters:
+  # example: https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/main/exporter/datadogexporter/examples/collector.yaml
+  datadog:
+    api:
+      key: "api-secret" # api key, sensitive
+      site: datadoghq.com
+    host_metadata:
+      enabled: false # disable gohai, causes runtime errors
+  logging:
+  otlphttp: # sumologic
+    endpoint: https://endpoint4.collection.sumologic.com/xxxx/yyyy/zzzz
+service:
+  pipelines:
+    metrics:
+      receivers: [prometheus]
+      processors: [batch]
+      exporters: [datadog]
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [datadog, logging, otlphttp]

@@ -17,7 +17,7 @@ import services.tasks
 
 
 @prefect.flow()
-def rp_up_flow() -> int:
+def rp_up() -> int:
     logger = prefect.get_run_logger()
 
     topic = services.kafka.topic_up()
@@ -25,11 +25,11 @@ def rp_up_flow() -> int:
 
     logger.info(f"sending topic '{topic}' key '{key}'")
 
-    services.tasks.rp_up_send_task(topic=topic, key=key)
+    services.tasks.rp_up_send(topic=topic, key=key)
 
     logger.info(f"checking topic '{topic}' key '{key}'")
 
-    code = services.tasks.rp_up_consume_task(topic=topic, group="group-0", key=key)
+    code = services.tasks.rp_up_consume(topic=topic, group="group-0", key=key)
 
     if code != 0:
         logger.error(f"error topic '{topic}' key '{key}' code {code}")
@@ -41,4 +41,4 @@ def rp_up_flow() -> int:
 
 
 if __name__ == "__main__":
-    rp_up_flow()
+    rp_up()

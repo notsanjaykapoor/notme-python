@@ -1,0 +1,8 @@
+resources:
+- otel-agent-configmap.yml
+- otel-deployment.yml
+- otel-service.yml
+configMapGenerator:
+- name: otel-collector-config
+  files:
+  - otel-collector.props.secret.yml

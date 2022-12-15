@@ -14,7 +14,7 @@ import dot_init  # noqa: E402, F401
 
 
 @prefect.flow()
-def biotrack_warehouse_load_flow(warehouse_uri: str, dump_dir: str) -> int:
+def biotrack_warehouse_load(warehouse_uri: str, dump_dir: str) -> int:
     logger = prefect.get_run_logger()
     logger.info(f"loading source dir '{dump_dir}' to warehouse' {warehouse_uri}'")
 
@@ -75,4 +75,4 @@ def biotrack_warehouse_load_table(warehouse_uri: str, dump_dir: str, dump_file: 
 
 
 if __name__ == "__main__":
-    biotrack_warehouse_load_flow(warehouse_uri=os.environ["BIOTRACK_WAREHOUSE_URI"], dump_dir="./data/biotrack")
+    biotrack_warehouse_load(warehouse_uri=os.environ["BIOTRACK_WAREHOUSE_URI"], dump_dir="./data/biotrack")
