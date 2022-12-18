@@ -10,6 +10,7 @@ import services.database
 import services.entities
 import services.entities.operators
 import services.entity_locations
+import services.graph
 import services.timely.flows
 import services.timely.inputs
 
@@ -79,6 +80,9 @@ def test_flow_json(session: sqlmodel.Session, neo_session: neo4j.Session, data_m
 
     for epoch, item in struct_flow_db_sync.output:
         print(f"{__name__} flow 2 epoch {epoch} item {item}")
+
+    if services.graph.status_up(neo=neo_session) != 0:
+        return
 
     struct_flow_graph_sync = services.timely.flows.EntityGraphSync(
         input=struct_flow_db_sync.output,

@@ -11,6 +11,7 @@ import sqlmodel.pool
 import dot_init  # noqa: F401
 import models
 import services.boot
+import services.graph
 import services.variants
 import typesearch
 
@@ -116,6 +117,10 @@ def neo_session_fixture():
 
     yield session
 
+    if services.graph.status_up(neo=session) != 0:
+        return
+
+    # reset iff neo4j is up and running
     services.boot.reset_graph(session)
 
 
@@ -219,4 +224,5 @@ def variant_session_fixture(session: sqlmodel.Session):
         "rules": [rule_1],
     }
 
+    services.variants.truncate(db=session)
     services.variants.truncate(db=session)

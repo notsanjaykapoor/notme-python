@@ -10,6 +10,7 @@ import services.database
 import services.entities
 import services.entities.operators
 import services.entity_locations
+import services.graph
 import services.timely.flows
 import services.timely.inputs
 
@@ -99,6 +100,9 @@ def test_flow_csv_user(session: sqlmodel.Session, neo_session: neo4j.Session, da
         limit=1024,
     ).call()
 
+    if services.graph.status_up(neo=neo_session) != 0:
+        return
+
     # assert len(struct_entities.objects) == 15
 
     struct_graph_sync = services.timely.flows.EntityGraphSync(
@@ -161,6 +165,9 @@ def test_flow_csv_user_random(session: sqlmodel.Session, neo_session: neo4j.Sess
         offset=0,
         limit=1024,
     ).call()
+
+    if services.graph.status_up(neo=neo_session) != 0:
+        return
 
     struct_graph_sync = services.timely.flows.EntityGraphSync(
         input=struct_db_sync.output,
