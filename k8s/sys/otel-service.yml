@@ -13,5 +13,5 @@ spec:
     protocol: TCP
     targetPort: 4318
   selector:
-    app.kubernetes.io/name: opentelemetrycollector
+    app.kubernetes.io/name: opentelemetrycollector-dev
   type: ClusterIP
