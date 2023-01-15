@@ -1,0 +1,150 @@
+#!/usr/bin/env python
+
+import glob
+import os
+import re
+import subprocess
+import sys
+
+sys.path.insert(1, os.path.join(sys.path[0], "../.."))
+
+import prefect
+import prefect.orion.schemas.states
+
+import dot_init  # noqa: E402, F401
+
+
+@prefect.flow()
+def biotrack_dw_load(warehouse_uri: str, dump_dir: str) -> int:
+    logger = prefect.get_run_logger()
+    logger.info(f"loading source tables in '{dump_dir}' to warehouse' {warehouse_uri}'")
+
+    # load schemas
+    for schema_file in glob.glob(f"{dump_dir}/*public*schema.sql"):
+        _biotrack_dw_load_schema(warehouse_uri=warehouse_uri, schema_file=schema_file)
+
+    # load data
+    for csv_file in glob.glob(f"{dump_dir}/*.csv"):
+        _biotrack_dw_load_csv(warehouse_uri=warehouse_uri, csv_file=csv_file)
+
+
+@prefect.task()
+def _biotrack_dw_drop_create(warehouse_uri: str) -> int:
+    logger = prefect.get_run_logger()
+    logger.info(f"reset warehouse '{warehouse_uri}'")
+
+    # parse warehouse uri into db uri and name
+    db_uri, db_name = re.search("(.*\/\/.*)\/(.*)", warehouse_uri).groups()
+
+    try:
+        subprocess.run(["psql", db_uri, "-c", f"drop database {db_name}"], check=True)
+    except Exception as e:
+        logger.error(f"exception {e}")
+
+    try:
+        subprocess.run(["psql", db_uri, "-c", f"create database {db_name}"], check=True)
+    except Exception as e:
+        logger.error(f"exception {e}")
+
+    return 0
+
+
+@prefect.task()
+def _biotrack_dw_load_csv(warehouse_uri: str, csv_file: str) -> int:
+    logger = prefect.get_run_logger()
+    logger.info(f"loading csv file '{csv_file}' to warehouse '{warehouse_uri}'")
+
+    _, table_name = re.search("(.*\.)(.*)\.csv", csv_file).groups()
+
+    try:
+        subprocess.run(
+            ["psql", "-d", warehouse_uri, "-c", f"\copy {table_name} from '{csv_file}' delimiter ',' csv header"],
+            check=True,
+            capture_output=False,
+            stdout=None,
+            stderr=None,
+        )
+    except Exception as e:
+        logger.error(f"psql exception {e}")
+        return 1
+
+    return 0
+
+
+@prefect.task()
+def _biotrack_dw_load_schema(warehouse_uri: str, schema_file: str) -> int:
+    logger = prefect.get_run_logger()
+    logger.info(f"loading schema file '{schema_file}' to warehouse '{warehouse_uri}'")
+
+    _, table_name = re.search("(.*\.)(.*)\.schema\.sql", schema_file).groups()
+
+    try:
+        subprocess.run(
+            ["psql", "-d", warehouse_uri, "-c", f"drop table if exists {table_name};"], check=True, capture_output=False, stdout=None, stderr=None
+        )
+    except Exception as e:
+        logger.error(f"psql exception {e}")
+        return 1
+
+    try:
+        cmd = f"psql -d {warehouse_uri} -f {schema_file}"
+        subprocess.run(cmd.split(" "), check=True, capture_output=False, stdout=None, stderr=None)
+    except Exception as e:
+        logger.error(f"psql exception {e}")
+        return 1
+
+    return 0
+
+
+@prefect.task()
+def _biotrack_dw_load_table(warehouse_uri: str, dump_file: str) -> int:
+    logger = prefect.get_run_logger()
+    logger.info(f"loading source file '{dump_file}' to warehouse '{warehouse_uri}'")
+
+    _, table_name = re.search("(.*\.)(.*)\.sql", dump_file).groups()
+
+    breakpoint()
+
+    try:
+        # cmd = "psql -d {warehouse_uri} -c 'drop table if exists {table_name}'"
+        subprocess.run(
+            ["psql", "-d", warehouse_uri, "-c", f"'drop table if exists {table_name};'"], check=True, capture_output=False, stdout=None, stderr=None
+        )
+    except Exception as e:
+        logger.error(f"psql exception {e}")
+
+    try:
+        cmd = "psql -d {warehouse_uri} -f {dump_file}"
+        subprocess.run(cmd.split(" "), check=True, capture_output=False, stdout=None, stderr=None)
+    except Exception as e:
+        logger.error(f"psql exception {e}")
+        return 1
+
+    # load table in sections; section post-data includes indexex, triggers, rules
+    # for section in ["pre-data", "data"]:
+    #     try:
+    #         logger.info(f"loading source file '{dump_file}' section '{section}'")
+
+    #         if section == "post-data":
+    #             cmd = f"pg_restore -d {warehouse_uri} --section={section} --no-owner -S postgres --disable-triggers {dump_file}"
+    #             # print(cmd)
+
+    #             # subprocess.run(
+    #             #     ["pg_restore", "-d", warehouse_uri, f"--section={section}", "--no-owner", "-S", "postgres", "--disable-triggers", dump_file],
+    #             #     check=True,
+    #             # )
+    #         else:
+    #             cmd = f"pg_restore -d {warehouse_uri} --section={section} --no-owner {dump_file}"
+    #             # print(cmd)
+    #             # subprocess.run(["pg_restore", "-d", warehouse_uri, f"--section={section}", "--no-owner", dump_file], check=True)
+
+    #         subprocess.run(cmd.split(" "), check=True, capture_output=False, stdout=None, stderr=None)
+    #     except Exception as e:
+    #         logger.error(f"exception {e}")
+    #         return 1
+
+    return 0
+
+
+if __name__ == "__main__":
+    biotrack_dw_load(warehouse_uri=os.environ["BIOTRACK_WAREHOUSE_URI"], dump_dir="./data/biotrack")

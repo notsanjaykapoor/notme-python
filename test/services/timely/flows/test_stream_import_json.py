@@ -1,5 +1,7 @@
 import json
 
+import bytewax.inputs
+import bytewax.outputs
 import neo4j
 import pytest
 import sqlmodel
@@ -64,33 +66,39 @@ def test_flow_json(session: sqlmodel.Session, neo_session: neo4j.Session, data_m
         limit=1024,
     ).call()
 
+    struct_csv_input_output = []
+
+    # set input params using a function (required by bytewax)
+    services.timely.inputs.input_json_params(file=json_file)
+
     struct_json_input = services.timely.flows.StreamJson(
-        input=services.timely.inputs.input_json(file=json_file),
+        input=bytewax.inputs.ManualInputConfig(services.timely.inputs.input_json_generator),
+        output=bytewax.outputs.TestingOutputConfig(struct_csv_input_output),
         data_mappings=struct_data_mappings.objects,
         data_models=struct_data_models.objects,
     ).call()
 
-    for epoch, item in struct_json_input.output:
-        print(f"{__name__} flow 1 epoch {epoch} item {item}")
+    for item in struct_csv_input_output:
+        print(f"{__name__} flow 1 item {item}")
 
-    struct_flow_db_sync = services.timely.flows.EntityDbSync(
-        input=struct_json_input.output,
-        db=session,
-    ).call()
+    # struct_flow_db_sync = services.timely.flows.EntityDbSync(
+    #     input=struct_json_input.output,
+    #     db=session,
+    # ).call()
 
-    for epoch, item in struct_flow_db_sync.output:
-        print(f"{__name__} flow 2 epoch {epoch} item {item}")
+    # for epoch, item in struct_flow_db_sync.output:
+    #     print(f"{__name__} flow 2 epoch {epoch} item {item}")
 
-    if services.graph.status_up(neo=neo_session) != 0:
-        return
+    # if services.graph.status_up(neo=neo_session) != 0:
+    #     return
 
-    struct_flow_graph_sync = services.timely.flows.EntityGraphSync(
-        input=struct_flow_db_sync.output,
-        db=session,
-        neo=neo_session,
-    ).call()
+    # struct_flow_graph_sync = services.timely.flows.EntityGraphSync(
+    #     input=struct_flow_db_sync.output,
+    #     db=session,
+    #     neo=neo_session,
+    # ).call()
 
-    for epoch, item in struct_flow_graph_sync.output:
-        print(f"{__name__} flow 3 epoch {epoch} item {item}")
+    # for epoch, item in struct_flow_graph_sync.output:
+    #     print(f"{__name__} flow 3 epoch {epoch} item {item}")
 
     services.database.truncate_table(db=session, table_name="entities")

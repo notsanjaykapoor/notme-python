@@ -1,4 +1,5 @@
 import dataclasses
+import json
 import os
 import sys
 import typing
@@ -6,7 +7,10 @@ import typing
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
 import bytewax  # # noqa: E402
-import bytewax.inputs  # # noqa: E402
+import bytewax.dataflow  # # noqa: E402
+import bytewax.execution  # noqa: E402
+import bytewax.inputs  # noqa: E402
+import bytewax.outputs  # noqa: E402
 
 import log  # noqa: E402
 import models  # noqa: E402
@@ -17,7 +21,6 @@ DATA_MODELS_STATIC = {"name": {"type": "string"}}
 @dataclasses.dataclass
 class Struct:
     code: int
-    output: list[tuple[int, dict]]
     errors: list[str]
 
 
@@ -26,8 +29,15 @@ class StreamCsv:
     timely dataflow to import a csv data stream
     """
 
-    def __init__(self, input: typing.Callable, data_mapping: models.DataMapping, data_models: list[models.DataModel]):
+    def __init__(
+        self,
+        input: bytewax.inputs.InputConfig,
+        output: bytewax.outputs.OutputConfig,
+        data_mapping: models.DataMapping,
+        data_models: list[models.DataModel],
+    ):
         self._input = input
+        self._output = output
         self._data_mapping = data_mapping
         self._data_models = data_models
 
@@ -40,15 +50,16 @@ class StreamCsv:
         self._logger = log.init("service")
 
     def call(self) -> Struct:
-        struct = Struct(0, [], [])
+        struct = Struct(0, [])
 
-        data_flow = bytewax.Dataflow()
+        data_flow = bytewax.dataflow.Dataflow()
+        data_flow.input("input", self._input)
         data_flow.map(self._map_clean)
         data_flow.map(self._map_transform)
         data_flow.map(self._map_derived)
-        data_flow.capture()
+        data_flow.capture(self._output)
 
-        struct.output = bytewax.run(data_flow, self._input)
+        bytewax.execution.run_main(data_flow)
 
         return struct
 
@@ -128,3 +139,13 @@ class StreamCsv:
             object_normal[name_slug] = values
 
         return object_normal
+
+    def _output_builder(self, worker_index, worker_count):
+        def output_handler(item):
+            breakpoint()  # xxx
+
+            line = json.dumps(item)
+            print(line)
+            return line
+
+            # return output_handler

@@ -17,7 +17,6 @@ import models  # noqa: E402
 @dataclasses.dataclass
 class Struct:
     code: int
-    output: list[tuple[int, dict]]
     errors: list[str]
 
 
@@ -26,22 +25,30 @@ class StreamJson:
     timely dataflow to import a json data stream
     """
 
-    def __init__(self, input: typing.Callable, data_mappings: list[models.DataMapping], data_models: list[models.DataModel]):
+    def __init__(
+        self,
+        input: bytewax.inputs.InputConfig,
+        output: bytewax.outputs.OutputConfig,
+        data_mappings: list[models.DataMapping],
+        data_models: list[models.DataModel],
+    ):
         self._input = input
+        self._output = output
         self._data_mappings = data_mappings
         self._data_models = data_models
 
         self._logger = log.init("service")
 
     def call(self) -> Struct:
-        struct = Struct(0, [], [])
+        struct = Struct(0, [])
 
-        data_flow = bytewax.Dataflow()
+        data_flow = bytewax.dataflow.Dataflow()
+        data_flow.input("input", self._input)
         data_flow.map(self._map_clean)
         data_flow.map(self._map_normalize)
-        data_flow.capture()
+        data_flow.capture(self._output)
 
-        struct.output = bytewax.run(data_flow, self._input)
+        bytewax.execution.run_main(data_flow)
 
         return struct
 

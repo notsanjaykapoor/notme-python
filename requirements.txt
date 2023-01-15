@@ -16,7 +16,7 @@ attrs==21.4.0
 backcall==0.2.0
 backports.cached-property==1.0.1
 black==22.12.0
-bytewax==0.10.0
+bytewax==0.14.0
 cachetools==5.2.0
 cbor2==5.4.3
 certifi==2022.6.15
