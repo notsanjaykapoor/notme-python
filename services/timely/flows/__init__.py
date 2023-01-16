@@ -4,4 +4,4 @@ from .entity_db_sync import EntityDbSync  # noqa: F401
 from .entity_graph_sync import EntityGraphSync  # noqa: F401
 from .entity_import import EntityImport  # noqa: F401
 from .stream_csv import StreamCsv  # noqa: F401
-from .stream_json import StreamJson  # noqa: F401
+from .stream_json import stream_json  # noqa: F401

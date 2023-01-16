@@ -71,12 +71,12 @@ def test_flow_json(session: sqlmodel.Session, neo_session: neo4j.Session, data_m
     # set input params using a function (required by bytewax)
     services.timely.inputs.input_json_params(file=json_file)
 
-    struct_json_input = services.timely.flows.StreamJson(
+    struct_json_input = services.timely.flows.stream_json(
         input=bytewax.inputs.ManualInputConfig(services.timely.inputs.input_json_generator),
         output=bytewax.outputs.TestingOutputConfig(struct_csv_input_output),
         data_mappings=struct_data_mappings.objects,
         data_models=struct_data_models.objects,
-    ).call()
+    )
 
     for item in struct_csv_input_output:
         print(f"{__name__} flow 1 item {item}")
