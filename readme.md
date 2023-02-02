@@ -2,18 +2,17 @@
 
 Install python 3.10.
 
-Install python packages with pip:
+Create python virtual env:
+
+```
+pyenv virtualenv 3.10.8 notme
+pyenv activate notme
+```
+
+Install python packages:
 
 ```
 pip install -r requirements.txt
-```
-
-### Ansible
-
-Start containers:
-
-```
-ansible-playbook ./ansible/playbook.yml -i ./ansible/inventories/hosts
 ```
 
 ### Api Example
@@ -21,19 +20,19 @@ ansible-playbook ./ansible/playbook.yml -i ./ansible/inventories/hosts
 Start server:
 
 ```
-./scripts/py-api
+./scripts/py-api -p 8001
 ```
 
 List users using curl (api server required):
 
 ```
-curl http://127.0.0.1:8001/users
+curl http://127.0.0.1:8001/api/v1/users
 ```
 
 List users using python client (api server not required):
 
 ```
-python ./runners/py-cli.py user-search
+./tty/py-cli user-search
 ```
 
 Create user (api server not required):
@@ -60,23 +59,7 @@ Start 2 consoles with different user ids and send messages:
 ./tty/ws-console.py --user-id user-2
 ```
 
-### Kafka + Redpanda
-
-Kafka install:
-
-```
-docker-compose -f docker-compose-kafka.yml up -d
-```
-
-Kafka topic create:
-
-```
-docker exec -it broker kafka-topics --bootstrap-server broker:9092 --create --topic chess
-
-docker exec -it broker kafka-topics --bootstrap-server broker:9092 --create --topic crypto
-
-docker exec -it broker kafka-topics --bootstrap-server broker:9092 --list
-```
+### Redpanda
 
 Redpanda install:
 
@@ -86,34 +69,37 @@ Install rpk binary:
 brew install redpanda-data/tap/redpanda
 ```
 
-```
-docker-compose -f docker-compose-redpanda.yml up -d
+Redpanda topic list:
 
 ```
-
-Redpanda topic create:
-
-```
-rpk topic create chess --brokers=localhost:9092
-
-rpk topic create crypto --brokers=localhost:9092
-
-rpk topic list --brokers=localhost:9092
+rpk topic list --brokers=redpanda-dev:9092
 ```
 
 The crypto example uses an actor based server that reads from a kafka topic with a set of actors to process each message.
 
-Create 'crypto' topic (see above) before running this example.
+Create 'crypto' topic:
 
 ```
-./tty/crypto-server.py --app crypto
+rpk topic create crypto --brokers=redpanda-dev:9092
+```
 
-./tty/crypto-client.py --topic crypto
+Run the server and then the client:
+
+```
+./tty/crypto-server --app crypto
+
+./tty/crypto-client --topic crypto
 ```
 
 The chess example ...
 
-Create 'chess' topic (see above) before running this example.
+Create 'chess' topic:
+
+```
+rpk topic create chess --brokers=redpanda-dev:9092
+```
+
+Run the server and then the client:
 
 ```
 ./tty/chess-kafka-server.py --app chess
@@ -130,7 +116,7 @@ The benchmarks for this example comparing kafka vs redpanda:
 Publish general kafka message to a specific topic:
 
 ```
-./tty/py-cli topic-write  --topic test
+./tty/py-cli topic-write --topic test --brokers=redpanda-dev:9092
 ```
 
 ### Zerorpc Example
@@ -258,28 +244,6 @@ Load graph data:
 Total nodes: 3169
 Total relationships: 9742
 
-### Memgraph Example
-
-Docker install: (https://hub.docker.com/r/memgraph/memgraph)
-
-```
-docker-compose -f docker-compose-memgraph.yml up -d
-
-```
-
-Run mg_client interactive client in a python shell:
-
-```
-import mgclient
-
-conn = mgclient.connect(host='127.0.0.1', port=7687)
-
-cursor = conn.cursor()
-
-query = "match (n) return count(*)"
-
-cursor.execute(query); rows = cursor.fetchall(); rows
-```
 
 ### Datadog
 

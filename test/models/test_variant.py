@@ -58,6 +58,7 @@ def test_variant(session: sqlmodel.Session):
         sku="sku1",
         status="active",
         stock_location_ids=[stock_1.id],
+        version=0,
     )
 
     session.add(variant_1)

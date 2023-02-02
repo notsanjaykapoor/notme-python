@@ -9,19 +9,8 @@ import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
-import asyncio
-import json
-import logging
-import signal
-import time
-from typing import Optional
-
 import typer
 import ulid
-import uvloop
-import websocket
-from database import engine
-from sqlmodel import Session, SQLModel
 
 import kafka
 import log

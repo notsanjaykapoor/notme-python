@@ -30,7 +30,10 @@ class VariantPruleSchema:
                 {"name": "rule_vendor_id", "type": "int64"},
                 {"name": "rule_version", "type": "int64"},
                 {"name": "tags", "type": "string[]", "facet": True},
-                {"name": "variant_status", "type": "string"},  # 'enabled', 'private', 'disabled'
+                {
+                    "name": "variant_status",
+                    "type": "string",
+                },  # 'enabled', 'private', 'disabled'
                 {"name": "variant_stock_quantity", "type": "int64"},
             ],
             "token_separators": ["+", "-", "@", "."],  # for email

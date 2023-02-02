@@ -20,7 +20,7 @@ logger = log.init("cli")
 host = "localhost"
 port = int(os.environ["NOISE_SERVER_PORT"])
 
-logger.info(f"noise client starting")
+logger.info("noise client starting")
 
 sock = socket.socket()
 sock.connect((host, port))

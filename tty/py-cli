@@ -2,7 +2,7 @@
 
 from dotenv import load_dotenv
 
-load_dotenv()  # take environment variables from .env.
+load_dotenv()  # read .env
 
 import asyncio  # noqa: E402
 import json  # noqa: E402
@@ -152,6 +152,8 @@ async def topic_read_async(topic: str = typer.Option(...), group: str = "python"
 def topic_write(topic: str = typer.Option(...), key: str = typer.Option(...)):
     # todo: use async?
 
+    logger.info(f"topic write '{topic}' key '{key}'")
+
     writer = kafka.Writer(topic=topic)
 
     writer.call(
@@ -162,6 +164,8 @@ def topic_write(topic: str = typer.Option(...), key: str = typer.Option(...)):
         },
     )
 
+    logger.info(f"topic write '{topic}' completed")
+
 
 @app.command()
 def user_create(name: str = typer.Option(...)):
@@ -171,13 +175,13 @@ def user_create(name: str = typer.Option(...)):
         struct_get = services.users.Get(db=db, user_id=name).call()
 
         if struct_get.user:
-            logger.info(f"cli result user {name} exists")
+            logger.info(f"user '{name}' exists")
             return 0
 
         struct_create = services.users.Create(db=db, user_id=name).call()
 
         if struct_create.code == 0:
-            logger.info(f"cli result user {name} created")
+            logger.info(f"user '{name}' created")
 
         return struct_create.id
 
@@ -188,13 +192,13 @@ def user_search(query: str = ""):
         service = services.users.List(db, query, 0, 10)
         struct = service.call()
 
-        for user in struct.users:
-            logger.info(f"cli result {user}")
+        for user in struct.objects:
+            logger.info(f"user - {user}")
 
 
 @app.command()
 def ws_send(message: str = "hey"):
-    logger.info(f"cli websocket sending '{message}'")
+    logger.info(f"websocket sending '{message}'")
 
     ws = websocket.WebSocket()
     ws.connect(f"{os.environ['WS_URL']}/ws")

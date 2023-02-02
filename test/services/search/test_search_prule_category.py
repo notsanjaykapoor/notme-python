@@ -6,7 +6,9 @@ import services.variants
 import services.variants.search
 
 
-def test_search__prule_with_category(session: sqlmodel.Session, typesense_session: typesense.client.Client):
+def test_search__prule_with_category(
+    session: sqlmodel.Session, typesense_session: typesense.client.Client
+):
     # variant with category setup
 
     vendor_1 = models.Vendor(
@@ -68,6 +70,7 @@ def test_search__prule_with_category(session: sqlmodel.Session, typesense_sessio
         sku="sku1",
         status="enabled",
         stock_location_ids=[],
+        version=0,
     )
 
     session.add(variant_1)
@@ -97,11 +100,13 @@ def test_search__prule_with_category(session: sqlmodel.Session, typesense_sessio
 
     # create index
 
-    services.variants.search.Create(search_client=typesense_session).call()
+    services.variants.search.Create(ts_client=typesense_session).call()
 
     # index objects
 
-    struct_index = services.variants.search.Index(db=session, search_client=typesense_session).call()
+    struct_index = services.variants.search.Index(
+        db=session, ts_client=typesense_session
+    ).call()
 
     assert struct_index.count == 2
 
@@ -119,9 +124,9 @@ def test_search__prule_with_category(session: sqlmodel.Session, typesense_sessio
     }
 
     search_results = services.variants.search.query(
-        search_client=typesense_session,
-        search_collection=models.VariantPruleSchema.typesense_collection(),
-        search_params=search_params,
+        ts_client=typesense_session,
+        ts_collection=models.VariantPruleSchema.typesense_collection(),
+        ts_params=search_params,
     )
 
     assert search_results["found"] == 1
@@ -140,9 +145,9 @@ def test_search__prule_with_category(session: sqlmodel.Session, typesense_sessio
     }
 
     search_results = services.variants.search.query(
-        search_client=typesense_session,
-        search_collection=models.VariantPruleSchema.typesense_collection(),
-        search_params=search_params,
+        ts_client=typesense_session,
+        ts_collection=models.VariantPruleSchema.typesense_collection(),
+        ts_params=search_params,
     )
 
     assert search_results["found"] == 0

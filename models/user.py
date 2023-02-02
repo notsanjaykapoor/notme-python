@@ -9,7 +9,7 @@ STATE_DISABLED = "disabled"
 STATE_ENABLED = "enabled"
 
 
-class User(sqlmodel.SQLModel, table=True):  # type: ignore
+class User(sqlmodel.SQLModel, table=True):
     __tablename__ = "users"
     __table_args__ = (
         sqlalchemy.UniqueConstraint("email", name="_email"),
@@ -20,11 +20,17 @@ class User(sqlmodel.SQLModel, table=True):  # type: ignore
     city: str = sqlmodel.Field(index=True, nullable=True)
     credentials_count: int = sqlmodel.Field(index=True, default=0)
     email: str = sqlmodel.Field(index=True, nullable=True)
-    exported_at: datetime.datetime = sqlmodel.Field(nullable=True)  # syncing with search
-    idp: str = sqlmodel.Field(index=True, default="")  # identity provider, e.g. 'authentik', 'google'
+    exported_at: datetime.datetime = sqlmodel.Field(
+        nullable=True
+    )  # syncing with search
+    idp: str = sqlmodel.Field(
+        index=True, default=""
+    )  # identity provider, e.g. 'authentik', 'google'
     mobile: str = sqlmodel.Field(index=True, nullable=True)
     state: str = sqlmodel.Field(index=True, nullable=False)
-    updated_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.utcnow, nullable=False)
+    updated_at: datetime.datetime = sqlmodel.Field(
+        default_factory=datetime.datetime.utcnow, nullable=False
+    )
     user_id: str = sqlmodel.Field(index=True, nullable=False)
 
     @property
@@ -49,14 +55,13 @@ class User(sqlmodel.SQLModel, table=True):  # type: ignore
 
     @classmethod
     def typesense_collection(cls) -> str:
-        return f"users-{os.environ['APP_ENV']}"
+        return f"users-{os.environ['TYPESENSE_ENV']}"
 
-    @property
     def typesense_document(self) -> dict:
         return {
             "city": self.city or "",
             "email": self.email,
-            "id": str(self.id),
+            "id": f"{self.id}",
             "location": [0.0, 0.0],
             "mobile": [self.mobile],
             "user_id": self.user_id,

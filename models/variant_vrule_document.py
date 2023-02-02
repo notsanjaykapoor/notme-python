@@ -9,7 +9,13 @@ DEFAULT_BATCH_ID = 0
 
 
 class VariantVruleDocument:
-    def __init__(self, variant: models.Variant, product: models.Product, dispensary_class_id: int, vrule: typing.Optional[models.VariantVrule]):
+    def __init__(
+        self,
+        variant: models.Variant,
+        product: models.Product,
+        dispensary_class_id: int,
+        vrule: typing.Optional[models.VariantVrule],
+    ):
         self._variant = variant
         self._product = product
         self._dispensary_class_id = dispensary_class_id
@@ -40,6 +46,7 @@ class VariantVruleDocument:
             "variant_sku": self._variant.sku,
             "variant_status": self._variant.status,
             "variant_stock_quantity": self._variant_stock_quantity(),
+            "variant_version": self._variant.version,
         }
 
     def _rule_category_ids(self) -> list[int]:

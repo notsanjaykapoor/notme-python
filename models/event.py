@@ -4,7 +4,7 @@ import sqlalchemy
 import sqlmodel
 
 
-class Event(sqlmodel.SQLModel, table=True):  # type: ignore
+class Event(sqlmodel.SQLModel, table=True):
     """create timescale events table; primary key should be a datetime field"""
 
     __tablename__ = "events"
@@ -14,6 +14,11 @@ class Event(sqlmodel.SQLModel, table=True):  # type: ignore
 
     name: str = sqlmodel.Field(index=True)
     timestamp: datetime.datetime = sqlmodel.Field(
-        sa_column=sqlalchemy.Column(sqlalchemy.DateTime(timezone=True), primary_key=True, index=True, nullable=False)
+        sa_column=sqlalchemy.Column(
+            sqlalchemy.DateTime(timezone=True),
+            primary_key=True,
+            index=True,
+            nullable=False,
+        )
     )
     value: float = sqlmodel.Field(index=True)

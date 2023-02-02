@@ -3,7 +3,8 @@ import json
 
 import kafka
 import log
-import models
+from models.actor import Actor
+from models.actor_message import ActorMessage
 
 
 @dataclasses.dataclass
@@ -16,7 +17,7 @@ class Generic(kafka.Handler):
     def __init__(self):
         self._logger = log.init("service")
 
-    async def call(self, msg: models.KafkaMessage):
+    def call(self, actor: Actor, msg: ActorMessage) -> Struct:
         struct = Struct(0, [])
 
         try:

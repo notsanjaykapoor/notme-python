@@ -2,7 +2,6 @@ import json
 import logging
 import re
 import typing
-
 from dataclasses import dataclass
 
 import models
@@ -55,10 +54,11 @@ class WorkerSource:
     def _process(self, actor: models.Actor, message_dict: dict):
         user_from = message_dict["from"]
 
-        self._logger.info(f"actor '{actor.name}' from {user_from}")
+        self._logger.info(f"actor '{actor.name}' from '{user_from}'")
 
         struct_factory = services.crypto.symmetric.Factory(
-            self._keys_file, user_from
+            toml_file=self._keys_file,
+            user_id=user_from,
         ).call()
 
         cipher_name_ = services.crypto.symmetric.cipher_name(struct_factory.cipher)

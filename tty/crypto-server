@@ -10,20 +10,13 @@ import sys
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
 import asyncio
-import json
-import logging
 import signal
-import time
-from typing import Optional
 
 import typer
-import ulid
 import uvloop
-from database import engine
-from sqlmodel import Session, SQLModel
 
-import log
 from actors.crypto.app import App
+import log
 
 app = typer.Typer()
 
@@ -37,7 +30,7 @@ def crypto_server(app: str = typer.Option(...)):
 
 
 async def crypto_server_async(app: str = "crypto"):
-    logger.info(f"crypto_server starting")
+    logger.info("crypto_server starting")
 
     # start app
     struct_app = App(toml_file=f"./data/apps/{app}.toml").call()
@@ -46,7 +39,7 @@ async def crypto_server_async(app: str = "crypto"):
     actors = [actor for name, actor in struct_app.actors.items()]
 
     def signal_handler(signum, frame):
-        logger.info(f"crypto_server signal handler ... cleaning up")
+        logger.info("crypto_server signal handler ... cleaning up")
         for actor in actors:
             actor.cancel()
 
@@ -59,9 +52,10 @@ async def crypto_server_async(app: str = "crypto"):
     try:
         tasks = [actor.task for actor in actors]
         await asyncio.gather(*tasks)
-    except:
+    except Exception:
         logger.error(f"crypto_server exception {sys.exc_info()[0]}")
 
 
 if __name__ == "__main__":
+    app()
     app()

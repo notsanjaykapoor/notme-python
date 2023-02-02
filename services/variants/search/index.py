@@ -18,9 +18,9 @@ class Struct:
 
 
 class Index:
-    def __init__(self, db: sqlmodel.Session, search_client: typesense.client.Client):
+    def __init__(self, db: sqlmodel.Session, ts_client: typesense.client.Client):
         self._db = db
-        self._search_client = search_client
+        self._ts_client = ts_client
 
         self._logger = log.init("service")
 
@@ -43,20 +43,28 @@ class Index:
 
         for vendor_id in vendor_ids:
             # find all vendor pricing rules
-            rules = self._db.exec(sqlmodel.select(models.VariantPrule).where(models.VariantPrule.vendor_id == vendor_id)).all()
+            rules = self._db.exec(
+                sqlmodel.select(models.VariantPrule).where(
+                    models.VariantPrule.vendor_id == vendor_id
+                )
+            ).all()
 
             for rule in rules:
                 if not rule.variant_id:
                     if rule.product_id:
-                        variant_ids = self._vendor_variant_ids(vendor_id=rule.vendor_id, product_id=rule.product_id)
+                        variant_ids = self._vendor_variant_ids(
+                            vendor_id=rule.vendor_id, product_id=rule.product_id
+                        )
                     else:
                         variant_ids = [0]
                 else:
                     variant_ids = [rule.variant_id]
 
-                document = models.VariantPruleDocument(vendor_id=rule.vendor_id, variant_ids=variant_ids, prule=rule).document()
+                document = models.VariantPruleDocument(
+                    vendor_id=rule.vendor_id, variant_ids=variant_ids, prule=rule
+                ).document()
 
-                self._search_client.collections[collection_name].documents.create(document)
+                self._ts_client.collections[collection_name].documents.create(document)
 
                 count += 1
 
@@ -114,26 +122,44 @@ class Index:
             vendor_variant_ids = self._vendor_variant_ids(vendor_id=vendor_id)
 
             for variant_id in vendor_variant_ids:
-                variant = self._db.exec(sqlmodel.select(models.Variant).where(models.Variant.id == variant_id)).first()
-                product = self._db.exec(sqlmodel.select(models.Product).where(models.Product.id == variant.product_id)).first()
+                variant = self._db.exec(
+                    sqlmodel.select(models.Variant).where(
+                        models.Variant.id == variant_id
+                    )
+                ).first()
+
+                product = self._db.exec(
+                    sqlmodel.select(models.Product).where(
+                        models.Product.id == variant.product_id
+                    )
+                ).first()
 
                 for dispensary_class_id in dispensary_rules_map.keys():
                     # check for a matching rule
-                    rule = self._rule_match(variant_id=variant_id, rule_map=dispensary_rules_map[dispensary_class_id])
+                    rule = self._rule_match(
+                        variant_id=variant_id,
+                        rule_map=dispensary_rules_map[dispensary_class_id],
+                    )
 
-                    document = models.VariantVruleDocument(variant, product, dispensary_class_id, rule).document()
+                    document = models.VariantVruleDocument(
+                        variant, product, dispensary_class_id, rule
+                    ).document()
 
-                    self._search_client.collections[collection_name].documents.create(document)
+                    self._ts_client.collections[collection_name].documents.create(
+                        document
+                    )
 
                     count += 1
 
                     self._logger.info(
-                        f"{context.rid_get()} {__name__} collection {collection_name} variant {variant.id} dispensary_class {dispensary_class_id} vrule {rule.id if rule else 'system'}"
+                        f"{context.rid_get()} {__name__} collection '{collection_name}' variant '{variant.id}' dispensary_class '{dispensary_class_id}' vrule '{rule.id if rule else 'system'}'"
                     )
 
         return count
 
-    def _rule_match(self, variant_id: int, rule_map: collections.OrderedDict) -> typing.Optional[models.VariantVrule]:
+    def _rule_match(
+        self, variant_id: int, rule_map: collections.OrderedDict
+    ) -> typing.Optional[models.VariantVrule]:
         for _rule_id, rule_dict in rule_map.items():
             if variant_id in rule_dict["variants"]:
                 return rule_dict["rule"]
@@ -144,7 +170,9 @@ class Index:
         if rule.variant_id:
             return [rule.variant_id]
 
-        return self._vendor_variant_ids(vendor_id=rule.vendor_id, product_id=rule.product_id)
+        return self._vendor_variant_ids(
+            vendor_id=rule.vendor_id, product_id=rule.product_id
+        )
 
     def _vendor_ids(self) -> list[int]:
         dataset = sqlmodel.select(
@@ -164,7 +192,9 @@ class Index:
 
         return self._db.exec(dataset).all()
 
-    def _vendor_variant_ids(self, vendor_id: int, product_id: typing.Optional[int] = None) -> list[int]:
+    def _vendor_variant_ids(
+        self, vendor_id: int, product_id: typing.Optional[int] = None
+    ) -> list[int]:
         if product_id:
             product_ids = [product_id]
         else:
@@ -178,5 +208,4 @@ class Index:
             .distinct()
         )
 
-        return self._db.exec(dataset).all()
         return self._db.exec(dataset).all()

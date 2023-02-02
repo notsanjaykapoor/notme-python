@@ -25,13 +25,8 @@ class Create:
         self._logger.info(f"{context.rid_get()} {__name__}")
 
         self._create_schema(
-            name=models.VariantPruleSchema.typesense_collection(),
-            schema=models.VariantPruleSchema.typesense_schema(),
-        )
-
-        self._create_schema(
-            name=models.VariantVruleSchema.typesense_collection(),
-            schema=models.VariantVruleSchema.typesense_schema(),
+            name=models.User.typesense_collection(),
+            schema=models.User.typesense_schema(),
         )
 
         return struct

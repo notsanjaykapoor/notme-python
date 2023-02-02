@@ -10,17 +10,10 @@ import sys
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
 import asyncio
-import json
-import logging
 import signal
-import time
-from typing import Optional
 
 import typer
-import ulid
 import uvloop
-from database import engine
-from sqlmodel import Session, SQLModel
 
 import log
 from actors.chess.app import App
@@ -37,7 +30,7 @@ def chess_server(app: str = typer.Option(...)):
 
 
 async def chess_server_async(app: str):
-    logger.info(f"chess_server starting")
+    logger.info("chess_server starting")
 
     # start app
     struct_app = App(
@@ -48,7 +41,7 @@ async def chess_server_async(app: str):
     actors = [actor for name, actor in struct_app.actors.items()]
 
     def signal_handler(signum, frame):
-        logger.info(f"chess_server signal handler ... cleaning up")
+        logger.info("chess_server signal handler ... cleaning up")
         for actor in actors:
             actor.cancel()
 
@@ -61,9 +54,10 @@ async def chess_server_async(app: str):
     try:
         tasks = [actor.task for actor in actors]
         await asyncio.gather(*tasks)
-    except:
+    except Exception:
         logger.error(f"chess_server exception {sys.exc_info()[0]}")
 
 
 if __name__ == "__main__":
+    app()
     app()

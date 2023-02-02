@@ -11,13 +11,15 @@ DEFAULT_ALL = [0]
 
 
 class VariantPruleDocument:
-    def __init__(self, vendor_id: int, variant_ids: list[int], prule: models.VariantPrule):
+    def __init__(
+        self, vendor_id: int, variant_ids: list[int], prule: models.VariantPrule
+    ):
         self._vendor_id = vendor_id
         self._variant_ids = variant_ids
         self._prule = prule
 
     def document(self) -> dict:
-        if not self._prule.trigger_unit in ["amount", "quantity"]:
+        if self._prule.trigger_unit not in ["amount", "quantity"]:
             raise ValueError("invalid prule trigger_unit")
 
         max_price: float = DEFAULT_MAX_PRICE

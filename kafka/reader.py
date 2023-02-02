@@ -23,7 +23,9 @@ class Reader:
         self._group = group
         self._handler = handler
 
-        self._consumer = confluent_kafka.Consumer(kafka.config.config_reader(group_id=self._group))
+        self._consumer = confluent_kafka.Consumer(
+            kafka.config.config_reader(group_id=self._group)
+        )
         self._timeout = 1.0
         self._topics = [self._topic]
         self._logger = log.init("service")
@@ -59,7 +61,8 @@ class Reader:
                         raise confluent_kafka.KafkaException(msg.error())
 
                 # call handler to process message
-                struct_handler = await self._handler.call(
+                struct_handler = self._handler.call(
+                    actor=self._actor,
                     msg=models.KafkaMessage(msg),
                 )
 

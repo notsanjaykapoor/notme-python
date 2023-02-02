@@ -1,5 +1,3 @@
-import random
-
 import sqlmodel
 import typesense
 
@@ -9,14 +7,20 @@ import services.variants
 import services.variants.search
 
 
-def test_search(session: sqlmodel.Session, typesense_session: typesense.client.Client, variant_session: dict):
+def test_search_vrule_basic(
+    session: sqlmodel.Session,
+    typesense_session: typesense.client.Client,
+    variant_session: dict,
+):
     # create index
 
-    services.variants.search.Create(search_client=typesense_session).call()
+    services.variants.search.Create(ts_client=typesense_session).call()
 
     # index objects
 
-    struct_index = services.variants.search.Index(db=session, search_client=typesense_session).call()
+    struct_index = services.variants.search.Index(
+        db=session, ts_client=typesense_session
+    ).call()
 
     assert struct_index.count == 4
 
@@ -31,12 +35,10 @@ def test_search(session: sqlmodel.Session, typesense_session: typesense.client.C
     }
 
     search_results = services.variants.search.query(
-        search_client=typesense_session,
-        search_collection=models.VariantVruleSchema.typesense_collection(),
-        search_params=search_params,
+        ts_client=typesense_session,
+        ts_collection=models.VariantVruleSchema.typesense_collection(),
+        ts_params=search_params,
     )
-
-    # print(search_results)
 
     assert search_results["found"] == 1
 
@@ -51,11 +53,9 @@ def test_search(session: sqlmodel.Session, typesense_session: typesense.client.C
     }
 
     search_results = services.variants.search.query(
-        search_client=typesense_session,
-        search_collection=models.VariantVruleSchema.typesense_collection(),
-        search_params=search_params,
+        ts_client=typesense_session,
+        ts_collection=models.VariantVruleSchema.typesense_collection(),
+        ts_params=search_params,
     )
-
-    # print(search_results)
 
     assert search_results["found"] == 2

@@ -1,6 +1,7 @@
 import sqlmodel
 
 import models
+import services.database
 
 
 def delete_by_id(db: sqlmodel.Session, ids: list[int]) -> int:
@@ -17,3 +18,10 @@ def delete_by_id(db: sqlmodel.Session, ids: list[int]) -> int:
     db.commit()
 
     return 0
+
+
+def truncate(db: sqlmodel.Session):
+    table_names = ["users"]
+
+    for table_name in table_names:
+        services.database.truncate_table(db=db, table_name=table_name)

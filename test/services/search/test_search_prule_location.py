@@ -6,7 +6,9 @@ import services.variants
 import services.variants.search
 
 
-def test_search__prule_with_stock_location(session: sqlmodel.Session, typesense_session: typesense.client.Client):
+def test_search__prule_with_stock_location(
+    session: sqlmodel.Session, typesense_session: typesense.client.Client
+):
     # variant with multiple stock locations setup
 
     vendor_1 = models.Vendor(
@@ -50,6 +52,7 @@ def test_search__prule_with_stock_location(session: sqlmodel.Session, typesense_
         sku="sku1",
         status="enabled",
         stock_location_ids=[stock_boston.id, stock_chicago.id],
+        version=0,
     )
 
     session.add(variant_1)
@@ -81,11 +84,13 @@ def test_search__prule_with_stock_location(session: sqlmodel.Session, typesense_
 
     # create index
 
-    services.variants.search.Create(search_client=typesense_session).call()
+    services.variants.search.Create(ts_client=typesense_session).call()
 
     # index objects
 
-    struct_index = services.variants.search.Index(db=session, search_client=typesense_session).call()
+    struct_index = services.variants.search.Index(
+        db=session, ts_client=typesense_session
+    ).call()
 
     assert struct_index.count == 2
 
@@ -103,9 +108,9 @@ def test_search__prule_with_stock_location(session: sqlmodel.Session, typesense_
     }
 
     search_results = services.variants.search.query(
-        search_client=typesense_session,
-        search_collection=models.VariantPruleSchema.typesense_collection(),
-        search_params=search_params,
+        ts_client=typesense_session,
+        ts_collection=models.VariantPruleSchema.typesense_collection(),
+        ts_params=search_params,
     )
 
     assert search_results["found"] == 1
@@ -129,9 +134,9 @@ def test_search__prule_with_stock_location(session: sqlmodel.Session, typesense_
     }
 
     search_results = services.variants.search.query(
-        search_client=typesense_session,
-        search_collection=models.VariantPruleSchema.typesense_collection(),
-        search_params=search_params,
+        ts_client=typesense_session,
+        ts_collection=models.VariantPruleSchema.typesense_collection(),
+        ts_params=search_params,
     )
 
     assert search_results["found"] == 0
@@ -143,7 +148,10 @@ def test_search__prule_with_stock_location(session: sqlmodel.Session, typesense_
 
     # search with location that does not match
 
-    filter_by_terms = services.variants.search.filter_terms_default() + services.variants.search.filter_terms_rule_locations(ids=[stock_boston.id])
+    filter_by_terms = (
+        services.variants.search.filter_terms_default()
+        + services.variants.search.filter_terms_rule_locations(ids=[stock_boston.id])
+    )
 
     search_params = {
         "q": "*",
@@ -151,9 +159,9 @@ def test_search__prule_with_stock_location(session: sqlmodel.Session, typesense_
     }
 
     search_results = services.variants.search.query(
-        search_client=typesense_session,
-        search_collection=models.VariantPruleSchema.typesense_collection(),
-        search_params=search_params,
+        ts_client=typesense_session,
+        ts_collection=models.VariantPruleSchema.typesense_collection(),
+        ts_params=search_params,
     )
 
     assert search_results["found"] == 0

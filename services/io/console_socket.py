@@ -1,8 +1,7 @@
 import asyncio
+from dataclasses import dataclass
 import logging
 import sys
-import typing
-from dataclasses import dataclass
 
 import aioconsole
 import websockets

@@ -8,12 +8,16 @@ import services.time
 logger = log.init("service")
 
 
-def query(search_client: typesense.client.Client, search_collection: str, search_params: dict) -> dict:
-    collection_name = models.VariantPruleSchema.typesense_collection()
+def query(
+    ts_client: typesense.client.Client, ts_collection: str, ts_params: dict
+) -> dict:
+    _collection_name = models.VariantPruleSchema.typesense_collection()
 
-    logger.info(f"{context.rid_get()} {__name__} collection {search_collection} {search_params}")
+    logger.info(
+        f"{context.rid_get()} {__name__} collection {ts_collection} {ts_params}"
+    )
 
-    return search_client.collections[search_collection].documents.search(search_params)
+    return ts_client.collections[ts_collection].documents.search(ts_params)
 
 
 def filter_terms(terms: list[str]) -> str:

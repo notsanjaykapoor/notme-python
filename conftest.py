@@ -17,6 +17,7 @@ import typesearch
 
 # set app env
 os.environ["APP_ENV"] = "tst"
+os.environ["TYPESENSE_ENV"] = "tst"
 
 test_db_name = os.environ.get("DATABASE_TEST_URL")
 connect_args: dict = {}
@@ -66,7 +67,7 @@ def database_tables_drop(engine: sqlalchemy.future.Engine):
 
 def database_tables_init(engine: sqlalchemy.future.Engine):
     # initialize hypertables
-    session = sqlmodel.Session(engine)
+    _session = sqlmodel.Session(engine)
 
     # note: requires timescaledb support
     # session.execute("select create_hypertable('events', 'timestamp')")
@@ -141,6 +142,36 @@ def typesense_session_fixture():
             client.collections[name].delete()
 
 
+@pytest.fixture(name="product_session")
+def product_session_fixture(session: sqlmodel.Session):
+    vendor_1 = models.Vendor(
+        name="Vendor 1",
+        slug="vendor-1",
+    )
+
+    session.add(vendor_1)
+    session.commit()
+
+    product_1 = models.Product(
+        category_ids=[],
+        description="",
+        name="Product 1",
+        price=1.00,
+        status="enabled",
+        vendor_id=vendor_1.id,
+    )
+
+    session.add(product_1)
+    session.commit()
+
+    yield {
+        "vendors": [vendor_1],
+        "products": [product_1],
+    }
+
+    services.variants.truncate(db=session)
+
+
 @pytest.fixture(name="variant_session")
 def variant_session_fixture(session: sqlmodel.Session):
     vendor_1 = models.Vendor(
@@ -170,6 +201,7 @@ def variant_session_fixture(session: sqlmodel.Session):
         sku="sku1",
         status="private",  # private variant
         stock_location_ids=[],
+        version=0,
     )
 
     session.add(variant_1)
@@ -182,6 +214,7 @@ def variant_session_fixture(session: sqlmodel.Session):
         sku="sku1",
         status="private",  # private variant
         stock_location_ids=[],
+        version=0,
     )
 
     session.add(variant_2)
@@ -221,8 +254,7 @@ def variant_session_fixture(session: sqlmodel.Session):
         "vendors": [vendor_1],
         "products": [product_1],
         "variants": [variant_1, variant_2],
-        "rules": [rule_1],
+        "rules": [rule_1, rule_2],
     }
 
-    services.variants.truncate(db=session)
     services.variants.truncate(db=session)
