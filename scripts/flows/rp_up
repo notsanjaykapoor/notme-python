@@ -11,7 +11,6 @@ import prefect
 import prefect.orion.schemas.states
 
 import dot_init  # noqa: E402, F401
-import log
 import services.kafka
 import services.tasks
 
@@ -33,7 +32,9 @@ def rp_up() -> int:
 
     if code != 0:
         logger.error(f"error topic '{topic}' key '{key}' code {code}")
-        return prefect.orion.schemas.states.Failed(message=f"rp_up_flow error with code {code}")
+        return prefect.orion.schemas.states.Failed(
+            message=f"rp_up_flow error with code {code}"
+        )
 
     logger.info(f"received topic '{topic}' key '{key}' code {code}")
 

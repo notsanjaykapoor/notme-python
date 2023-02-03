@@ -2,16 +2,13 @@
 
 from dotenv import load_dotenv
 
-load_dotenv()  # read environment variables from .env
+load_dotenv()
 
 import asyncio
-import json
-import logging
 import os
 import sys
 
 import typer
-import ulid
 import uvloop
 import websockets
 

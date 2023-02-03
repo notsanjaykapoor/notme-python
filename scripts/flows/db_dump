@@ -16,7 +16,9 @@ import dot_init  # noqa: E402, F401
 
 
 @click.command()
-@click.option("--uri", help="source database uri, e.g. 'postgresql://user:pwd@host:port/db'")
+@click.option(
+    "--uri", help="source database uri, e.g. 'postgresql://user:pwd@host:port/db'"
+)
 @click.option("--bucket", help="aws upload bucket, e.g. 'lt-db-dev'")
 @prefect.flow()
 def db_dump(uri: str, bucket: str):

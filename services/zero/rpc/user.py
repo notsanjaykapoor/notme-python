@@ -1,11 +1,10 @@
 import logging
 
-import sqlmodel
 import ulid
-from database import engine
 
-import services.users
 from context import request_id
+import services.database.session
+import services.users
 
 
 class User:
@@ -17,7 +16,7 @@ class User:
 
         self._logger.info(f"{request_id.get()} rpc user_get {user_id}")
 
-        with sqlmodel.Session(engine) as db:
+        with services.database.session.get() as db:
             struct_get = services.users.Get(db, user_id).call()
 
             response = {"code": struct_get.code}
@@ -32,7 +31,7 @@ class User:
 
         self._logger.info(f"{request_id.get()} rpc users_list {query}")
 
-        with sqlmodel.Session(engine) as db:
+        with services.database.session.get() as db:
             struct_list = services.users.List(db, query, offset, limit).call()
 
             response = {"code": struct_list.code, "count": len(struct_list.objects)}

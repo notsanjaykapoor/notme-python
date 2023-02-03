@@ -4,12 +4,31 @@ import os
 import subprocess
 import sys
 
+import click
+
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import prefect
 import prefect.orion.schemas.states
 
 import dot_init  # noqa: E402, F401
+
+
+@click.command()
+@click.option("--uri", default="", help="source database uri, e.g. 'postgresql://user:pwd@host:port/db'")
+@click.option("--data/--no-data", default=False, help="export biotrack data'")
+@click.option("--schemas/--no-schemas", default=False, help="export biotrack schemas'")
+@prefect.flow()
+def biotrack_export(uri: str, data: bool, schemas: bool):
+    uri = uri or os.environ["BIOTRACK_SOURCE_URI"]
+
+    if schemas:
+        biotrack_schemas = [table_name.strip() for table_name in os.environ["BIOTRACK_SOURCE_SCHEMAS"].split(",")]
+        biotrack_export_schemas(biotrack_uri=uri, biotrack_tables=biotrack_schemas, dump_dir=".")
+
+    if data:
+        biotrack_tables = [table_name.strip() for table_name in os.environ["BIOTRACK_SOURCE_TABLES"].split(",")]
+        biotrack_export_data(biotrack_uri=uri, biotrack_tables=biotrack_tables, dump_dir="./data/biotrack")
 
 
 @prefect.flow()
@@ -96,19 +115,10 @@ def _biotrack_export_table_sql(biotrack_uri: str, table_name: str, dump_dir: str
 
 
 if __name__ == "__main__":
-    # 1. export public schemas
-    # 2. edit schemas to match views
-
-    biotrack_uri = os.environ["BIOTRACK_SOURCE_URI"]
-    biotrack_schemas = [table_name.strip() for table_name in os.environ["BIOTRACK_SOURCE_SCHEMAS"].split(",")]
-    biotrack_tables = [table_name.strip() for table_name in os.environ["BIOTRACK_SOURCE_TABLES"].split(",")]
+    biotrack_export()
 
     # table_names = [
     #     "bmsi_labresults_potency_analysis",  # permission denied for sequence bmsi_labresults_potency_analysis_id_seq
     #     "bmsi_labresults_samples",
     #     "inventory",
     # ]
-
-    # biotrack_export_schemas(biotrack_uri=biotrack_uri, biotrack_tables=biotrack_schemas, dump_dir=".")
-
-    biotrack_export_data(biotrack_uri=biotrack_uri, biotrack_tables=biotrack_tables, dump_dir="./data/biotrack")

@@ -1,9 +1,7 @@
-import json
 import os
 import typing
 
 import datadog
-import requests_oauthlib
 import sqlmodel
 import strawberry
 import ulid
@@ -74,7 +72,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.add_middleware(SessionMiddleware, secret_key=os.environ.get("FASTAPI_SESSION_KEY"), max_age=None)
+app.add_middleware(
+    SessionMiddleware, secret_key=os.environ.get("FASTAPI_SESSION_KEY"), max_age=None
+)
 
 
 @app.on_event("startup")
@@ -99,7 +99,12 @@ async def add_request_id(request: Request, call_next):
 
 @datadog.statsd.timed("api.v1.entities.list", tags=["env:dev", "api:rest"])
 @app.get("/api/v1/entities", tags=["entities"], response_model=list[models.Entity])
-def entities_list(query: str = "", offset: int = 0, limit: int = 100, db: sqlmodel.Session = Depends(get_db)):
+def entities_list(
+    query: str = "",
+    offset: int = 0,
+    limit: int = 100,
+    db: sqlmodel.Session = Depends(get_db),
+):
     logger.info(f"{context.rid_get()} api.v1.entities.list")
 
     struct = services.entities.List(db, query, offset, limit).call()
@@ -139,7 +144,9 @@ def openid_login(
 
     if email:
         # map email to idp
-        struct_list = services.users.List(db=db, query=f"email:{email}", offset=0, limit=1).call()
+        struct_list = services.users.List(
+            db=db, query=f"email:{email}", offset=0, limit=1
+        ).call()
 
         if struct_list.code != 0:
             return {"code": 409, "errors": ["user not found"]}
@@ -163,7 +170,9 @@ def openid_login(
 def openid_authentik_callback(request: Request, state: str, code: str):
     logger.info(f"{context.rid_get()} openid.authentik.callback try")
 
-    struct_auth = services.openid.AuthCallback(idp="authentik", code=code, state=state).call()
+    struct_auth = services.openid.AuthCallback(
+        idp="authentik", code=code, state=state
+    ).call()
 
     if struct_auth.code == 0:
         request.session["user_jwt"] = struct_auth.token
@@ -181,7 +190,9 @@ def openid_authentik_callback(request: Request, state: str, code: str):
 def openid_google_callback(request: Request, state: str, code: str):
     logger.info(f"{context.rid_get()} openid.google.callback try")
 
-    struct_auth = services.openid.AuthCallback(idp="google", code=code, state=state).call()
+    struct_auth = services.openid.AuthCallback(
+        idp="google", code=code, state=state
+    ).call()
 
     logger.info(f"{context.rid_get()} openid.google.callback completed")
 
@@ -213,7 +224,12 @@ def user_get(user_id: str, db: sqlmodel.Session = Depends(get_db)):
 
 @datadog.statsd.timed("api.users.list", tags=["env:dev"])
 @app.get("/api/v1/users", response_model=list[models.User])
-def users_list(query: str = "", offset: int = 0, limit: int = 100, db: sqlmodel.Session = Depends(get_db)):
+def users_list(
+    query: str = "",
+    offset: int = 0,
+    limit: int = 100,
+    db: sqlmodel.Session = Depends(get_db),
+):
     logger.info(f"{context.rid_get()} api.users.list")
 
     struct = services.users.List(db, query, offset, limit).call()
@@ -225,7 +241,10 @@ def users_list(query: str = "", offset: int = 0, limit: int = 100, db: sqlmodel.
 
 @datadog.statsd.timed("api.webauthn.auth.complete", tags=["env:dev", "api:rest"])
 @app.post("/api/v1/webauthn/auth/complete")
-def webauthn_auth_complete(params: services.webauthn.auth.CompleteParams, db: sqlmodel.Session = Depends(get_db)):
+def webauthn_auth_complete(
+    params: services.webauthn.auth.CompleteParams,
+    db: sqlmodel.Session = Depends(get_db),
+):
     logger.info(f"{context.rid_get()} api.webauthn.auth.complete")
 
     struct = services.webauthn.auth.Complete(params, db).call()
@@ -235,7 +254,9 @@ def webauthn_auth_complete(params: services.webauthn.auth.CompleteParams, db: sq
 
 @datadog.statsd.timed("api.webauthn.auth.init", tags=["env:dev", "api:rest"])
 @app.post("/api/v1/webauthn/auth/init")
-def webauthn_auth_init(params: services.webauthn.auth.InitParams, db: sqlmodel.Session = Depends(get_db)):
+def webauthn_auth_init(
+    params: services.webauthn.auth.InitParams, db: sqlmodel.Session = Depends(get_db)
+):
     logger.info(f"{context.rid_get()} api.webauthn.auth.init")
 
     struct = services.webauthn.auth.Init(params, db).call()
@@ -247,7 +268,10 @@ def webauthn_auth_init(params: services.webauthn.auth.InitParams, db: sqlmodel.S
 
 @datadog.statsd.timed("api.webauthn.register.complete", tags=["env:dev", "api:rest"])
 @app.post("/api/v1/webauthn/register/complete")
-def webauthn_register_complete(params: services.webauthn.register.CompleteParams, db: sqlmodel.Session = Depends(get_db)):
+def webauthn_register_complete(
+    params: services.webauthn.register.CompleteParams,
+    db: sqlmodel.Session = Depends(get_db),
+):
     logger.info(f"{context.rid_get()} api.webauthn.register.complete")
 
     struct = services.webauthn.register.Complete(params, db).call()
@@ -257,7 +281,10 @@ def webauthn_register_complete(params: services.webauthn.register.CompleteParams
 
 @datadog.statsd.timed("api.webauthn.register.init", tags=["env:dev", "api:rest"])
 @app.post("/api/v1/webauthn/register/init")
-def webauthn_register_init(params: services.webauthn.register.InitParams, db: sqlmodel.Session = Depends(get_db)):
+def webauthn_register_init(
+    params: services.webauthn.register.InitParams,
+    db: sqlmodel.Session = Depends(get_db),
+):
     logger.info(f"{context.rid_get()} api.webauthn.register.init")
 
     struct = services.webauthn.register.Init(params, db).call()

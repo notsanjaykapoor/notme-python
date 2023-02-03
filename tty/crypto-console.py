@@ -2,28 +2,15 @@
 
 from dotenv import load_dotenv
 
-load_dotenv()  # take environment variables from .env.
+load_dotenv()
 
 import os
-import pdb
 import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
-import asyncio
-import json
-import logging
-import signal
-import time
-from typing import Optional
-
 import typer
-import ulid
-import uvloop
-import websocket
 from cryptography.hazmat.primitives import serialization
-from database import engine
-from sqlmodel import Session, SQLModel
 
 import log
 import services.crypto.pkey
