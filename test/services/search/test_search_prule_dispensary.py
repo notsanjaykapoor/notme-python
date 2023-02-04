@@ -42,6 +42,7 @@ def test_search__prule_with_dispensary_class(
         status="enabled",
         stock_location_ids=[],
         version=0,
+        vendor_id=vendor_1.id,
     )
 
     session.add(variant_1)

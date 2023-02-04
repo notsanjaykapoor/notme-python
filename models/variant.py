@@ -22,4 +22,5 @@ class Variant(sqlmodel.SQLModel, table=True):
     stock_location_ids: list[int] = sqlmodel.Field(
         sa_column=sqlmodel.Column(sqlmodel.ARRAY(sqlmodel.INT)), default=[]
     )
+    vendor_id: int = sqlmodel.Field(index=False, nullable=False)
     version: int = sqlmodel.Field(index=False, nullable=False)

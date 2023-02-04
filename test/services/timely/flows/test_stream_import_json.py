@@ -49,7 +49,12 @@ def data_models(session: sqlmodel.Session):
     services.data_models.delete_by_id(db=session, ids=struct_create.ids)
 
 
-def test_flow_json(session: sqlmodel.Session, neo_session: neo4j.Session, data_models: list[int], data_mappings: list[int]):
+def test_flow_json(
+    session: sqlmodel.Session,
+    neo_session: neo4j.Session,
+    data_models: list[int],
+    data_mappings: list[int],
+):
     json_file = "./test/data/entities/entities__basic.json"
 
     struct_data_mappings = services.data_mappings.List(
@@ -71,8 +76,10 @@ def test_flow_json(session: sqlmodel.Session, neo_session: neo4j.Session, data_m
     # set input params using a function (required by bytewax)
     services.timely.inputs.input_json_params(file=json_file)
 
-    struct_json_input = services.timely.flows.stream_json(
-        input=bytewax.inputs.ManualInputConfig(services.timely.inputs.input_json_generator),
+    _struct_json_input = services.timely.flows.stream_json(
+        input=bytewax.inputs.ManualInputConfig(
+            services.timely.inputs.input_json_generator
+        ),
         output=bytewax.outputs.TestingOutputConfig(struct_csv_input_output),
         data_mappings=struct_data_mappings.objects,
         data_models=struct_data_models.objects,

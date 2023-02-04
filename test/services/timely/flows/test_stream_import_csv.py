@@ -49,7 +49,12 @@ def data_models(session: sqlmodel.Session):
     services.data_models.delete_by_id(db=session, ids=struct_create.ids)
 
 
-def test_flow_csv_user(session: sqlmodel.Session, neo_session: neo4j.Session, data_models: list[int], data_mappings: list[int]):
+def test_flow_csv_user(
+    session: sqlmodel.Session,
+    neo_session: neo4j.Session,
+    data_models: list[int],
+    data_mappings: list[int],
+):
     csv_file = "./test/data/data_streams/user_1.csv"
 
     struct_data_mappings = services.data_mappings.List(
@@ -83,8 +88,10 @@ def test_flow_csv_user(session: sqlmodel.Session, neo_session: neo4j.Session, da
     # set input params using a function (required by bytewax)
     services.timely.inputs.input_csv_params(file=csv_file)
 
-    struct_csv_input = services.timely.flows.StreamCsv(
-        input=bytewax.inputs.ManualInputConfig(services.timely.inputs.input_csv_generator),
+    _struct_csv_input = services.timely.flows.StreamCsv(
+        input=bytewax.inputs.ManualInputConfig(
+            services.timely.inputs.input_csv_generator
+        ),
         output=bytewax.outputs.TestingOutputConfig(struct_csv_input_output),
         data_mapping=data_mapping_user,
         data_models=data_models_person,
@@ -125,7 +132,12 @@ def test_flow_csv_user(session: sqlmodel.Session, neo_session: neo4j.Session, da
     services.database.truncate_table(db=session, table_name="entities")
 
 
-def test_flow_csv_user_random(session: sqlmodel.Session, neo_session: neo4j.Session, data_models: list[int], data_mappings: list[int]):
+def test_flow_csv_user_random(
+    session: sqlmodel.Session,
+    neo_session: neo4j.Session,
+    data_models: list[int],
+    data_mappings: list[int],
+):
     csv_file = "./test/data/data_streams/user_random_1.csv"
 
     struct_data_mappings = services.data_mappings.List(
@@ -155,8 +167,10 @@ def test_flow_csv_user_random(session: sqlmodel.Session, neo_session: neo4j.Sess
     # set input params using a function (required by bytewax)
     services.timely.inputs.input_csv_random_params(file=csv_file, count=5)
 
-    struct_csv_input = services.timely.flows.StreamCsv(
-        input=bytewax.inputs.ManualInputConfig(services.timely.inputs.input_csv_random_generator),
+    _struct_csv_input = services.timely.flows.StreamCsv(
+        input=bytewax.inputs.ManualInputConfig(
+            services.timely.inputs.input_csv_random_generator
+        ),
         output=bytewax.outputs.TestingOutputConfig(struct_csv_input_output),
         data_mapping=data_mapping_user,
         data_models=data_models_person,

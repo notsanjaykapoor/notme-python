@@ -1,0 +1,49 @@
+#!/usr/bin/env python
+
+import datetime
+import re
+
+import bytewax.dataflow
+import bytewax.execution
+import bytewax.inputs
+import bytewax.outputs
+import bytewax.window
+
+
+def file_input(worker_index, worker_count, resume_state):
+    for line in open("./timely/wordcount.txt"):
+        yield 1, line
+
+
+def lower(line):
+    return line.lower()
+
+
+def tokenize(line):
+    return re.findall(r'[^\s!,.?":;0-9]+', line)
+
+
+def initial_count(word):
+    return word, 1
+
+
+def add(count1, count2):
+    return count1 + count2
+
+
+clock_config = bytewax.window.SystemClockConfig()
+window_config = bytewax.window.TumblingWindowConfig(
+    length=datetime.timedelta(seconds=5)
+)
+
+flow = bytewax.dataflow.Dataflow()
+flow.input("input", bytewax.inputs.ManualInputConfig(file_input))
+flow.map(lower)
+flow.flat_map(tokenize)
+flow.map(initial_count)
+flow.reduce_window("sum", clock_config, window_config, add)
+flow.capture(bytewax.outputs.StdOutputConfig())
+
+bytewax.execution.run_main(flow)
+bytewax.execution.run_main(flow)
+bytewax.execution.run_main(flow)

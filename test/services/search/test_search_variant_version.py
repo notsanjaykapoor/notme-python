@@ -30,6 +30,7 @@ def test_search_variant_version(
             status="active",
             stock_location_ids=[],
             version=random.randint(1, 1000),
+            vendor_id=vendor.id,
         )
 
         session.add(variant)
@@ -49,48 +50,15 @@ def test_search_variant_version(
 
     assert struct_index.count == len(variants)
 
-    # check vendor variant versions
+    # get vendor variant sha's from db and ts
 
-    search_params = {
-        "facet_by": "",
-        "filter_by": f"rule_vendor_id:{vendor.id} && rule_dispensary_class_ids:[0]",
-        "include_fields": "variant_id,variant_version",
-        "page": 1,
-        "per_page": 100,
-        "q": "*",
-        "sort_by": "variant_id:asc",
-    }
-
-    search_results = services.variants.search.query(
-        ts_client=typesense_session,
-        ts_collection=models.VariantVruleSchema.typesense_collection(),
-        ts_params=search_params,
+    variant_sha_ts = services.variants.sha_ts(
+        vendor_id=vendor.id, ts_client=typesense_session
     )
 
-    # print(search_results)
+    variant_sha_db = services.variants.sha_db(vendor_id=vendor.id, session=session)
 
-    assert search_results["found"] == len(variants)
-
-    hits = search_results["hits"]
-
-    versions_ts = [
-        f"{o['document']['variant_id']}:{o['document']['variant_version']}"
-        for o in hits
-    ]
-    versions_ts_str = ",".join(versions_ts)
-
-    variants_db_query = session.exec(
-        sqlmodel.select(models.Variant.id, models.Variant.version).order_by(
-            models.Variant.id.asc()
-        )
-    )
-
-    versions_db = [f"{v.id}:{v.version}" for v in variants_db_query]
-    versions_db_str = ",".join(versions_db)
-
-    # version fingerprints should match
-
-    assert versions_db_str == versions_ts_str
+    assert variant_sha_db == variant_sha_ts
 
     # update variant
 
@@ -100,15 +68,6 @@ def test_search_variant_version(
 
     # regenerate db fingerprint
 
-    variants_db_query = session.exec(
-        sqlmodel.select(models.Variant.id, models.Variant.version).order_by(
-            models.Variant.id.asc()
-        )
-    )
+    variant_sha_db = services.variants.sha_db(vendor_id=vendor.id, session=session)
 
-    versions_db = [f"{v.id}:{v.version}" for v in variants_db_query]
-    versions_db_str = ",".join(versions_db)
-
-    # version fingerprints should be different
-
-    assert versions_db_str != versions_ts_str
+    assert variant_sha_db != variant_sha_ts

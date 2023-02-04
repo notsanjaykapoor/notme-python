@@ -9,3 +9,6 @@ line-length = 150
 force-sort-within-sections = true
 order-by-type = true
 
+[tool.ruff.per-file-ignores]
+"__init__.py" = ["E402", "F401"]
+

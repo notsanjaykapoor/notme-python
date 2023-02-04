@@ -202,6 +202,7 @@ def variant_session_fixture(session: sqlmodel.Session):
         status="private",  # private variant
         stock_location_ids=[],
         version=0,
+        vendor_id=vendor_1.id,
     )
 
     session.add(variant_1)
@@ -215,6 +216,7 @@ def variant_session_fixture(session: sqlmodel.Session):
         status="private",  # private variant
         stock_location_ids=[],
         version=0,
+        vendor_id=vendor_1.id,
     )
 
     session.add(variant_2)
