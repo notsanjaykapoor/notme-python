@@ -4,7 +4,7 @@ resources:
 - otel-agent-configmap.yml
 - otel-deployment.yml
 - otel-service.yml
-- neo4j-deploy.yml
+# - neo4j-deploy.yml
 - postgres-deploy.yml
 - redpanda-deploy.yml
 - typesense-deploy.yml

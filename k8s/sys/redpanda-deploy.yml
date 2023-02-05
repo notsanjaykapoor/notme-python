@@ -17,8 +17,8 @@ spec:
     spec:
       containers:
       - name: notme-redpanda
-        image: notme-redpanda:1.0
-        imagePullPolicy: Never # use local registry
+        image: vectorized/redpanda:v22.3.8
+        imagePullPolicy: IfNotPresent
         command: ["/bin/sh", "-c", "rpk redpanda start --overprovisioned --smp 1 --kafka-addr PLAINTEXT://0.0.0.0:29092,OUTSIDE://0.0.0.0:9092 --advertise-kafka-addr PLAINTEXT://notme-redpanda:9092,OUTSIDE://notme-redpanda:9092"]
         ports:
           - containerPort: 9092

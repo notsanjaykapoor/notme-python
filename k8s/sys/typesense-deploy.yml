@@ -18,7 +18,7 @@ spec:
       containers:
       - name: notme-typesense
         image: typesense/typesense:0.23.1
-        imagePullPolicy: Never # use minikube registry
+        imagePullPolicy: IfNotPresent
         env:
           - name: TYPESENSE_API_KEY
             value: xyz

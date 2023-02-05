@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: rpk
+  namespace: default
+spec:
+  containers:
+  - name: rpk
+    image: vectorized/redpanda:v22.3.8
+    command:
+      - sleep
+      - "infinity"
+    env:
+      - name: REDPANDA_BROKERS
+        value: redpanda-dev.default:9092
+    imagePullPolicy: IfNotPresent
+  restartPolicy: Always

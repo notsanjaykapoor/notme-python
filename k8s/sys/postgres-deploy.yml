@@ -17,8 +17,8 @@ spec:
     spec:
       containers:
       - name: notme-postgres
-        image: notme-postgres:latest
-        imagePullPolicy: Never # use local registry
+        image: postgis/postgis:14-3.3
+        imagePullPolicy: IfNotPresent
         env:
           - name: POSTGRES_PASSWORD
             value: development
