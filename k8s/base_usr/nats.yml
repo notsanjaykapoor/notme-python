@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nats
+  namespace: default
+  labels:
+    app: nats
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nats
+  template:
+    metadata:
+      labels:
+        app: nats
+    spec:
+      containers:
+      - name: nats
+        image: nats:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+          - containerPort: 4222
+            protocol: TCP
+        volumeMounts:
+          - mountPath: /host-data
+            name: host-volume
+      volumes:
+      - name: host-volume
+        hostPath:
+          path: /host-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: nats-dev
+  name: nats-dev
+spec:
+  ports:
+    - port: 4222 # port exposed to external users
+      protocol: TCP
+      targetPort: 4222
+  selector:
+    app: nats
+  type: NodePort

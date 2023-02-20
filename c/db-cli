@@ -7,11 +7,11 @@ import typer
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
-import db_cli_boot  # noqa: E402
-import db_cli_entity  # noqa: E402
+import db_cli_boot
+import db_cli_entity
 
 import dot_init  # noqa: E402, F401
-import services.database.session  # noqa: E402
+import services.database.session
 
 # initialize database
 services.database.session.migrate()

@@ -4,12 +4,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-import logging
 import os
 import sys
 
 import ulid
-import zmq
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
