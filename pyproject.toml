@@ -3,7 +3,7 @@
 select = ["E", "F"]
 ignore = ["E402"]
 
-line-length = 150
+line-length = 180
 
 [tool.ruff.isort]
 force-sort-within-sections = true
