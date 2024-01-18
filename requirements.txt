@@ -106,7 +106,7 @@ pycparser==2.21
 pydantic==1.10.2
 pydantic-factories==1.4.1
 pyflakes==2.4.0
-Pygments==2.11.2
+Pygments==2.15.0
 pyOpenSSL==22.0.0
 pyparsing==3.0.9
 pytest==7.2.0
