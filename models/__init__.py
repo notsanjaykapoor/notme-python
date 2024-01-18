@@ -12,7 +12,6 @@ from .entity_location import EntityLocation  # noqa: F401
 from .entity_watch import EntityWatch  # noqa: F401
 from .event import Event  # noqa: F401
 from .kafka_message import KafkaMessage  # noqa: F401
-from .memgraph_connection import MemgraphConnection  # noqa: F401
 from .product import Product  # noqa: F401
 from .socket_manager import SocketManager  # noqa: F401
 from .user import User  # noqa: F401

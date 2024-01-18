@@ -238,4 +238,3 @@ def _time_now() -> str:
 
 if __name__ == "__main__":
     db_snapshot()
-    db_snapshot()
