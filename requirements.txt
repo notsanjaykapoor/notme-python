@@ -61,7 +61,7 @@ hyperframe==6.0.1
 idna==3.3
 iniconfig==1.1.1
 ipdb==0.13.9
-ipython==8.4.0
+ipython==8.10.0
 isort==5.10.1
 itsdangerous==2.1.2
 jedi==0.18.1
@@ -98,7 +98,6 @@ protobuf==4.23.3
 psycopg2-binary==2.9.4
 ptyprocess==0.7.0
 pure-eval==0.2.2
-py==1.11.0
 pyarrow==14.0.1
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
@@ -110,7 +109,7 @@ pyflakes==2.4.0
 Pygments==2.11.2
 pyOpenSSL==22.0.0
 pyparsing==3.0.9
-pytest==7.1.2
+pytest==7.2.0
 pytest-asyncio==0.18.3
 pytest-mock==3.7.0
 python-dateutil==2.8.2
