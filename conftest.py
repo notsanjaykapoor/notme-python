@@ -7,13 +7,13 @@ import sqlalchemy
 import sqlalchemy.future
 import sqlmodel
 import sqlmodel.pool
+import ts
 
 import dot_init  # noqa: F401
 import models
 import services.boot
 import services.graph
 import services.variants
-import typesearch
 
 # set app env
 os.environ["APP_ENV"] = "tst"
@@ -127,7 +127,7 @@ def neo_session_fixture():
 
 @pytest.fixture(name="typesense_session")
 def typesense_session_fixture():
-    client = typesearch.client(
+    client = ts.client(
         uri=os.environ.get("TYPESENSE_URL"),
         api_key=os.environ.get("TYPESENSE_API_KEY"),
     )
