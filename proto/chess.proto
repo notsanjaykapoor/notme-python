@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package stream;
+
+service Stream {
+  // A Bidirectional streaming RPC.
+  //
+  // Accepts a stream of Message sent while a route is being traversed,
+  rpc message(stream Message) returns (stream Message) {}
+}
+
+message Message {
+    string subject = 1;
+    string message = 2;
+}

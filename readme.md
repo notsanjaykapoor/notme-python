@@ -1,11 +1,11 @@
 ### Setup
 
-Install python 3.10.
+Install python 3.11.6.
 
 Create python virtual env:
 
 ```
-pyenv virtualenv 3.10.8 notme
+pyenv virtualenv 3.11.6 notme
 pyenv activate notme
 ```
 
@@ -54,9 +54,9 @@ Start the server first:
 Start 2 consoles with different user ids and send messages:
 
 ```
-./tty/ws-console.py --user-id user-1
+./tty/ws-console --user-id user-1
 
-./tty/ws-console.py --user-id user-2
+./tty/ws-console --user-id user-2
 ```
 
 ### Redpanda
@@ -126,7 +126,7 @@ The zerorpc examples uses rpc to implement a simple users service.
 Start the server first (defaults to port 4242):
 
 ```
-./tty/rpc-server.py
+./tty/rpc-server
 ```
 
 Once the server is running, you can query it using the zerorpc client:
@@ -154,47 +154,53 @@ This zeromq example is using push/pull sockets to implement a pipeline algorithm
 Start the sink, then the filter, and then the source:
 
 ```
-./tty/chess-zero-sink.py
+./tty/chess-zero-sink
 
-./tty/chess-zero-filter.py
+./tty/chess-zero-filter
 
-./tty/chess-zero-source.py
+./tty/chess-zero-source
 ```
 
-### Curio Channel
+### Curio Example 
 
-This example uses curio channels between a producer and consumer to send messages.
+[Curio](https://curio.readthedocs.io/en/latest/index.html) is a library for concurrent systems programming that uses coroutines and common programming abstractions such as threads, sockets, files, locks, and queues. In addition, it supports cancellation, task groups, and other useful features
+
+This example uses curio channels between a producer and consumer to send messages from a chess pgn file.
 
 Start the producer first:
 
 ```
-./tty/chess-curio-source.py
+./tty/chess-curio-source
 ```
 
 Then start the consumer:
 
 ```
-./tty/chess-curio-sink.py
+./tty/chess-curio-sink
 ```
 
 ### GRPC Example
 
+[gRPC](https://grpc.io/) is a modern open source high performance Remote Procedure Call (RPC) framework that can run in any environment. It can efficiently connect services in and across data centers with pluggable support for load balancing, tracing, health checking and authentication.
+
+This example uses a grpc stream to send messages from a chess pgn file.
+
 Compile proto file:
 
 ```
-./scripts/grpc-compile proto/stream.proto
+./scripts/grpc/grpc-compile proto/chess.proto
 ```
 
-Run the stream server:
+Run the chess server:
 
 ```
-python proto/stream_server.py
+python proto/chess_server.py
 ```
 
 Then run the stream client:
 
 ```
-python proto/stream_client.py
+python proto/chess_client.py
 ```
 
 ### Neo4j Example
@@ -244,11 +250,3 @@ Load graph data:
 Total nodes: 3169
 Total relationships: 9742
 
-
-### Datadog
-
-Docker install:
-
-```
-docker run -d --name dd-agent -v /var/run/docker.sock:/var/run/docker.sock:ro -v /proc/:/host/proc/:ro -v /sys/fs/cgroup/:/host/sys/fs/cgroup:ro -e DD_API_KEY=ca6d9d1162c1a0f3f22959d9d6a86afc -e DD_SITE="datadoghq.com" -e DD_DOGSTATSD_NON_LOCAL_TRAFFIC="true" -e DD_IGNORE_AUTOCONF="elastic istio redisdb" -p 8125:8125/udp gcr.io/datadoghq/agent:7
-```

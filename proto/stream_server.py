@@ -7,7 +7,7 @@ import stream_pb2_grpc
 class StreamService(stream_pb2_grpc.StreamServicer):
     def rpc_message(self, request_iterator, context):
         for message in request_iterator:
-            print(f"{message}")
+            print(f"rx: {message}")
             yield message
 
 
