@@ -15,7 +15,9 @@ Install python packages:
 pip install -r requirements.txt
 ```
 
-### Api Example
+### FastAPI Example
+
+[FastAPI](https://fastapi.tiangolo.com/) s a modern, fast (high-performance), web framework for building APIs with Python 3.8+ based on standard Python type hints.
 
 Start server:
 
@@ -43,7 +45,7 @@ Create user (api server not required):
 
 ### Chat Example
 
-The chat example uses a chat server and a client/console. You need to run at least 2 console users to really see this work.
+The chat example implements a chat server using FastAPI and websockets. You need to run at least 2 console users to really see this work.
 
 Start the server first:
 
@@ -51,7 +53,7 @@ Start the server first:
 ./scripts/ws-server
 ```
 
-Start 2 consoles with different user ids and send messages:
+Start 2 consoles in separate terminals with different user ids and send messages:
 
 ```
 ./tty/ws-console --user-id user-1
@@ -59,7 +61,7 @@ Start 2 consoles with different user ids and send messages:
 ./tty/ws-console --user-id user-2
 ```
 
-### Redpanda
+### Redpanda (Kafka)
 
 Redpanda install:
 
@@ -83,7 +85,7 @@ Create 'crypto' topic:
 rpk topic create crypto --brokers=redpanda-dev:9092
 ```
 
-Run the server and then the client:
+Run the server and then the client in 2 separate terminals:
 
 ```
 ./tty/crypto-server --app crypto
@@ -91,7 +93,7 @@ Run the server and then the client:
 ./tty/crypto-client --topic crypto
 ```
 
-The chess example ...
+The chess example using a chess pgn file.
 
 Create 'chess' topic:
 
@@ -99,19 +101,13 @@ Create 'chess' topic:
 rpk topic create chess --brokers=redpanda-dev:9092
 ```
 
-Run the server and then the client:
+Run the server and then the client in 2 separate terminals:
 
 ```
-./tty/chess-kafka-server.py --app chess
+./tty/chess-kafka-server --app chess
 
-./tty/chess-kafka-client.py --topic chess --file ./data/chess/mega2400_part_01.pgn.txt --max-records 1000000000
+./tty/chess-kafka-client --topic chess --file ./data/chess/mega2400_part_01.pgn.txt --max-records 1000000000
 ```
-
-The benchmarks for this example comparing kafka vs redpanda:
-
-1. kafka - 10000 records ~ 18 mins, all 35273 records ~ 66 mins (on power)
-
-2. redpanda - 10000 records ~ 17 mins, all 35273 records ~ 63 mins (on battery)
 
 Publish general kafka message to a specific topic:
 
@@ -119,7 +115,27 @@ Publish general kafka message to a specific topic:
 ./tty/py-cli topic-write --topic test --brokers=redpanda-dev:9092
 ```
 
+
+### ZeroMQ Example
+
+[ZeroMQ](https://zeromq.org/) looks like an embeddable networking library but acts like a concurrency framework. It gives you sockets that carry atomic messages across various transports like in-process, inter-process, TCP, and multicast. You can connect sockets N-to-N with patterns like fan-out, pub-sub, task distribution, and request-reply. It's fast enough to be the fabric for clustered products. Its asynchronous I/O model gives you scalable multicore applications, built as asynchronous message-processing tasks. It has a score of language APIs and runs on most operating systems.
+
+This zeromq example is using push/pull sockets to implement a pipeline algorithm using a chess pgn file. There are 3 steps in the pipeline, the source, the filter, and the sink.
+
+Start the sink, then the filter, and then the source in 3 separate terminals:
+
+```
+./tty/chess-zero-sink
+
+./tty/chess-zero-filter
+
+./tty/chess-zero-source
+```
+
+
 ### Zerorpc Example
+
+[Zerorpc](https://www.zerorpc.io/) is a light-weight, reliable and language-agnostic library for distributed communication between server-side processes. It builds on top of ZeroMQ and MessagePack. Support for streamed responses - similar to python generators - makes zerorpc more than a typical RPC engine. Built-in heartbeats and timeouts detect and recover from failed requests. Introspective capabilities, first-class exceptions and the command-line utility make debugging easy.
 
 The zerorpc examples uses rpc to implement a simple users service.
 
@@ -145,20 +161,6 @@ Get user by id:
 
 ```
 zerorpc tcp://127.0.0.1:4242 user_get "name"
-```
-
-### Zeromq Example
-
-This zeromq example is using push/pull sockets to implement a pipeline algorithm. There are 3 steps in the pipeline, the source, the filter, and the sink.
-
-Start the sink, then the filter, and then the source:
-
-```
-./tty/chess-zero-sink
-
-./tty/chess-zero-filter
-
-./tty/chess-zero-source
 ```
 
 ### Curio Example 
