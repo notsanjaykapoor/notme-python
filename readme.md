@@ -1,3 +1,7 @@
+### Intro
+
+This repo is a collection of interesting python networking and database tools and libraries with sample code.
+
 ### Setup
 
 Install python 3.11.6.
@@ -43,7 +47,7 @@ Create user (api server not required):
 ./tty/py-cli.py user-create --name user-1
 ```
 
-### Chat Example
+### FastAPI Chat Example
 
 The chat example implements a chat server using FastAPI and websockets. You need to run at least 2 console users to really see this work.
 
@@ -61,7 +65,7 @@ Start 2 consoles in separate terminals with different user ids and send messages
 ./tty/ws-console --user-id user-2
 ```
 
-### Redpanda (Kafka)
+### Redpanda (Kafka) Example
 
 Redpanda install:
 
