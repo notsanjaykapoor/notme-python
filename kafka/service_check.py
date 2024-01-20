@@ -2,7 +2,6 @@ import os
 
 import datadog
 
-import stats_init  # noqa: F401
 import dot_init  # noqa: F401
 import network
 

@@ -9,7 +9,6 @@ import services.entities
 import services.entity_locations
 import services.graph.query
 import services.graph.session
-import stats_init  # noqa: F401
 
 CHECK_NAME = "notme.service_check"
 CHECK_TAGS = ["check:graph-sync"]

@@ -93,7 +93,7 @@ pickleshare==0.7.5
 platformdirs==2.5.2
 pluggy==1.0.0
 polars==0.16.8
-prompt-toolkit==3.0.29
+prompt-toolkit==3.0.43
 protobuf==4.23.3
 psycopg2-binary==2.9.4
 ptyprocess==0.7.0
@@ -107,7 +107,7 @@ pydantic==1.10.2
 pydantic-factories==1.4.1
 pyflakes==2.4.0
 Pygments==2.15.0
-pyOpenSSL==22.0.0
+pyOpenSSL==23.3.0
 pyparsing==3.0.9
 pytest==7.2.0
 pytest-asyncio==0.18.3

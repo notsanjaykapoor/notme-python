@@ -9,7 +9,6 @@ import dot_init  # noqa: F401
 import log
 import services.graph.query
 import services.graph.session
-import stats_init  # noqa: F401
 
 logger = log.init("cli")
 

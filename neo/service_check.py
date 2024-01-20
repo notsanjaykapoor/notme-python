@@ -4,7 +4,6 @@ import datadog
 
 import dot_init  # noqa: F401
 import network
-import stats_init  # noqa: F401
 
 CHECK_NAME = "notme.service_check"
 CHECK_TAGS = ["check:neo"]

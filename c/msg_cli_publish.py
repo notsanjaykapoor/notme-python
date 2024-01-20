@@ -6,7 +6,6 @@ import typing
 import typer
 
 import dot_init  # noqa: F401
-import stats_init  # noqa: F401
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 

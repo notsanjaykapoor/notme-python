@@ -10,7 +10,6 @@ import dot_init  # noqa: E402, F401
 import kafka  # noqa: E402
 import neo  # noqa: E402
 import services.graph  # noqa: E402
-import stats_init  # noqa: E402, F401
 
 while True:
     # check services
