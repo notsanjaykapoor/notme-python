@@ -7,7 +7,6 @@ load_dotenv()
 import os  # noqa: E402
 import sys  # noqa: E402
 
-import datadog  # noqa: E402
 import typer  # noqa: E402
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
@@ -40,9 +39,8 @@ def edges(
 
     logger.info(f"[graph-cli] query '{struct_graph.query}' params {struct_graph.params}")
 
-    with datadog.statsd.timed(f"{__name__}.timer", tags=["env:dev", "neo:read"]):
-        with services.graph.session.get() as neo:
-            records = neo.read_transaction(services.graph.tx.read, struct_graph.query, struct_graph.params)
+    with services.graph.session.get() as neo:
+        records = neo.read_transaction(services.graph.tx.read, struct_graph.query, struct_graph.params)
 
     if not records:
         logger.info("[graph-cli] no records found")
@@ -79,9 +77,8 @@ def geo(
 
     logger.info(f"[graph-cli] query '{struct_graph.query}' params {struct_graph.params}")
 
-    with datadog.statsd.timed(f"{__name__}.timer", tags=["env:dev", "neo:read"]):
-        with services.graph.session.get() as neo:
-            records = neo.read_transaction(services.graph.tx.read, struct_graph.query, struct_graph.params)
+    with services.graph.session.get() as neo:
+        records = neo.read_transaction(services.graph.tx.read, struct_graph.query, struct_graph.params)
 
     if not records:
         logger.info("[graph-cli] no records found")

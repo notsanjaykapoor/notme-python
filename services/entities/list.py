@@ -1,7 +1,6 @@
 import dataclasses
 import re
 
-import datadog
 import sqlalchemy
 import sqlmodel
 from sqlmodel.sql.expression import Select, SelectOfScalar
@@ -35,7 +34,6 @@ class List:
         self._dataset = sqlmodel.select(models.Entity)  # default database query
         self._logger = log.init("service")
 
-    @datadog.statsd.timed("service", tags=[f"service:{__name__}"])
     def call(self) -> Struct:
         struct = Struct(0, [], 0, [])
 

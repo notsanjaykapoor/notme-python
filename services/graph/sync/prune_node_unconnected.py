@@ -1,6 +1,5 @@
 import dataclasses
 
-import datadog
 import neo4j
 import neo4j.graph
 
@@ -35,9 +34,8 @@ class PruneNodeUnconnected:
 
         graph_query = self._query_node_delete()
 
-        with datadog.statsd.timed("neo.writer", tags=[f"writer:{__name__}"]):
-            summary = self._neo.write_transaction(services.graph.tx.write, graph_query.query, graph_query.params)
-            struct.nodes_deleted += summary.counters.nodes_deleted
+        summary = self._neo.write_transaction(services.graph.tx.write, graph_query.query, graph_query.params)
+        struct.nodes_deleted += summary.counters.nodes_deleted
 
         return struct
 

@@ -1,7 +1,5 @@
 import os
 
-import datadog
-
 import dot_init  # noqa: F401
 import network
 

@@ -1,6 +1,5 @@
 import dataclasses
 
-import datadog
 import neo4j
 import sqlmodel
 
@@ -32,7 +31,6 @@ class EntityLocationSync:
 
         self._logger = log.init("service")
 
-    @datadog.statsd.timed(f"{__name__}.timer", tags=["env:dev"])
     def call(self) -> Struct:
         struct = Struct(0, 0, 0, [])
 
@@ -77,7 +75,6 @@ class EntityLocationSync:
 
         self._logger.info(f"{__name__} label '{entity_name}' props {params}")
 
-        with datadog.statsd.timed(f"{__name__}.timer", tags=["env:dev", "neo:write"]):
-            self._neo.write_transaction(services.graph.tx.write, query_update, params)
+        self._neo.write_transaction(services.graph.tx.write, query_update, params)
 
         return 1

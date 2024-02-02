@@ -1,9 +1,6 @@
-import datadog
-
 from .types import GraphQuery
 
 
-@datadog.statsd.timed("neo.reader", tags=[f"reader:{__name__}"])
 def match_shortest_path(src_label: str, src_id: str, dst_label: str, dst_id: str) -> GraphQuery:
     """find all shortest paths between nodes"""
     struct = GraphQuery("", {})

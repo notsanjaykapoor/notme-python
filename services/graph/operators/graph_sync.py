@@ -1,6 +1,5 @@
 import dataclasses
 
-import datadog
 import neo4j
 import sqlmodel
 
@@ -32,7 +31,6 @@ class GraphSync:
         self._entity_id = entity_id
         self._entity_code = entity_code
 
-    @datadog.statsd.timed(f"{__name__}.timer", tags=["env:dev"])
     def call(self) -> Struct:
         struct = Struct(0, 0, 0, [], 0, 0, [], [])
 

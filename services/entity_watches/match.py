@@ -2,7 +2,6 @@ import dataclasses
 import re
 import typing
 
-import datadog
 import neo4j
 import sqlmodel
 
@@ -145,10 +144,9 @@ class Match:
         return 0
 
     def _watch_entity_geo_query(self, query: str, params: dict) -> list[neo4j.Record]:
-        with datadog.statsd.timed(f"{__name__}.timer", tags=["env:dev", "neo:read"]):
-            records = self._neo.read_transaction(services.graph.tx.read, query, params)
+        records = self._neo.read_transaction(services.graph.tx.read, query, params)
 
-            return records
+        return records
 
     def _watch_entity_normal_match(self, watch: models.EntityWatch, entity: models.Entity, tokens: list[dict]) -> int:
         """returns 0 if watch matches entity; 1 otherwise"""

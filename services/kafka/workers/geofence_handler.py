@@ -5,7 +5,6 @@ import logging
 import typing
 
 import attrs
-import datadog
 
 import kafka
 import log
@@ -28,7 +27,6 @@ class GeofenceHandler(kafka.Handler):
     _topic: str = services.kafka.topics.TOPIC_GEOFENCE_ALERTS
     _logger: logging.Logger = log.init("actor")
 
-    @datadog.statsd.timed(f"{__name__}.timer", tags=["env:dev", "kafka:reader"])
     async def call(self, msg: models.KafkaMessage) -> kafka.KafkaResult:
         struct = kafka.KafkaResult(0, [])
 
@@ -48,8 +46,5 @@ class GeofenceHandler(kafka.Handler):
             struct.code = 500
 
             self._logger.error(f"actor '{task_name}' exception {e}")
-
-        datadog.statsd.increment(f"{__name__}.results.increment", tags=["env:dev", f"code:{struct.code}"])
-        datadog.statsd.flush()
 
         return struct

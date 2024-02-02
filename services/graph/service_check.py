@@ -1,4 +1,3 @@
-import datadog
 import sqlmodel
 
 import dot_init  # noqa: F401
@@ -62,8 +61,6 @@ def service_check() -> int:
 
         if db_entity_geo_count != db_entity_location_count:
             _metric(status=2, message="graph sync error")
-
-    datadog.statsd.flush()
 
     return 0
 
@@ -133,9 +130,4 @@ def _db_relationship_linked_count(db: sqlmodel.Session) -> int:
 
 
 def _metric(status: int, message: str):
-    datadog.statsd.service_check(
-        check_name=CHECK_NAME,
-        status=status,
-        message=message,
-        tags=CHECK_TAGS,
-    )
+    pass

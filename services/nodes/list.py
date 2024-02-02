@@ -2,7 +2,6 @@ import dataclasses
 import re
 import typing
 
-import datadog
 import neo4j
 import neo4j.graph
 import sqlmodel
@@ -45,7 +44,6 @@ class List:
 
         self._logger = log.init("service")
 
-    @datadog.statsd.timed("service", tags=[f"service:{__name__}"])
     def call(self) -> Struct:
         struct = Struct(0, None, None, [], 0, [], 0, [])
 

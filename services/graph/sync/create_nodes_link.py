@@ -1,6 +1,5 @@
 import dataclasses
 
-import datadog
 import neo4j
 import sqlmodel
 
@@ -82,9 +81,7 @@ class CreateNodesLink:
 
         params = {"id": self._node_id(data_link)}
 
-        with datadog.statsd.timed("neo.writer", tags=[f"writer:{__name__}"]):
-            summary = self._neo.write_transaction(services.graph.tx.write, query, params)
+        summary = self._neo.write_transaction(services.graph.tx.write, query, params)
+        node_struct.nodes_created += summary.counters.nodes_created
 
-            node_struct.nodes_created += summary.counters.nodes_created
-
-            return node_struct
+        return node_struct

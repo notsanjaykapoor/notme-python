@@ -1,6 +1,5 @@
 import dataclasses
 
-import datadog
 import neo4j
 import sqlmodel
 

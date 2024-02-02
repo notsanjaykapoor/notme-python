@@ -1,11 +1,8 @@
 import typing
 
-import datadog
-
 from .types import GraphQuery
 
 
-@datadog.statsd.timed("neo.reader", tags=[f"reader:{__name__}"])
 def match_geo_all_from_node(src_label: str, src_id: str, meters: float) -> GraphQuery:
     struct = GraphQuery("", {})
 
@@ -22,7 +19,6 @@ def match_geo_all_from_node(src_label: str, src_id: str, meters: float) -> Graph
     return struct
 
 
-@datadog.statsd.timed("neo.reader", tags=[f"reader:{__name__}"])
 def match_geo_all_from_point(lat: float, lon: float, meters: float) -> GraphQuery:
     struct = GraphQuery("", {})
 
@@ -40,7 +36,6 @@ def match_geo_all_from_point(lat: float, lon: float, meters: float) -> GraphQuer
     return struct
 
 
-@datadog.statsd.timed("neo.reader", tags=[f"reader:{__name__}"])
 def match_geo_filtered_from_point(lat: float, lon: float, meters: float, dst_label: typing.Optional[str], dst_id: str) -> GraphQuery:
     struct = GraphQuery("", {})
 

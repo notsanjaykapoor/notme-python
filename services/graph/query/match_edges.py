@@ -1,9 +1,6 @@
-import datadog
-
 from .types import GraphQuery
 
 
-@datadog.statsd.timed("neo.reader", tags=[f"reader:{__name__}"])
 def match_edges(src_label: str, src_id: str) -> GraphQuery:
     struct = GraphQuery("", {})
 

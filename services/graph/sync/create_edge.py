@@ -1,7 +1,6 @@
 import dataclasses
 import typing
 
-import datadog
 import neo4j
 
 import log
@@ -67,14 +66,13 @@ class CreateEdge:
 
         self._logger.info(f"{__name__} src {self._src_label}:{self._src_id} dst {self._dst_label}:{self._dst_id}")
 
-        with datadog.statsd.timed("neo.writer", tags=[f"writer:{__name__}"]):
-            summary = self._neo.write_transaction(services.graph.tx.write, query_create, params)
-            struct.edges_created = summary.counters.relationships_created
+        summary = self._neo.write_transaction(services.graph.tx.write, query_create, params)
+        struct.edges_created = summary.counters.relationships_created
 
-            if summary.counters.relationships_created:
-                struct.edges.append({"s": self._src_id, "d": self._dst_id, "e": self._edge_name})
+        if summary.counters.relationships_created:
+            struct.edges.append({"s": self._src_id, "d": self._dst_id, "e": self._edge_name})
 
-            return struct
+        return struct
 
     def _edge_count(self, query: str, params: dict) -> int:
         result = services.graph.query.execute(query, params, self._neo)

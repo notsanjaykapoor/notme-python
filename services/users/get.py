@@ -1,7 +1,6 @@
 import dataclasses
 import typing
 
-import datadog
 import sqlmodel
 
 import context
@@ -24,7 +23,6 @@ class Get:
         self._model = models.User
         self._logger = log.init("service")
 
-    @datadog.statsd.timed("service", tags=[f"service:{__name__}"])
     def call(self) -> Struct:
         struct = Struct(0, None, [])
 

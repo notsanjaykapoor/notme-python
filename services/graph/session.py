@@ -5,11 +5,11 @@ import typing
 import neo4j
 
 
-def get(uri=typing.Optional[str]) -> neo4j.Session:
+def get(uri: typing.Optional[str] = None) -> neo4j.Session:
     return _get_driver(uri=uri).session(database=_get_db_name(uri=uri))
 
 
-def _get_db_name(uri=typing.Optional[str]) -> str:
+def _get_db_name(uri: typing.Optional[str] = None) -> str:
     """get neo4j database name"""
     if not uri:
         return os.environ["NEO4J_DB_NAME"]
@@ -22,7 +22,7 @@ def _get_db_name(uri=typing.Optional[str]) -> str:
     return match[2]
 
 
-def _get_driver(uri=typing.Optional[str]) -> neo4j.Driver:
+def _get_driver(uri: typing.Optional[str] = None) -> neo4j.Driver:
     if not uri:
         uri = os.environ["NEO4J_HOST_URL"]
 
