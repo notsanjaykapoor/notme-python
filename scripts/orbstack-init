@@ -1,0 +1,200 @@
+#!/usr/bin/env python
+
+import subprocess
+
+import click
+
+ORB_CONTAINERS = [
+    {
+        "cmd": "docker run -d --rm --net host --name clickhouse-dev -p 8123:8123 -p 9000:9000 clickhouse/clickhouse-server:latest",
+        "name": "clickhouse-dev",
+    },
+    {
+        "cmd": "docker run -d --rm --net host --name jaeger-dev \
+            -e COLLECTOR_ZIPKIN_HOST_PORT=:9411 \
+            -p 4317:4317 \
+            -p 4318:4318 \
+            -p 5778:5778 \
+            -p 9411:9411 \
+            -p 6831:6831/udp \
+            -p 6832:6832/udp \
+            -p 14250:14250 \
+            -p 14268:14268 \
+            -p 16686:16686 \
+            jaegertracing/all-in-one:latest",
+        "name": "jaeger-dev",
+    },
+    {
+        "cmd": "docker run -d --rm --net host --name neo-dev -v neo-vol:/data -p 7687:7687 -p 7474:7474 --env NEO4J_AUTH=none --env=NEO4J_ACCEPT_LICENSE_AGREEMENT=yes neo4j:enterprise",
+        "name": "neo-dev",
+    },
+    # {
+    #     "cmd": "docker run -d --rm --net host --name otel-dev -v otel-vol:/conf otel/opentelemetry-collector-contrib:0.67.0 --config=/conf/otel-collector.yml",
+    #     "name": "otel-dev",
+    # },
+    {
+        "cmd": "docker run -d --rm --net host --name postgres-dev -v postgres-vol:/data --platform linux/amd64 -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=development -e PGDATA=/data -e PGPORT=5433 postgis/postgis:14-3.3",
+        "name": "postgres-dev",
+    },
+    # {
+    #     "cmd": "docker run -d --rm --net host --name quickwit-dev -v quickwit-vol:/quickwit/qwdata -p 7280:7280 --platform linux/arm64 quickwit/quickwit run",
+    #     "name": "quickwit-dev",
+    # },
+    {
+        "cmd": "docker run -d --rm --net host --name redis-dev redis:latest",
+        "name": "redis-dev",
+    },
+    {
+        "cmd": "docker run -d --rm --net host --name redpanda-dev -v redpanda-vol:/data -p 8081:8081 vectorized/redpanda:v22.3.8 redpanda start --overprovisioned --smp 1 --kafka-addr PLAINTEXT://0.0.0.0:9092,OUTSIDE://0.0.0.0:29092 --advertise-kafka-addr PLAINTEXT://redpanda-dev:9092,OUTSIDE://redpanda-dev:9092",
+        "name": "redpanda-dev",
+    },
+    {
+        "cmd": "docker run -d --rm --net host --name typesense-dev -v typesense-vol:/data typesense/typesense:0.24.0 --data-dir=/data --api-key=xyz --enable-cors",
+        "name": "typesense-dev",
+    },
+]
+
+ORB_VOLS = [
+    {
+        "name": "neo-vol",
+    },
+    {
+        "files": [
+            {
+                "dst": "otel-collector.yml",
+                "src": "./secrets/otel-collector.secret.yml",
+            }
+        ],
+        "name": "otel-vol",
+    },
+    {
+        "name": "postgres-vol",
+    },
+    # {
+    #     "name": "quitwit-vol",
+    # },
+    {
+        "name": "redpanda-vol",
+    },
+    {
+        "name": "typesense-vol",
+    }
+]
+
+
+@click.command()
+def orbstack_init() -> int:
+    """ initialize orbstack """
+
+    try:
+        names_all = [container["name"] for container in ORB_CONTAINERS]
+
+        _print_status(f"containers check ... {names_all}")
+
+        names_running = _containers_list()
+        names_missing = set(names_all) - set(names_running)
+
+        if not names_missing:
+            _print_ok(f"containers running ... {names_running}")
+            return 0
+
+        _volumes_create()
+        _containers_start(names=names_missing)
+    except Exception:
+        pass
+
+
+def _containers_list() -> list[str]:
+    """
+    Get list of currently running containers
+    """
+    names = []
+
+    result = subprocess.run("docker container ls", shell=True, capture_output=True)
+    lines = result.stdout.decode("utf-8").split("\n")
+    lines.pop(0)
+
+    for line in lines:
+        if not line:
+            continue
+        name = line.split(" ")[-1]
+        names.append(name)
+
+    return sorted(names)
+
+
+def _containers_start(names: list[str]):
+    """
+    Start containers in 'names' list
+    """
+    for container in ORB_CONTAINERS:
+        name = container.get("name")
+        cmd = container.get("cmd")
+        container.get("files", [])
+
+        try:
+            print(f"container start {name}", end=" ... ", flush=True)
+
+            if name not in names:
+                _print_status("exists")
+                continue
+
+            subprocess.run(cmd, shell=True, capture_output=True)
+
+            _print_ok("started")
+        except Exception as e:
+            _print_error(f"error, {e}")
+
+
+def _volumes_create():
+    """
+    Create orbstack directories used as docker volumes
+    """
+    for volume in ORB_VOLS:
+        name = volume.get("name")
+        files = volume.get("files", [])
+
+        try:
+            print(f"volume create {name}", end=" ... ", flush=True)
+
+            dir = f"~/OrbStack/docker/volumes/{name}"
+            cmd = f"mkdir -p {dir}"
+            subprocess.run(cmd, shell=True)
+
+            _print_ok("ok")
+        except Exception as e:
+            _print_error(f"error, {e}")
+
+        try:
+            for file_object in files:
+                dst = file_object.get("dst")
+                src = file_object.get("src")
+
+                cmd = f"cp {src} {dir}/{dst}"
+
+                print(f"volume copy {src}", end=" ... ", flush=True)
+                result = subprocess.run(cmd, shell=True)
+
+                if result.returncode != 0:
+                    raise Exception("copy failed")
+
+                _print_ok("ok")
+        except Exception as e:
+            _print_error(f"exception, {e}")
+            raise e
+
+
+def _print_error(s: str):
+    print("\x1b[1;31m" + s + "\x1b[0m")
+
+
+def _print_ok(s: str):
+    print("\x1b[1;32m" + s + "\x1b[0m")
+
+
+def _print_status(s: str):
+    print("\x1b[1;33m" + s + "\x1b[0m")
+
+
+if __name__ == "__main__":
+    orbstack_init()

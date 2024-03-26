@@ -1,12 +1,13 @@
 import os
 import typing
 
+import fastapi
+import fastapi.middleware.cors
+import fastapi.templating
 import sqlmodel
+import starlette.middleware.sessions
 import strawberry
 import ulid
-from fastapi import APIRouter, Depends, FastAPI, Request  # noqa: E402
-from fastapi.middleware.cors import CORSMiddleware
-from starlette.middleware.sessions import SessionMiddleware
 
 # from sqlmodel import Session  # noqa: E402
 from strawberry.fastapi import GraphQLRouter  # noqa: E402
@@ -27,8 +28,10 @@ import services.webauthn.register
 logger = log.init("api")
 
 # create app object
-app = FastAPI()
+app = fastapi.FastAPI()
 
+# initialize templates dir
+templates = fastapi.templating.Jinja2Templates(directory="templates")
 
 # db dependency
 def get_db():
@@ -37,14 +40,14 @@ def get_db():
 
 
 # gql db dependency
-async def get_gql_context(db=Depends(get_db)):
+async def get_gql_context(db=fastapi.Depends(get_db)):
     return {"db": db}
 
 
-api_router = APIRouter(
+api_router = fastapi.APIRouter(
     prefix="/api/v1",
     tags=["api"],
-    dependencies=[Depends(get_db)],
+    dependencies=[fastapi.Depends(get_db)],
     responses={404: {"description": "Not found"}},
 )
 
@@ -64,7 +67,7 @@ app.include_router(graphql_router, prefix="/graphql")
 app.include_router(api_router, prefix="/api/v1")
 
 app.add_middleware(
-    CORSMiddleware,
+    fastapi.middleware.cors.CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
@@ -72,7 +75,7 @@ app.add_middleware(
 )
 
 app.add_middleware(
-    SessionMiddleware, secret_key=os.environ.get("FASTAPI_SESSION_KEY"), max_age=None
+    starlette.middleware.sessions.SessionMiddleware, secret_key=os.environ.get("FASTAPI_SESSION_KEY"), max_age=None
 )
 
 
@@ -89,7 +92,7 @@ def on_shutdown():
 
 
 @app.middleware("http")
-async def add_request_id(request: Request, call_next):
+async def add_request_id(request: fastapi.Request, call_next):
     # set request id context var
     context.rid_set(ulid.new().str)
     response = await call_next(request)
@@ -101,7 +104,7 @@ def entities_list(
     query: str = "",
     offset: int = 0,
     limit: int = 100,
-    db: sqlmodel.Session = Depends(get_db),
+    db: sqlmodel.Session = fastapi.Depends(get_db),
 ):
     logger.info(f"{context.rid_get()} api.v1.entities.list")
 
@@ -131,9 +134,14 @@ def api_ping():
     }
 
 
+@app.get("/me", response_class=fastapi.responses.HTMLResponse)
+def me(request: fastapi.Request):
+    return templates.TemplateResponse(request, "me.html", {"app_version": "version"})
+
+
 @app.get("/openid/auth")
 def openid_login(
-    db: sqlmodel.Session = Depends(get_db),
+    db: sqlmodel.Session = fastapi.Depends(get_db),
     email: typing.Optional[str] = "",
     idp: typing.Optional[str] = "",
 ):
@@ -164,7 +172,7 @@ def openid_login(
 
 
 @app.get("/openid/authentik/callback")
-def openid_authentik_callback(request: Request, state: str, code: str):
+def openid_authentik_callback(request: fastapi.Request, state: str, code: str):
     logger.info(f"{context.rid_get()} openid.authentik.callback try")
 
     struct_auth = services.openid.AuthCallback(
@@ -184,7 +192,7 @@ def openid_authentik_callback(request: Request, state: str, code: str):
 
 
 @app.get("/openid/google/callback")
-def openid_google_callback(request: Request, state: str, code: str):
+def openid_google_callback(request: fastapi.Request, state: str, code: str):
     logger.info(f"{context.rid_get()} openid.google.callback try")
 
     struct_auth = services.openid.AuthCallback(
@@ -200,7 +208,7 @@ def openid_google_callback(request: Request, state: str, code: str):
 
 
 @app.post("/api/v1/users", response_model=int)
-def user_create(user_id: str, db: sqlmodel.Session = Depends(get_db)):
+def user_create(user_id: str, db: sqlmodel.Session = fastapi.Depends(get_db)):
     logger.info(f"{context.rid_get()} api.users.create")
 
     struct = services.users.Create(db, user_id, params={}).call()
@@ -209,7 +217,7 @@ def user_create(user_id: str, db: sqlmodel.Session = Depends(get_db)):
 
 
 @app.get("/api/v1/users/{user_id}", response_model=models.User)
-def user_get(user_id: str, db: sqlmodel.Session = Depends(get_db)):
+def user_get(user_id: str, db: sqlmodel.Session = fastapi.Depends(get_db)):
     logger.info(f"{context.rid_get()} api.users.get")
 
     struct = services.users.Get(db, user_id).call()
@@ -222,7 +230,7 @@ def users_list(
     query: str = "",
     offset: int = 0,
     limit: int = 100,
-    db: sqlmodel.Session = Depends(get_db),
+    db: sqlmodel.Session = fastapi.Depends(get_db),
 ):
     logger.info(f"{context.rid_get()} api.users.list")
 
@@ -236,7 +244,7 @@ def users_list(
 @app.post("/api/v1/webauthn/auth/complete")
 def webauthn_auth_complete(
     params: services.webauthn.auth.CompleteParams,
-    db: sqlmodel.Session = Depends(get_db),
+    db: sqlmodel.Session = fastapi.Depends(get_db),
 ):
     logger.info(f"{context.rid_get()} api.webauthn.auth.complete")
 
@@ -247,7 +255,7 @@ def webauthn_auth_complete(
 
 @app.post("/api/v1/webauthn/auth/init")
 def webauthn_auth_init(
-    params: services.webauthn.auth.InitParams, db: sqlmodel.Session = Depends(get_db)
+    params: services.webauthn.auth.InitParams, db: sqlmodel.Session = fastapi.Depends(get_db)
 ):
     logger.info(f"{context.rid_get()} api.webauthn.auth.init")
 
@@ -261,7 +269,7 @@ def webauthn_auth_init(
 @app.post("/api/v1/webauthn/register/complete")
 def webauthn_register_complete(
     params: services.webauthn.register.CompleteParams,
-    db: sqlmodel.Session = Depends(get_db),
+    db: sqlmodel.Session = fastapi.Depends(get_db),
 ):
     logger.info(f"{context.rid_get()} api.webauthn.register.complete")
 
@@ -273,7 +281,7 @@ def webauthn_register_complete(
 @app.post("/api/v1/webauthn/register/init")
 def webauthn_register_init(
     params: services.webauthn.register.InitParams,
-    db: sqlmodel.Session = Depends(get_db),
+    db: sqlmodel.Session = fastapi.Depends(get_db),
 ):
     logger.info(f"{context.rid_get()} api.webauthn.register.init")
 
