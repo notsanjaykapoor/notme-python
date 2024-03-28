@@ -1,0 +1,280 @@
+#!/usr/bin/env python
+
+import subprocess
+import time
+
+import click
+import dotenv
+import requests
+import ulid
+
+dotenv.load_dotenv()
+
+DEFAULT_APP_CHECK_INTERVAL = 2
+DEFAULT_APP_CHECK_TIMEOUT = 20
+
+DEFAULT_SSH_CHECK_INTERVAL = 3
+DEFAULT_SSH_CHECK_TIMEOUT = 15
+
+GCP_REPO = "gcr.io/notme-330419/notme-python"
+
+@click.group()
+def cli():
+    pass
+
+
+@click.command()
+@click.option("--sha", default="", required=False, help="git repo sha or tag")
+@click.pass_context
+def build(ctx, sha: str):
+    time_start_unix = time.time()
+
+    version = sha or ulid.new()
+
+    print("docker build {version}", end=" ... ", flush=True)
+
+    _docker_build(version=version)
+
+    _print_ok("ok")
+
+    time_end_unix = time.time()
+    time_mins = round((time_end_unix - time_start_unix) / 60, 1)
+
+    _print_ok(f"build completed in {time_mins} mins")
+
+
+@click.command()
+@click.option("--host", default=None, required=True, help="gcp host or ip address")
+@click.option("--user", default=None, required=True, help="gcp ssh username")
+@click.option("--site", default="https://python.notme.one", required=False, help="site uri")
+@click.pass_context
+def deploy(ctx, host: str, user: str, site: str):
+    time_start_unix = time.time()
+
+    print(f"host {host} ping", end=" ... ", flush=True)
+
+    timeout = 0
+    while timeout < DEFAULT_SSH_CHECK_TIMEOUT:
+        code = _host_check(host=host, user=user)
+        if code == 0:
+            break
+        time.sleep(DEFAULT_SSH_CHECK_INTERVAL)
+        timeout += DEFAULT_SSH_CHECK_INTERVAL
+
+    _print_ok("ok")
+
+    print(f"host {host} docker login", end=" ... ", flush=True)
+
+    _docker_login(host=host, user=user)
+
+    _print_ok("ok")
+
+    print(f"host {host} scp files", end=" ... ", flush=True)
+
+    _host_scp_files(host=host, user=user, dir="ruby", files=[".env.prd"])
+
+    _print_ok("ok")
+
+    print(f"host {host} docker image pull", end=" ... ", flush=True)
+
+    _docker_image_pull(host=host, user=user)
+
+    _print_ok("ok")
+
+    print(f"host {host} docker app db migrate", end=" ... ", flush=True)
+
+    _docker_app_db_migrate(host=host, user=user)
+
+    _print_ok("ok")
+
+    print(f"host {host} docker app start", end=" ... ", flush=True)
+
+    _docker_app_restart(host=host, user=user)
+
+    _print_ok("ok")
+
+    site_ping = f"{site}/version"
+
+    print(f"ping {site_ping}", end=" ... ", flush=True)
+
+    timeout = 0
+    while timeout < DEFAULT_APP_CHECK_TIMEOUT:
+        try:
+            r = requests.get(site_ping)
+            if (code := r.status_code) in [0, 200]:
+                break
+        except Exception:
+            code = 500
+        time.sleep(DEFAULT_APP_CHECK_INTERVAL)
+        timeout += DEFAULT_APP_CHECK_INTERVAL
+
+    if code not in [0, 200]:
+        _print_error(f"error {code}")
+        exit(code)
+
+    _print_ok(f"ok, {code}")
+
+    time_end_unix = time.time()
+    time_secs = round((time_end_unix - time_start_unix), 1)
+
+    _print_ok(f"host {host} deploy completed in {time_secs} secs")
+
+
+def _docker_app_db_migrate(host: str, user: str) -> int:
+    response = subprocess.run(
+        f"ssh -t {user}@{host} 'sudo docker run --name python-migrate-prd --network notme --rm --env-file ./python/.env.prd {GCP_REPO}:latest /app/bin/db-migrate'",
+        shell=True,
+        capture_output=True,
+    )
+
+    if response.returncode not in [0]:
+        _print_error(response.stdout.decode("utf-8"))
+        exit(response.returncode)
+
+    return response.returncode
+
+
+def _docker_app_restart(host: str, user: str) -> int:
+    apps = ["python-migrate-prd", "python-prd"]
+
+    for app in apps:
+        response = subprocess.run(
+            f"ssh -t {user}@{host} 'sudo docker stop {app}'",
+            shell=True,
+            capture_output=True,
+        )
+
+        if response.returncode not in [0, 1]: # 1 means container not running
+            _print_error(response.stdout.decode("utf-8"))
+            exit(response.returncode)
+
+    return _docker_app_start(host=host, user=user)
+
+
+def _docker_app_start(host: str, user: str) -> int:
+    # api server
+    response = subprocess.run(
+        f"ssh -t {user}@{host} 'sudo docker run --name python-prd --network notme --env-file ./python/.env.prd -d --rm -p 5000:5000 {GCP_REPO}:latest /app/bin/api-server --port 5000'",
+        shell=True,
+        capture_output=True,
+    )
+
+    if response.returncode != 0:
+        _print_error(response.stdout.decode("utf-8"))
+        exit(response.returncode)
+
+    return response.returncode
+
+
+def _docker_build(version: str) -> int:
+    response = subprocess.run(
+        f"docker build -t {GCP_REPO}:{version} -t {GCP_REPO}:latest --platform linux/amd64 --build-arg APP_VERSION={version} .",
+        shell=True,
+        capture_output=False,
+    )
+
+    if response.returncode != 0:
+        exit(response.returncode)
+
+    response = subprocess.run(
+        f"docker push {GCP_REPO}:{version}",
+        shell=True,
+        capture_output=False,
+    )
+
+    if response.returncode != 0:
+        exit(response.returncode)
+
+    response = subprocess.run(
+        f"docker push {GCP_REPO}:latest",
+        shell=True,
+        capture_output=False,
+    )
+
+    if response.returncode != 0:
+        exit(response.returncode)
+
+    return response.returncode
+
+
+def _docker_image_pull(host: str, user: str) -> int:
+    response = subprocess.run(
+        f"ssh -t {user}@{host} 'sudo docker image pull {GCP_REPO}:latest'",
+        shell=True,
+        capture_output=True,
+    )
+
+    if response.returncode not in [0]:
+        _print_error(response.stdout.decode("utf-8"))
+        exit(response.returncode)
+
+    return response.returncode
+
+
+def _docker_login(host: str, user: str) -> int:
+    response = subprocess.run(
+        f"ssh -t {user}@{host} 'gcloud auth print-access-token | sudo docker login -u oauth2accesstoken --password-stdin gcr.io'",
+        shell=True,
+        capture_output=True,
+    )
+
+    if response.returncode != 0:
+        _print_error(response.stdout.decode("utf-8"))
+        exit(response.returncode)
+
+    return response.returncode
+
+
+def _host_check(host: str, user: str) -> int:
+    ssh_code = subprocess.run(
+        f"ssh -t {user}@{host} 'ls'",
+        shell=True,
+        capture_output=True,
+    ).returncode
+
+    if ssh_code not in [0]:
+        exit(ssh_code)
+
+    return ssh_code
+
+
+def _host_scp_files(host: str, user: str, dir: str, files: list[str]) -> int:
+    scp_code = subprocess.run(
+        f"ssh -t {user}@{host} 'mkdir -p {dir}'",
+        shell=True,
+        capture_output=True,
+    ).returncode
+
+    if scp_code not in [0]:
+        exit(scp_code)
+
+    for file in files:
+        scp_code = subprocess.run(
+            f"scp {file} {user}@{host}:{dir}/{file}",
+            shell=True,
+            capture_output=True,
+        ).returncode
+
+        if scp_code != 0:
+            exit(scp_code)
+
+    return 0
+
+
+def _print_error(s: str):
+    print("\x1b[1;31m" + s + "\x1b[0m", flush=True)
+
+
+def _print_ok(s: str):
+    print("\x1b[1;32m" + s + "\x1b[0m", flush=True)
+
+
+def _print_status(s: str):
+    print("\x1b[1;36m" + s + "\x1b[0m", flush=True)
+
+
+cli.add_command(build)
+cli.add_command(deploy)
+
+if __name__ == "__main__":
+    cli()

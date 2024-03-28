@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="md:container md:mx-auto py-20 px-10 text-left text-lg">
+    <p>
+        I am an experienced entrepreneur that loves building software and working in environments where ownership, accountability and empathy are core principles.
+        You can read about my background
+        <a class="font-bold text-blue-600 text-normal" href="https://docs.google.com/document/d/1_YBvhpwsezkfwuVOnyep3NUTsnozdAZJqcNRNHrDt0Y/edit?usp=sharing" target="_blank">here</a>
+        or on
+        <a class="font-bold text-blue-600 text-normal" href="https://www.linkedin.com/in/sanjay-kapoor-109288/" target="_blank">LinkedIn</a>
+        .
+    </p>
+    <p class="mt-10">
+      My code repos 
+      (<a class="font-bold text-blue-600 text-normal" href="https://github.com/notsanjaykapoor/notme-elixir" target="_blank">Elixir</a>,
+      <a class="font-bold text-blue-600 text-normal" href="https://github.com/notsanjaykapoor/notme-python" target="_blank">Python</a>,
+      <a class="font-bold text-blue-600 text-normal" href="https://github.com/notsanjaykapoor/notme-ruby" target="_blank">Ruby</a>,
+      <a class="font-bold text-blue-600 text-normal" href="https://github.com/notsanjaykapoor/deploybot" target="_blank">Rust</a>)
+      are a playground for learning, building, and exploring.
+    </p>
+    <p class="mt-10">
+      I am based in Chicago.  Reach out via <a class="font-semibold text-blue-600 text-normal" href="mailto:notsanjaykapoor@email.com">email</a>.
+    </p>
+    <p class="mt-20 text-xs">
+        @{{ app_version }}
+    </p>
+</div>
+  
+{% endblock %}

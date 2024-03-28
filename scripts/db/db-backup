@@ -1,0 +1,65 @@
+#!/usr/bin/env python
+
+import os
+import re
+import subprocess
+import sys
+
+sys.path.append(".")
+
+import click
+import ulid
+
+import dot_init
+import models  # noqa: F401, required for migrations
+
+
+@click.group()
+def cli():
+    pass
+
+
+@click.command()
+@click.option('--output-file', default="", required=False, help="backup output file name")
+@click.pass_context
+def local(ctx, output_file: str) -> dict:
+    """
+    Backup local database defined by env 'DATABASE_URL'
+    """
+
+    output_file = output_file or f"backup.{ulid.new().str}.sql"
+
+    db_uri = os.environ.get("DATABASE_URL")
+
+    match = re.match("(postgres|postgresql):\/\/([^:]+:[^@]+)@([^:]+):(\d+)\/(.*)", db_uri)
+    _user_password, host, port, db_name = (match[2], match[3], match[4], match[5])
+
+    print(f"db backup '{host}:{port}' db '{db_name}'", end=" ... ", flush=True)
+
+    cmd = f"pg_dump -d {db_uri} -Fc --no-owner --no-acl --file {output_file}"
+
+    result = subprocess.run(cmd.split(" "), check=True, capture_output=True)
+
+    if result.returncode != 0:
+        _print_error(f"error {result.returncode}")
+        exit(result.returncode)
+
+    _print_ok("ok")
+
+
+def _print_error(s: str):
+    print("\x1b[1;31m" + s + "\x1b[0m")
+
+
+def _print_ok(s: str):
+    print("\x1b[1;32m" + s + "\x1b[0m")
+
+
+def _print_status(s: str):
+    print("\x1b[1;33m" + s + "\x1b[0m")
+
+
+cli.add_command(local)
+
+if __name__ == "__main__":
+    cli()
