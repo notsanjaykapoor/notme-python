@@ -142,8 +142,6 @@ class StreamCsv:
 
     def _output_builder(self, worker_index, worker_count):
         def output_handler(item):
-            breakpoint()  # xxx
-
             line = json.dumps(item)
             print(line)
             return line

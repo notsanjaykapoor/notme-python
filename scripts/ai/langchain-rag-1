@@ -1,0 +1,189 @@
+#!/usr/bin/env python
+
+import os
+import sys
+
+sys.path.insert(1, os.path.join(sys.path[0], "../.."))
+
+import click
+import langchain.agents.agent_toolkits
+
+# import langchain.text_splitter
+# import langchain_community.document_loaders
+import langchain_community.embeddings
+
+# import langchain_community.vectorstores
+import langchain_openai.chat_models
+from langchain import hub
+
+import dot_init
+import services.corpus
+
+config = {
+    "notme": {
+        "dir": "./data/notme/txt",
+    },
+    "paulg": {
+        "urls": [
+            "https://paulgraham.com/reddits.html",
+            "https://paulgraham.com/google.html",
+            "https://paulgraham.com/best.html",
+        ],
+    },
+    "sotu": {
+        "dir": "./data/sotu",
+    },
+}
+
+@click.group()
+def cli():
+    pass
+
+@click.command()
+@click.option('--name', default=None, required=True, help="corpus name")
+@click.option('--query', default=None, required=True, help="question")
+@click.pass_context
+def chat(ctx, name: str, query: str) -> dict:
+    """
+    """
+    search_result = services.corpus.search(query="")
+
+    if name not in search_result.names:
+        _print_error(f"corpus '{name}' invalid")
+        exit(1)
+
+    db_name = f"faiss/{name}"
+    embedding = langchain_community.embeddings.GPT4AllEmbeddings()
+
+    agent_result = services.corpus.chat_agent(db_name=db_name, embedding=embedding, prompt_name="hwchase17/openai-tools-agent")
+    agent_executor = agent_result.agent_executor
+
+    _print_status(f"corpus '{name}' query '{query}'")
+
+    result = agent_executor.invoke({"input": query})
+
+    print(result) #
+
+    _print_ok(result.get("output"))
+
+
+@click.command()
+@click.option('--name', default=None, required=True, help="corpus name")
+@click.pass_context
+def write(ctx, name: str) -> dict:
+    """
+    
+    """
+    docs_config = config.get(name, {})
+
+    if not docs_config:
+        _print_error(f"corpus {name} invalid")
+        exit(1)
+
+    db_name = f"faiss/{name}"
+    embedding = langchain_community.embeddings.GPT4AllEmbeddings()
+
+    _print_status(f"corpus '{name}' write config '{docs_config}'")
+
+    write_result = services.corpus.write(db_name=db_name, embedding=embedding, config=docs_config)
+
+    _print_status(f"corpus '{name}' write result docs {write_result.docs_count} chunks {write_result.chunks_count}")
+
+    exit(0)
+
+    # loader = langchain_community.document_loaders.DirectoryLoader(docs_dir)
+    # loader = langchain_community.document_loaders.TextLoader(docs_list)
+
+    # We load the document using LangChain’s handy extractors, formatters, loaders, embeddings, and LLMs
+
+    # documents = loader.load()
+    # text_splitter = langchain.text_splitter.CharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
+    # texts = text_splitter.split_documents(documents)
+
+    # We use an OpenAI default embedding model
+    # Note the code in this example does not preserve privacy
+    # embeddings = OpenAIEmbeddings()
+
+    # LangChain provides API functions to interact with FAISS
+    # db = langchain_community.vectorstores.FAISS.from_documents(texts, embedding=embedding)
+    # db.save_local(db_name)
+
+    # db = langchain_community.vectorstores.FAISS.load_local(db_name, embeddings, allow_dangerous_deserialization=True)
+
+    # _print_status(f"corpus {name} write to db {db_name} docs {len(documents)} chunks {db.index.ntotal}")
+
+    # We create a 'retriever' that knows how to interact with our vector database using an augmented context
+    # We could construct the retriever ourselves from first principles but it's tedious
+    # Instead we'll use LangChain to create a retriever for our vector database
+
+    # retriever = db.as_retriever()
+
+    # tool = langchain.agents.agent_toolkits.create_retriever_tool(
+    #     retriever,
+    #     name,
+    #    f"search and returns documents regarding the {name}"
+    # )
+    # tools = [tool]
+
+    # We wrap an LLM (here OpenAI) with a conversational interface that can process augmented requests
+
+    # llm = langchain_openai.chat_models.ChatOpenAI(temperature = 0)
+    # agent_executor = langchain.agents.agent_toolkits.create_conversational_retrieval_agent(
+    #     llm,
+    #     tools,
+    #     max_token_limit=2000, # default value
+    #     verbose=True,
+    # )
+
+    # prompt = hub.pull("hwchase17/openai-tools-agent")
+    # agent = langchain.agents.create_openai_tools_agent(llm, tools, prompt)
+    # agent_executor = langchain.agents.AgentExecutor(agent=agent, tools=tools)
+
+    # input = "what is NATO?"
+    # result = agent_executor.invoke({"input": input})
+
+    # Response from the model
+
+    input = "Where did Sanjay work in 2015?"
+    result = agent_executor.invoke({"input": input})
+
+    print(result) #
+
+    input = "Where does Sanjay live?"
+    result = agent_executor.invoke({"input": input})
+
+    print(result) #
+
+    input = "Where did Sanjay go to college?"
+    result = agent_executor.invoke({"input": input})
+
+    print(result) #
+
+    input = "When was NATO created?"
+    result = agent_executor.invoke({"input": input})
+
+    print(result) #
+
+    input = "What did the president say about Nancy Pelosi?"
+    result = agent_executor.invoke({"input": input})
+
+    print(result) #
+
+
+def _print_error(s: str):
+    print("\x1b[1;31m" + s + "\x1b[0m")
+
+
+def _print_ok(s: str):
+    print("\x1b[1;32m" + s + "\x1b[0m")
+
+
+def _print_status(s: str):
+    print("\x1b[1;33m" + s + "\x1b[0m")
+
+
+cli.add_command(chat)
+cli.add_command(write)
+
+if __name__ == "__main__":
+    cli()

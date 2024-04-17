@@ -18,6 +18,7 @@ import dot_init  # noqa: F401
 import gql  # noqa: E402
 import log  # noqa: E402
 import models  # noqa: E402
+import routers
 import services.database.session  # noqa: E402
 import services.entities  # noqa: E402
 import services.openid
@@ -30,9 +31,6 @@ logger = log.init("api")
 # create app object
 app = fastapi.FastAPI()
 
-# initialize templates dir
-templates = fastapi.templating.Jinja2Templates(directory="templates")
-
 # db dependency
 def get_db():
     with services.database.session.get() as session:
@@ -44,12 +42,12 @@ async def get_gql_context(db=fastapi.Depends(get_db)):
     return {"db": db}
 
 
-api_router = fastapi.APIRouter(
-    prefix="/api/v1",
-    tags=["api"],
-    dependencies=[fastapi.Depends(get_db)],
-    responses={404: {"description": "Not found"}},
-)
+# api_router = fastapi.APIRouter(
+#     prefix="/api/v1",
+#     tags=["api"],
+#     dependencies=[fastapi.Depends(get_db)],
+#     responses={404: {"description": "Not found"}},
+# )
 
 # initialize graphql schema and router
 
@@ -64,7 +62,11 @@ graphql_router = GraphQLRouter(
 )
 
 app.include_router(graphql_router, prefix="/graphql")
-app.include_router(api_router, prefix="/api/v1")
+# app.include_router(api_router, prefix="/api/v1")
+app.include_router(routers.health.app)
+app.include_router(routers.me.app)
+app.include_router(routers.rag.app)
+app.include_router(routers.users.app)
 
 app.add_middleware(
     fastapi.middleware.cors.CORSMiddleware,
@@ -82,7 +84,6 @@ app.add_middleware(
 @app.on_event("startup")
 def on_startup():
     logger.info("api.startup")
-
     services.database.session.migrate()
 
 
@@ -113,30 +114,6 @@ def entities_list(
     # logger.info(f"api.users.list response {struct}")
 
     return struct.objects
-
-
-# kubernetes inspired health probes
-@app.get("/health")
-@app.get("/health/live")
-@app.get("/health/ready")
-@app.get("/health/startup")
-def api_health():
-    return {
-        "api": "up",
-    }
-
-
-@app.get("/ping")
-def api_ping():
-    return {
-        "code": 0,
-        "message": "pong",
-    }
-
-
-@app.get("/me", response_class=fastapi.responses.HTMLResponse)
-def me(request: fastapi.Request):
-    return templates.TemplateResponse(request, "me.html", {"app_version": "version"})
 
 
 @app.get("/openid/auth")
@@ -205,40 +182,6 @@ def openid_google_callback(request: fastapi.Request, state: str, code: str):
         "code": struct_auth.code,
         "errors": struct_auth.errors,
     }
-
-
-@app.post("/api/v1/users", response_model=int)
-def user_create(user_id: str, db: sqlmodel.Session = fastapi.Depends(get_db)):
-    logger.info(f"{context.rid_get()} api.users.create")
-
-    struct = services.users.Create(db, user_id, params={}).call()
-
-    return struct.id
-
-
-@app.get("/api/v1/users/{user_id}", response_model=models.User)
-def user_get(user_id: str, db: sqlmodel.Session = fastapi.Depends(get_db)):
-    logger.info(f"{context.rid_get()} api.users.get")
-
-    struct = services.users.Get(db, user_id).call()
-
-    return struct.user
-
-
-@app.get("/api/v1/users", response_model=list[models.User])
-def users_list(
-    query: str = "",
-    offset: int = 0,
-    limit: int = 100,
-    db: sqlmodel.Session = fastapi.Depends(get_db),
-):
-    logger.info(f"{context.rid_get()} api.users.list")
-
-    struct = services.users.List(db, query, offset, limit).call()
-
-    # logger.info(f"api.users.list response {struct}")
-
-    return struct.objects
 
 
 @app.post("/api/v1/webauthn/auth/complete")

@@ -57,6 +57,11 @@ logging_config = {
             "level": LOG_LEVEL,
             # "propagate": False
         },
+        "app": {
+            "handlers": ["console"],
+            "level": LOG_LEVEL,
+            # "propagate": False
+        },
         "cli": {
             "handlers": ["console"],
             "level": LOG_LEVEL,

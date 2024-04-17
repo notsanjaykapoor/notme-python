@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container grid grid-cols-12">
+  <div class="col-span-12 mt-10">
+    <h3 class="font-bold text-center">
+      {{ app_name }}
+    </h3>
+  </div>
+  <div class="col-start-2 col-span-10 mt-2 opacity-50 text-center text-xs text-zinc-400">
+    @{{ app_version }}
+  </div>
+</div>
+
+<div class="container grid grid-cols-12 mt-10">
+  <div class="col-start-2 col-span-10 font-bold text-sm">
+    <input type="search" name="query" placeholder="{{prompt_text}}" autocomplete="off" hx-get="/rag/{{corpus_name}}/query" hx-target="#rag-answer" hx-trigger="keyup[key=='Enter'] from:body" hx-on="htmx:beforeRequest: document.getElementById('rag-answer').innerText = 'processing ...'" class="peer px-0 mx-0 h-full w-full border-b bg-transparent pt-4 pb-1.5 font-sans text-sm font-normal text-blue-gray-700 outline outline-0 transition-all placeholder-shown:border-blue-gray-200 focus:border-pink-600 focus:outline-0 disabled:border-0 disabled:bg-blue-gray-50">
+  </div>
+</div>
+
+<div class="container grid grid-cols-12 mt-10">
+  <div class="col-start-2 col-span-10 mt-0">
+    <p class="text-sm italic font-black" id="rag-answer">
+    </p>  
+  </div>
+</div>
+
+{% endblock %}

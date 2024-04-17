@@ -1,0 +1,218 @@
+﻿Sanjay Kapoor
+Residence: Chicago, IL
+Mobile: +1 650.387.6818
+Email: notsanjaykapoor@gmail.com
+Website: https://www.notme.one
+
+
+Technology entrepreneur with extensive experience in software engineering and product management.
+
+
+Experience
+
+
+Principal Software Engineer, Leaf Trade, Chicago, IL (Oct 2022 - Mar 2024) 
+
+
+Leaf Trade provides a tech solution for the cannabis industry to simplify wholesale ordering, inventory management, fulfillment and payments (think Shopify for cannabis).  The platform uses Python (backend), Javascript (frontend), Redpanda (Kafka), Typesense (search) and deployed on Kubernetes (AWS EKS).
+
+
+* Re-architected and re-built search engine (originally built using Elasticsearch, re-built using Typesense) resulting in 5x performance improvement
+* Re-built async workloads by adding Redpanda as a general platform component
+* Re-architected and re-built data reporting pipeline using Polars and Clickhouse
+* Re-built app infrastructure from using AWS ECS to EKS (Kubernetes)
+* Added Opentelemetry to platform for observability
+* Re-built ci pipeline reducing time from 20+ mins to ~5 mins
+
+
+
+
+Software Engineer, Peregrine, San Francisco, CA (May 2022 - Oct 2022) 
+
+
+Peregrine provides real-time data ingestion, analysis and alerts in the public safety sector.  The platform ingests large amounts of data in real-time, cleans and normalizes it before persisting to primary and secondary data stores.  The platform (Python, Django, Postgres, Elasticsearch, Neo4j, Redis, Kubernetes) has a large surface area, my responsibilities include:
+
+
+* Add graph related features to Neo4j
+* Improve performance of incoming data pipelines
+* Update infrastructure to increase reliability and make it fault-tolerant
+
+
+
+
+CTO, Symbiome, San Francisco, CA (Mar 2020 - Jan 2022) 
+
+
+Core responsibilities include architecture, design, and building software:
+
+
+* Built trial platform to define, distribute, and collect weekly survey responses for trial products, normalize all data, and analyze with Google BigQuery
+
+
+* Built e-commerce platform, integrated with Shopify (order transactions), Iterable (emails), Twilio (SMS interactions), Kustomer (customer service).  The core platform integrated and normalized all data, managed all workflows, and exported to BigQuery for data analysis.
+
+
+Principal Software Engineer, Fooda, Chicago, IL (June 2016  - Feb 2020) 
+
+
+Core responsibilities include architecture, design, mentoring and building:
+
+
+* Re-architected numerous system level components (e.g. Point of Sale)  to support additional features and increase performance
+
+
+* Added observability tools for logging (Sumologic) and monitoring (Prometheus)
+
+
+* Built automation tools for system level integration testing (Testbot) and for automated deployments using Kubernetes (Deploybot)
+
+
+* Technology stack includes Ruby, Postgres, Elasticsearch, Redis, and RabbitMQ
+
+
+
+
+Tech Lead for Groupon Stores Marketplace, Chicago, IL (Apr 2014  - Apr 2016) 
+
+
+* Built the Groupon Stores/Goods marketplace business form $0 to $100m+ GMV in the first 12 months of operation. Designed and built the technology platform that enables thousands of sellers to list their products for sale on Groupon daily.
+
+
+* Distributed services architecture where our team was responsible for building and maintaining a product catalog, a real-time inventory service, and an admin interface for sellers.  The distributed architecture and the scale of Groupon made for some interesting problem solving.  The technology stack included Ruby, Postgres, Elasticsearch, and Redis.
+
+
+
+
+
+
+CTO / Co-Founder oBaz, Chicago, IL (acquired) (Jan 2011 - Apr 2014 ) 
+
+
+* E-commerce marketplace with 1m+ users shopping 100k+ products from 5k+ small and medium brands.  Acquired by Groupon.
+
+
+* Service-based architecture with a Ruby API, using Postgres, Elasticsearch, and Redis.  The frontend application was built with Ruby and JQuery.  
+
+
+
+
+CTO / Co-Founder Pegmo, Chicago, IL (acquired) (Dec 2010 - Jan 2012 ) 
+
+
+* Social loyalty and engagement game that allows users to interact with their favorite businesses.  As users complete social tasks, they earn rewards with these businesses.
+
+
+* Monolithic application using Ruby, Postgres, Elasticsearch, and Redis, and JQuery
+
+
+
+
+
+
+Technology Consultant (CTO), Howaboutwe, New York, NY (Apr 2010 - Dec 1, 2010) 
+
+
+* New York activity-based dating site.  People propose and are matched on the dates they propose.
+
+
+* Helped scale the site (5x improvement in re-building their matching algorithm) and expand the site from being a New York only site to a national site.  The performance improvements alone helped the founding team raise a Series A round.
+
+
+* Company was acquired in 2014 by IAC
+
+
+
+
+
+
+Technology Consultant (CTO), Fave Media, Chicago, IL (Jun 2007 - Feb 2010) 
+
+
+* Fave Media was a local business directory and web-based advertising platform targeting small businesses, and generating about 90,000 unique visitors a day (Jan '09). 
+
+
+* Responsible for architecting, building, testing, scaling, and optimizing (SEO and general performance) their Ruby on Rails web application.  The site makes heavy use of search (sphinx), caching (memcached), and content (both video and images).  It also includes an e-commerce component for businesses to purchase advertising products such as keywords, content, and search placement on the site.
+
+
+
+
+
+
+Technology Consultant, Pitchfork Media, Chicago, IL (Feb 2007 - May 2007) 
+
+
+* Pitchfork Media runs a Ruby on Rails powered website devoted to music criticism and commentary, music news, artist interviews, music video clips, and music content (primarily mp3's).  Its central focus lies with independent music.  The site has upwards of 600K page views per day. (spring 2007 traffic statistics)
+
+
+* Responsible for performance and feature enhancements
+
+
+
+
+
+
+Technology Consultant to CTO, Eyeka, Paris, France (Mar 2006 - Nov 2006) 
+
+
+* Eyeka is a technology-start-up based in Paris, France that is creating a marketplace to share and monetize user-generated content. 
+
+
+* Product responsibilities included product definition and requirements
+
+
+* Technology responsibilities included technology research and evaluation, architecture, and development
+
+
+
+
+Technology Consultant to CEO, IfByPhone, LLC, Chicago, IL (Oct 2005 - Mar 2006)
+
+
+*  IfByPhone is a technology start-up based in Chicago that provides a suite of voice applications targeted at different customer segments.
+
+
+* Development responsibilities included enhancing a game server that allows users to play blackjack, poker and multi-player trivia over the phone
+
+
+
+
+Consultant, Interim CTO, CenterPost Communications, Inc., Chicago, IL (Apr 2005 – Aug 2005)
+
+
+* Company provides multi-channel outbound/inbound communications for large enterprises; primarily focused on VoiceXML applications in the travel, pharmaceutical, and insurance sectors.
+
+
+* Responsible for assessing and revamping technology architecture, bringing focus and process to development organization, building QA and support teams.  Managed a team of 25 with a $2M+ budget.
+
+
+Founder, CEO, CTO, Jarna, Inc., Menlo Park, CA (1999 – 2003)
+
+
+* Founded Jarna in the spring of 1999 to provide an enterprise scale real-time, messaging platform for wired and wireless devices.  Company completed Series A financing of $6M in the spring of 2000, led by Bay Partners and Metropolis Ventures.  Responsible for defining company strategy, building the technology and business development teams, defining the product vision and architecture, managing product development, and opening up key customer and partner accounts.  
+
+
+* Was CEO from 1999-2001, CTO from 2001-2002, and CEO again from 2002-2003.  The company was acquired by Visto in the spring of 2003.
+
+
+
+
+Senior Engineer, Eclipse International, Sunnyvale, CA (1996 - 1998)
+
+
+* Responsibilities included design and development of subsystems ranging from low-level firmware to application software for Windows CE mobile devices.
+
+
+
+
+Staff and Senior Engineer Northern Telecom,  Mountain View, CA (1993 - 1996)
+
+
+* Helped architect and build a wireless PBX, core technologies included a real-time operating system (VxWorks), and a distribution object request broker (IONA).  A patent was later awarded for the use of ORB technology in a real-time, cellular system. 
+
+
+Education
+ 
+* M.S, Computer Science, Stanford, June 1997
+
+
+* B.S, Electrical Engineering and Computer Science, UC Berkeley, December 1992
