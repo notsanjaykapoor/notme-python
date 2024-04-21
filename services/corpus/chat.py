@@ -1,9 +1,12 @@
 import dataclasses
 
 import langchain.agents
+import langchain.agents.agent_toolkits
 import langchain_community
 import langchain_community.embeddings
+import langchain_community.vectorstores
 import langchain_openai.chat_models
+
 from langchain import hub
 
 
@@ -15,23 +18,21 @@ class Struct:
     errors: list[str]
 
 
-def chat_agent(db_name: str, embedding: langchain_community.embeddings, prompt_name: str) -> Struct:
+def chat_agent(
+        db: langchain_community.vectorstores,
+        llm: langchain_openai.chat_models,
+        prompt: hub,) -> Struct:
     """
-    Create a chat agent using the specified embedding and vector store to answer queries.
+    Create a chat agent using the specified db, embedding, llm and prompt
     """
     struct = Struct(0, None, None, [])
-
-    db = langchain_community.vectorstores.FAISS.load_local(db_name, embedding, allow_dangerous_deserialization=True)
 
     tool = langchain.agents.agent_toolkits.create_retriever_tool(
         db.as_retriever(),
         "retriever",
-       f"search and returns documents about {db_name}"
+        "rag implementation",
     )
     tools = [tool]
-
-    llm = langchain_openai.chat_models.ChatOpenAI(temperature = 0)
-    prompt = hub.pull(prompt_name)
 
     struct.agent = langchain.agents.create_openai_tools_agent(llm=llm, tools=tools, prompt=prompt)
     struct.agent_executor = langchain.agents.AgentExecutor(agent=struct.agent, tools=tools)

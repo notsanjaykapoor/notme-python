@@ -6,13 +6,14 @@ import sys
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import click
+
 import langchain.agents.agent_toolkits
-
-# import langchain.text_splitter
-# import langchain_community.document_loaders
+import langchain.callbacks.streaming_stdout
+import langchain.chains
 import langchain_community.embeddings
-
-# import langchain_community.vectorstores
+import langchain_community.llms
+import langchain_community.vectorstores
+import langchain_core.prompts
 import langchain_openai.chat_models
 from langchain import hub
 
@@ -55,7 +56,12 @@ def chat(ctx, name: str, query: str) -> dict:
     db_name = f"faiss/{name}"
     embedding = langchain_community.embeddings.GPT4AllEmbeddings()
 
-    agent_result = services.corpus.chat_agent(db_name=db_name, embedding=embedding, prompt_name="hwchase17/openai-tools-agent")
+    db = langchain_community.vectorstores.FAISS.load_local(db_name, embedding, allow_dangerous_deserialization=True)
+
+    prompt = hub.pull("hwchase17/openai-tools-agent")
+    llm = langchain_openai.chat_models.ChatOpenAI(temperature = 0)
+
+    agent_result = services.corpus.chat_agent(db=db, llm=llm, prompt=prompt)
     agent_executor = agent_result.agent_executor
 
     _print_status(f"corpus '{name}' query '{query}'")
@@ -66,6 +72,54 @@ def chat(ctx, name: str, query: str) -> dict:
 
     _print_ok(result.get("output"))
 
+
+@click.command()
+@click.option('--name', default=None, required=True, help="corpus name")
+@click.option('--query', default=None, required=True, help="question")
+@click.pass_context
+def oneshot(ctx, name: str, query: str) -> dict:
+    """
+    """
+    search_result = services.corpus.search(query="")
+
+    if name not in search_result.names:
+        _print_error(f"corpus '{name}' invalid")
+        exit(1)
+
+    model_path = os.environ["RAG_MODEL_PATH"]
+    db_name = f"faiss/{name}"
+
+    if "/" in model_path:
+        model_name = model_path.split("/")[-1]
+    else:
+        model_name = model_path
+
+    embedding = langchain_community.embeddings.GPT4AllEmbeddings(model=model_path)
+    db = langchain_community.vectorstores.FAISS.load_local(db_name, embedding, allow_dangerous_deserialization=True)
+
+    # callbacks = [langchain.callbacks.streaming_stdout.StreamingStdOutCallbackHandler()]
+    # llm = langchain_community.llms.Embed4All(model_name=model_path, allow_download=False)
+    llm = langchain_community.llms.GPT4All(model=model_path, allow_download=False)
+
+    # template = """Question: {question}\nAnswer: Let's think step by step."""
+    # prompt = langchain_core.prompts.PromptTemplate.from_template(template)
+
+    _print_status(f"corpus '{name}' model '{model_name}' query '{query}'")
+
+    conversation = langchain.chains.ConversationalRetrievalChain.from_llm(
+        llm,
+        retriever=db.as_retriever(),
+        return_source_documents=True,
+        verbose=False,
+    )
+    result = conversation({"question": query, "chat_history": []})
+
+    # llm_chain = langchain.chains.LLMChain(prompt=prompt, llm=llm)
+    # result = llm_chain.run(query)
+
+    print(result) #
+
+    _print_ok(result.get("answer").strip())
 
 @click.command()
 @click.option('--name', default=None, required=True, help="corpus name")
@@ -144,16 +198,6 @@ def write(ctx, name: str) -> dict:
 
     # Response from the model
 
-    input = "Where did Sanjay work in 2015?"
-    result = agent_executor.invoke({"input": input})
-
-    print(result) #
-
-    input = "Where does Sanjay live?"
-    result = agent_executor.invoke({"input": input})
-
-    print(result) #
-
     input = "Where did Sanjay go to college?"
     result = agent_executor.invoke({"input": input})
 
@@ -183,6 +227,7 @@ def _print_status(s: str):
 
 
 cli.add_command(chat)
+cli.add_command(oneshot)
 cli.add_command(write)
 
 if __name__ == "__main__":

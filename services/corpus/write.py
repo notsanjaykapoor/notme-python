@@ -2,6 +2,7 @@ import dataclasses
 
 import langchain.text_splitter
 import langchain_community.document_loaders
+import langchain_community.embeddings
 import langchain_community.vectorstores
 
 @dataclasses.dataclass
