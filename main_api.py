@@ -1,9 +1,12 @@
 import os
 import typing
 
+import contextlib
 import fastapi
 import fastapi.middleware.cors
 import fastapi.templating
+import phoenix
+import phoenix.trace
 import sqlmodel
 import starlette.middleware.sessions
 import strawberry
@@ -28,8 +31,21 @@ import services.webauthn.register
 
 logger = log.init("api")
 
+@contextlib.asynccontextmanager
+async def lifespan(app: fastapi.FastAPI):
+    logger.info("api.startup")
+
+    # migrate database
+    services.database.session.migrate()
+
+    # launch phoenix
+    session = phoenix.launch_app()
+    phoenix.trace.langchain.LangChainInstrumentor().instrument()
+
+    yield
+
 # create app object
-app = fastapi.FastAPI()
+app = fastapi.FastAPI(lifespan=lifespan)
 
 # db dependency
 def get_db():
@@ -41,13 +57,6 @@ def get_db():
 async def get_gql_context(db=fastapi.Depends(get_db)):
     return {"db": db}
 
-
-# api_router = fastapi.APIRouter(
-#     prefix="/api/v1",
-#     tags=["api"],
-#     dependencies=[fastapi.Depends(get_db)],
-#     responses={404: {"description": "Not found"}},
-# )
 
 # initialize graphql schema and router
 
@@ -62,7 +71,6 @@ graphql_router = GraphQLRouter(
 )
 
 app.include_router(graphql_router, prefix="/graphql")
-# app.include_router(api_router, prefix="/api/v1")
 app.include_router(routers.health.app)
 app.include_router(routers.me.app)
 app.include_router(routers.rag.app)
@@ -79,17 +87,6 @@ app.add_middleware(
 app.add_middleware(
     starlette.middleware.sessions.SessionMiddleware, secret_key=os.environ.get("FASTAPI_SESSION_KEY"), max_age=None
 )
-
-
-@app.on_event("startup")
-def on_startup():
-    logger.info("api.startup")
-    services.database.session.migrate()
-
-
-@app.on_event("shutdown")
-def on_shutdown():
-    logger.info("api.shutdown")
 
 
 @app.middleware("http")
