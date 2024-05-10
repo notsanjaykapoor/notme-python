@@ -1,8 +1,9 @@
 import geoalchemy2
 import shapely.geometry
 import sqlalchemy
+import sqlalchemy.orm
 
-Base = sqlalchemy.ext.declarative.declarative_base()
+Base = sqlalchemy.orm.declarative_base()
 
 
 class EntityLocation(Base):  # type: ignore

@@ -10,11 +10,14 @@ import click
 import langchain.agents.agent_toolkits
 import langchain.callbacks.streaming_stdout
 import langchain.chains
+import langchain.retrievers
+import langchain.retrievers.document_compressors
 import langchain_community.embeddings
 import langchain_community.llms
 import langchain_community.vectorstores
 import langchain_core.prompts
 import langchain_openai.chat_models
+import langchain_postgres.vectorstores
 from langchain import hub
 
 import dot_init
@@ -121,10 +124,48 @@ def oneshot(ctx, name: str, query: str) -> dict:
 
     _print_ok(result.get("answer").strip())
 
+
 @click.command()
 @click.option('--name', default=None, required=True, help="corpus name")
 @click.pass_context
-def write(ctx, name: str) -> dict:
+def corpus_delete(ctx, name: str) -> list[str]:
+    """
+    
+    """
+    db_url = os.environ.get("DATABASE_VECTOR_URL")
+
+
+    delete_code = services.corpus.delete(db_url=db_url, db_name=name)
+
+    if delete_code == 0:
+        _print_status(f"corpus delete ok")
+    else:
+        _print_error(f"corpus delete error {delete_code}")
+
+
+@click.command()
+@click.pass_context
+def corpus_list(ctx) -> list[str]:
+    """
+    
+    """
+    db_url = os.environ.get("DATABASE_VECTOR_URL")
+
+    list_result = services.corpus.list_all(db_url=db_url)
+
+    if list_result.code == 0:
+        _print_status(f"corpus list {list_result.names}")
+    else:
+        _print_error(f"corpus list error {list_result.code}")
+
+
+@click.command()
+@click.option('--name', default=None, required=True, help="corpus name")
+@click.option('--model', default=None, required=True, help="model name")
+@click.option('--type', default=None, required=True, help="retriever type, e.g. basic, compress")
+@click.option('--query', default=None, required=True, help="question")
+@click.pass_context
+def corpus_retrieve(ctx, name: str, model: str, type: str, query: str) -> dict:
     """
     
     """
@@ -134,14 +175,72 @@ def write(ctx, name: str) -> dict:
         _print_error(f"corpus {name} invalid")
         exit(1)
 
-    db_name = f"faiss/{name}"
-    embedding = langchain_community.embeddings.GPT4AllEmbeddings()
+    if model == "gpt4all":
+        embeddings = langchain_community.embeddings.GPT4AllEmbeddings()
+    elif model == "openai":
+        embeddings = langchain_openai.OpenAIEmbeddings()
+    else:
+        embeddings = langchain_community.embeddings.HuggingFaceHubEmbeddings(model=model)
 
-    _print_status(f"corpus '{name}' write config '{docs_config}'")
+    db_url = os.environ.get("DATABASE_VECTOR_URL")
 
-    write_result = services.corpus.write(db_name=db_name, embedding=embedding, config=docs_config)
+    encode_result = services.corpus.name_encode(corpus=name, model=model)
+    db_name = encode_result.database
+ 
+    _print_status(f"corpus retrieve '{name}' model '{model}' db '{db_name}' query '{query}'")
 
-    _print_status(f"corpus '{name}' write result docs {write_result.docs_count} chunks {write_result.chunks_count}")
+    # db = langchain_postgres.vectorstores.PGVector.load_local(db_name, embeddings, allow_dangerous_deserialization=True)
+    db = langchain_postgres.vectorstores.PGVector(
+        embeddings=embeddings,
+        collection_name=db_name,
+        connection=f"{db_url}/{db_name}",
+        use_jsonb=True,
+    )
+    db_retriever = db.as_retriever()
+
+    if type == "compress":
+        embeddings_filter = langchain.retrievers.document_compressors.EmbeddingsFilter(embeddings=embeddings, similarity_threshold=0.76)
+        compression_retriever = langchain.retrievers.ContextualCompressionRetriever(
+            base_compressor=embeddings_filter, base_retriever=db_retriever
+        )
+
+        docs = compression_retriever.invoke(query)
+    else:
+        docs = db_retriever.invoke(query)
+
+    _print_docs(docs)
+
+@click.command()
+@click.option('--name', default=None, required=True, help="corpus name")
+@click.option('--model', default=None, required=True, help="embedding model name")
+@click.pass_context
+def corpus_write(ctx, name: str, model: str) -> dict:
+    """
+    
+    """
+    docs_config = config.get(name, {})
+
+    if not docs_config:
+        _print_error(f"corpus {name} invalid")
+        exit(1)
+
+    if model == "gpt4all":
+        embeddings = langchain_community.embeddings.GPT4AllEmbeddings()
+    elif model == "openai":
+        embeddings = langchain_openai.OpenAIEmbeddings()
+    else:
+        embeddings = langchain_community.embeddings.HuggingFaceHubEmbeddings(model=model)
+
+    db_url = os.environ.get("DATABASE_VECTOR_URL")
+
+    encode_result = services.corpus.name_encode(corpus=name, model=model)
+    db_name = encode_result.database
+
+    _print_status(f"corpus write '{name}' model '{model}' database '{db_name}' config '{docs_config}'")
+
+    write_result = services.corpus.write(db_url=db_url, db_name=db_name, embeddings=embeddings, config=docs_config)
+
+    _print_status(f"corpus write '{name}' model '{model}' database '{db_name}' result docs {write_result.docs_count} chunks {write_result.chunks_count}")
 
     exit(0)
 
@@ -226,9 +325,19 @@ def _print_status(s: str):
     print("\x1b[1;33m" + s + "\x1b[0m")
 
 
+def _print_docs(docs):
+    print(
+        f"\n{'-' * 100}\n".join(
+            [f"Document {i+1}:\n\n" + d.page_content for i, d in enumerate(docs)]
+        )
+    )
+
 cli.add_command(chat)
 cli.add_command(oneshot)
-cli.add_command(write)
+cli.add_command(corpus_delete)
+cli.add_command(corpus_list)
+cli.add_command(corpus_retrieve)
+cli.add_command(corpus_write)
 
 if __name__ == "__main__":
     cli()

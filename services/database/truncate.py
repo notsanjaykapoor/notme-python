@@ -1,3 +1,4 @@
+import sqlalchemy
 import sqlmodel
 
 from .session import table_names
@@ -10,5 +11,5 @@ def truncate_all(db: sqlmodel.Session, exclude: list[str] = ["credentials", "spa
 
 
 def truncate_table(db: sqlmodel.Session, table_name: str):
-    db.execute(f"delete from {table_name}")
+    db.execute(sqlalchemy.text(f"delete from {table_name}"))
     db.commit()

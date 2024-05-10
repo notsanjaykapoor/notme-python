@@ -1,7 +1,8 @@
 import sqlalchemy
+import sqlalchemy.orm
 import sqlalchemy.ext.mutable
 
-Base = sqlalchemy.ext.declarative.declarative_base()
+Base = sqlalchemy.orm.declarative_base()
 
 
 class DataMapping(Base):  # type: ignore

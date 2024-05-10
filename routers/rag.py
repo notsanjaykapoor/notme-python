@@ -5,13 +5,17 @@ import log
 import main_shared
 import os
 import services.corpus
+import starlette.responses
 
-import langchain.chains
+import langchain.retrievers.document_compressors
 import langchain_openai.chat_models
 import langchain_community
 import langchain_community.embeddings
+import langchain_community.llms
 import langchain_community.vectorstores
 from langchain import hub
+import phoenix
+import phoenix.trace.langchain
 
 logger = log.init("app")
 
@@ -24,9 +28,14 @@ app = fastapi.APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
+app_version = os.environ["APP_VERSION"]
+
 
 @app.post("/rag/corpus", response_class=fastapi.responses.RedirectResponse)
 async def rag_corpus(request: fastapi.Request):
+    """
+    Select a corpus (deprecated)
+    """
     bytes = await request.body()
     value = bytes.decode("utf-8").split("=")[1]
 
@@ -42,6 +51,9 @@ async def rag_corpus(request: fastapi.Request):
 
 @app.post("/rag/llm", response_class=fastapi.responses.RedirectResponse)
 async def rag_llm(request: fastapi.Request):
+    """
+    Select a llm (deprecated)
+    """
     bytes = await request.body()
     value = bytes.decode("utf-8").split("=")[1]
 
@@ -54,73 +66,62 @@ async def rag_llm(request: fastapi.Request):
     return response
 
 
-@app.get("/rag/{corpus}/query", response_class=fastapi.responses.HTMLResponse)
-def rag_query(request: fastapi.Request, corpus: str, query: str):
-    rag_llm = request.cookies.get("rag_llm") or "local"
+@app.get("/rag/query", response_class=fastapi.responses.HTMLResponse)
+def rag_query(request: fastapi.Request, corpus_name: str, retriever_type: str, query: str):
+    logger.info(f"{context.rid_get()} rag corpus '{corpus_name}' retriever '{retriever_type}' query '{query}'")
 
-    logger.info(f"{context.rid_get()} rag corpus '{corpus}' llm '{rag_llm}' query '{query}'")
+    db_url = os.environ.get("DATABASE_VECTOR_URL")
 
-    db_name = f"faiss/{corpus}"
-    embedding = langchain_community.embeddings.GPT4AllEmbeddings()
+    list_result = services.corpus.list_all(db_url=db_url)
+    corpus_names = list_result.names
 
-    db = langchain_community.vectorstores.FAISS.load_local(db_name, embedding, allow_dangerous_deserialization=True)
+    retriever_types = ["basic", "compress"]
 
-    if rag_llm == "local":
-        llm = langchain_community.llms.GPT4All(model=os.environ["RAG_MODEL_PATH"], callbacks=[], verbose=True)
-        chain_result = services.corpus.qa_chain(db=db, llm=llm)
-        chain = chain_result.chain
+    retrieve_result = services.corpus.retrieve(db_url=db_url, db_name=corpus_name, retriever_type=retriever_type, query=query)
+    docs = retrieve_result.docs
 
-        result = chain({"question": query, "chat_history": []})
-        answer = result.get("answer")
-    else:
-        prompt = hub.pull("hwchase17/openai-tools-agent")
-        llm = langchain_openai.chat_models.ChatOpenAI(temperature = 0)
+    print(docs)
 
-        agent_result = services.corpus.chat_agent(db=db, llm=llm, prompt=prompt)
-        agent_executor = agent_result.agent_executor
-
-        result = agent_executor.invoke({"input": query})
-        answer = result.get("output")
-
-    logger.info(f"{context.rid_get()} rag corpus '{corpus}' response")
-
-    return answer
-
-@app.get("/rag", response_class=fastapi.responses.HTMLResponse)
-@app.get("/rag/{corpus}", response_class=fastapi.responses.HTMLResponse)
-def rag(request: fastapi.Request):
-    corpus = request.path_params.get("corpus", "")
-    rag_llm = request.cookies.get("rag_llm") or "local"
-    version = os.environ["APP_VERSION"]
-
-    rag_llms = ["local", "openai"]
-
-    logger.info(f"{context.rid_get()} rag llm '{rag_llm}' corpus '{corpus}'")
-
-    search_result = services.corpus.search(query="")
-    corpus_names = search_result.names
- 
-    if corpus and corpus not in corpus_names:
-        return fastapi.responses.RedirectResponse("/rag")
-
-    if corpus:
-        app_name = f"Rag corpus '{corpus}'"
-        prompt_text = "ask a question"
-    else:
-        app_name = f"Rag"
-        corpus_names = ["select a corpus"] + corpus_names
-        prompt_text = ""
+    # return starlette.responses.JSONResponse(texts)
 
     return templates.TemplateResponse(
         request,
         "rag.html",
         {
-            "app_name": app_name,
-            "app_version": version,
-            "corpus_name": corpus,
+            "app_name": "Rag Example",
+            "app_version": app_version,
+            "corpus_name": corpus_name,
             "corpus_names": corpus_names,
-            "prompt_text": prompt_text,
-            "rag_llm": rag_llm,
-            "rag_llms": rag_llms,
+            "docs": docs,
+            "prompt_text": "ask a question",
+            "query": query,
+            "retriever_types": retriever_types,
+        }
+    )
+
+
+@app.get("/rag", response_class=fastapi.responses.HTMLResponse)
+def rag(request: fastapi.Request):
+    db_url = os.environ.get("DATABASE_VECTOR_URL")
+
+    list_result = services.corpus.list_all(db_url=db_url)
+    corpus_names = list_result.names
+
+    retriever_types = ["basic", "compress"]
+
+    logger.info(f"{context.rid_get()} rag")
+
+    return templates.TemplateResponse(
+        request,
+        "rag.html",
+        {
+            "app_name": "Rag Example",
+            "app_version": app_version,
+            "corpus_name": "",
+            "corpus_names": corpus_names,
+            "docs": [],
+            "prompt_text": "ask a question",
+            "query": "",
+            "retriever_types": retriever_types,
         }
     )

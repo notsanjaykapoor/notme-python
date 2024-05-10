@@ -1,9 +1,9 @@
 import geoalchemy2
 import shapely.geometry
 import sqlalchemy
-from sqlalchemy.ext.declarative import declarative_base
+import sqlalchemy.orm
 
-Base = declarative_base()
+Base = sqlalchemy.orm.declarative_base()
 
 
 class City(Base):  # type: ignore

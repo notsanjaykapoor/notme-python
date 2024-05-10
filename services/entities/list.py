@@ -87,6 +87,7 @@ class List:
                     self._dataset = self._dataset.where(self._model.name == value)
             elif token["field"] == "name_text":
                 # full text search
+                # todo: changes made to sqlalchemy 2.0 that need to be looked into
                 ts_vector = sqlalchemy.func.to_tsvector(models.Entity.name)
                 self._dataset = self._dataset.where(ts_vector.match(value))
                 # self._dataset = self._dataset.where(ts_vector.match(sqlalchemy.func.websearch_to_tsquery(value)))

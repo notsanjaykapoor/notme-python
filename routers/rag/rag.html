@@ -13,6 +13,7 @@
   </div>
 </div>
 
+{% if false %}
 <div class="container grid grid-cols-12 mt-5">
   <form class="col-span-12 max-w-sm mx-auto text-center" action="/rag/llm" method="post">
     <label for="name" class="sr-only">model</label>
@@ -27,8 +28,10 @@
     </select>
   </form>
 </div>
+{% endif %}
 
-<div class="container grid grid-cols-12 mt-0">
+{% if false %}
+<div class="container grid grid-cols-12 mt-5">
   <form class="col-span-12 max-w-sm mx-auto text-center" action="/rag/corpus" method="post">
     <label for="name" class="sr-only">model</label>
     <select id="name" name="name" onchange="this.form.submit()" class="block py-2.5 px-0 w-full text-sm text-gray-100 bg-transparent border-0 border-b-2 border-none appearance-none dark:text-gray-400 dark:border-gray-500 focus:outline-none focus:ring-0 focus:border-gray-200 peer">
@@ -42,19 +45,41 @@
     </select>
   </form>
 </div>
-
-{% if corpus_name %}
-<div class="container grid grid-cols-12 mt-10">
-  <div class="col-start-2 col-span-10 font-bold text-sm">
-    <input type="search" name="query" placeholder="{{prompt_text}}" autocomplete="off" hx-get="/rag/{{corpus_name}}/query" hx-target="#rag-answer" hx-trigger="keyup[key=='Enter'] from:body" hx-on="htmx:beforeRequest: document.getElementById('rag-answer').innerText = 'processing ...'" class="peer px-0 mx-0 h-full w-full border-b bg-transparent pt-4 pb-1.5 font-sans text-sm font-normal text-blue-gray-700 outline outline-0 transition-all placeholder-shown:border-blue-gray-200 focus:border-pink-600 focus:outline-0 disabled:border-0 disabled:bg-blue-gray-50">
-  </div>
-</div>
 {% endif %}
+
+<form hx-post="/rag/query" hx-target="#rag-answer" hx-trigger="keyup[key=='Enter']" action="/rag/query" method="get">
+  <div class="container grid grid-cols-12 mt-10">
+    <div class="col-start-2 col-span-3 font-normal text-sm">
+      <select id="corpus_name" name="corpus_name" onchange="" class="block py-2.5 px-0 w-full text-sm bg-transparent border-0 border-b-2 border-none appearance-none dark:text-black-600 dark:border-gray-500 focus:outline-none focus:ring-0 focus:border-gray-200 peer">
+        {% for name in corpus_names %}
+          {% if name == corpus_name %}
+            <option value="{{name}}" selected="1">{{name}}</option>
+          {% else %}
+            <option value="{{name}}">{{name}}</option>
+          {% endif %}
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-start-5 col-span-1 font-normal text-sm">
+      <select id="retriever_type" name="retriever_type" onchange="" class="block py-2.5 px-0 w-full text-sm bg-transparent border-0 border-b-2 border-none appearance-none dark:text-blue-400 dark:border-gray-500 focus:outline-none focus:ring-0 focus:border-gray-200 peer">
+        {% for type in retriever_types %}
+          <option value="{{type}}">{{type}}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-start-6 col-span-6 font-bold text-sm">
+      <input type="search" name="query" value="{{query}}" placeholder="{{prompt_text}}" autocomplete="off" hx-on="htmx:beforeRequest: document.getElementById('rag-answer').innerText = 'processing ...'" class="peer px-0 py-2.5 mx-0 h-full w-full border-b bg-transparent pt-4 pb-1.5 font-sans text-sm font-normal text-blue-gray-700 outline outline-0 transition-all placeholder-shown:border-blue-gray-200 focus:border-pink-600 focus:outline-0 disabled:border-0 disabled:bg-blue-gray-50">
+    </div>
+  </div>
+</form>
 
 <div class="container grid grid-cols-12 mt-10">
   <div class="col-start-2 col-span-10 mt-0">
     <p class="text-sm italic font-bold text-blue-700" id="rag-answer">
-    </p>  
+    </p>
+    {% for doc in docs %}
+      <p class="text-xs italic font-bold text-blue-700 py-5">{{doc.page_content}}</p>
+    {% endfor %}
   </div>
 </div>
 

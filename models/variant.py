@@ -7,9 +7,9 @@ import sqlmodel
 class Variant(sqlmodel.SQLModel, table=True):
     __tablename__ = "variants"
 
-    STATUS_ENABLED = "enabled"
-    STATUS_PRIVATE = "private"
-    STATUS_DISABLED = "disabled"
+    STATUS_ENABLED: typing.Annotated[str, "constant"] = "enabled"
+    STATUS_PRIVATE: typing.Annotated[str, "constant"] = "private"
+    STATUS_DISABLED: typing.Annotated[str, "constant"] = "disabled"
 
     id: typing.Optional[int] = sqlmodel.Field(default=None, primary_key=True)
     name: str = sqlmodel.Field(index=True, nullable=False)

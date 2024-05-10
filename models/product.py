@@ -7,9 +7,9 @@ import sqlmodel
 class Product(sqlmodel.SQLModel, table=True):
     __tablename__ = "products"
 
-    STATUS_ACTIVE = "active"
-    STATUS_ARCHIVED = "archived"
-    STATUS_DELETED = "deleted"
+    STATUS_ACTIVE: typing.Annotated[str, "constant"] = "active"
+    STATUS_ARCHIVED: typing.Annotated[str, "constant"] = "archived"
+    STATUS_DELETED: typing.Annotated[str, "constant"] = "deleted"
 
     id: typing.Optional[int] = sqlmodel.Field(default=None, primary_key=True)
     category_ids: list[int] = sqlmodel.Field(

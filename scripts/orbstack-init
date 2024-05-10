@@ -33,6 +33,10 @@ ORB_CONTAINERS = [
     #     "name": "otel-dev",
     # },
     {
+        "cmd": "docker run -d --rm --net host --name pgvector-dev -v pgvector-vol:/data/pgvector --platform linux/amd64 -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=development -e PGDATA=/data/pgvector -e PGPORT=5435 ankane/pgvector:latest",
+        "name": "pgvector-dev",
+    },
+    {
         "cmd": "docker run -d --rm --net host --name postgres-dev -v postgres-vol:/data --platform linux/amd64 -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=development -e PGDATA=/data -e PGPORT=5433 postgis/postgis:14-3.3",
         "name": "postgres-dev",
     },
@@ -66,6 +70,9 @@ ORB_VOLS = [
             }
         ],
         "name": "otel-vol",
+    },
+    {
+        "name": "pgvector-vol",
     },
     {
         "name": "postgres-vol",
