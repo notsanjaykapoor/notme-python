@@ -50,19 +50,19 @@
 <form hx-post="/rag/query" hx-target="#rag-answer" hx-trigger="keyup[key=='Enter']" action="/rag/query" method="get">
   <div class="container grid grid-cols-12 mt-10">
     <div class="col-start-2 col-span-3 font-normal text-sm">
-      <select id="corpus_name" name="corpus_name" onchange="" class="block py-2.5 px-0 w-full text-sm bg-transparent border-0 border-b-2 border-none appearance-none dark:text-black-600 dark:border-gray-500 focus:outline-none focus:ring-0 focus:border-gray-200 peer">
-        {% for name in corpus_names %}
-          {% if name == corpus_name %}
-            <option value="{{name}}" selected="1">{{name}}</option>
+      <select id="database_name" name="database_name" onchange="" class="block py-2.5 px-0 w-full text-sm bg-transparent border-0 border-b-2 border-none appearance-none dark:text-black-600 dark:border-gray-500 focus:outline-none focus:ring-0 focus:border-gray-200 peer">
+        {% for object in databases %}
+          {% if object["database"] == database_name %}
+            <option value="{{object['database']}}" selected="1">{{object['name']}}</option>
           {% else %}
-            <option value="{{name}}">{{name}}</option>
+            <option value="{{object['database']}}">{{object['name']}}</option>
           {% endif %}
         {% endfor %}
       </select>
     </div>
     <div class="col-start-5 col-span-1 font-normal text-sm">
-      <select id="retriever_type" name="retriever_type" onchange="" class="block py-2.5 px-0 w-full text-sm bg-transparent border-0 border-b-2 border-none appearance-none dark:text-blue-400 dark:border-gray-500 focus:outline-none focus:ring-0 focus:border-gray-200 peer">
-        {% for type in retriever_types %}
+      <select id="retriever_name" name="retriever_name" onchange="" class="block py-2.5 px-0 w-full text-sm bg-transparent border-0 border-b-2 border-none appearance-none dark:text-blue-400 dark:border-gray-500 focus:outline-none focus:ring-0 focus:border-gray-200 peer">
+        {% for type in retriever_names %}
           <option value="{{type}}">{{type}}</option>
         {% endfor %}
       </select>

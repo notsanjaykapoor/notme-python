@@ -29,6 +29,7 @@ app = fastapi.APIRouter(
 )
 
 app_version = os.environ["APP_VERSION"]
+retriever_names = ["default", "compress"]
 
 
 @app.post("/rag/corpus", response_class=fastapi.responses.RedirectResponse)
@@ -67,20 +68,16 @@ async def rag_llm(request: fastapi.Request):
 
 
 @app.get("/rag/query", response_class=fastapi.responses.HTMLResponse)
-def rag_query(request: fastapi.Request, corpus_name: str, retriever_type: str, query: str):
-    logger.info(f"{context.rid_get()} rag corpus '{corpus_name}' retriever '{retriever_type}' query '{query}'")
+def rag_query(request: fastapi.Request, database_name: str, retriever_name: str, query: str):
+    logger.info(f"{context.rid_get()} rag database '{database_name}' retriever '{retriever_name}' query '{query}'")
 
     db_url = os.environ.get("DATABASE_VECTOR_URL")
 
     list_result = services.corpus.list_all(db_url=db_url)
-    corpus_names = list_result.names
+    databases = list_result.databases
 
-    retriever_types = ["basic", "compress"]
-
-    retrieve_result = services.corpus.retrieve(db_url=db_url, db_name=corpus_name, retriever_type=retriever_type, query=query)
+    retrieve_result = services.corpus.retrieve(db_url=db_url, db_name=database_name, retriever_name=retriever_name, query=query)
     docs = retrieve_result.docs
-
-    print(docs)
 
     # return starlette.responses.JSONResponse(texts)
 
@@ -90,12 +87,12 @@ def rag_query(request: fastapi.Request, corpus_name: str, retriever_type: str, q
         {
             "app_name": "Rag Example",
             "app_version": app_version,
-            "corpus_name": corpus_name,
-            "corpus_names": corpus_names,
+            "database_name": database_name,
+            "databases": databases,
             "docs": docs,
             "prompt_text": "ask a question",
             "query": query,
-            "retriever_types": retriever_types,
+            "retriever_names": retriever_names,
         }
     )
 
@@ -105,9 +102,7 @@ def rag(request: fastapi.Request):
     db_url = os.environ.get("DATABASE_VECTOR_URL")
 
     list_result = services.corpus.list_all(db_url=db_url)
-    corpus_names = list_result.names
-
-    retriever_types = ["basic", "compress"]
+    databases = list_result.databases
 
     logger.info(f"{context.rid_get()} rag")
 
@@ -118,10 +113,10 @@ def rag(request: fastapi.Request):
             "app_name": "Rag Example",
             "app_version": app_version,
             "corpus_name": "",
-            "corpus_names": corpus_names,
+            "databases": databases,
             "docs": [],
             "prompt_text": "ask a question",
             "query": "",
-            "retriever_types": retriever_types,
+            "retriever_names": retriever_names,
         }
     )

@@ -3,11 +3,13 @@ import dataclasses
 import sqlalchemy
 import sqlmodel
 
+import services.corpus
+
 @dataclasses.dataclass
 class Struct:
     code: int
+    databases: list[dict]
     errors: list[str]
-    names: list[str]
 
 
 def list_all(db_url: str) -> Struct:
@@ -20,7 +22,23 @@ def list_all(db_url: str) -> Struct:
 
     with engine.connect() as conn:
         result = conn.execute(sqlalchemy.text("SELECT datname FROM pg_database WHERE datistemplate = false;"))
-        struct.names = sorted([row[0] for row in result if row[0].startswith("c:")])
+        names = sorted([row[0] for row in result])
+
+    for name in names:
+        parse_result = services.corpus.name_parse(database=name)
+
+        if parse_result.code != 0:
+            continue
+
+        corpus = parse_result.corpus
+        model = parse_result.model
+        name = f"corpus '{corpus}' model '{model}'"
+        struct.databases.append({
+            "corpus": corpus,
+            "database": parse_result.database,
+            "model": model,
+            "name": name,
+        })
 
     return struct
 

@@ -15,7 +15,7 @@ class Struct:
     errors: list[str]
 
 
-def retrieve(db_url: str, db_name: str, retriever_type: str, query: str) -> Struct:
+def retrieve(db_url: str, db_name: str, retriever_name: str, query: str) -> Struct:
     """
     """
     struct = Struct(0, [], [])
@@ -38,7 +38,7 @@ def retrieve(db_url: str, db_name: str, retriever_type: str, query: str) -> Stru
     )
     db_retriever = db.as_retriever()
 
-    if retriever_type == "compress":
+    if retriever_name == "compress":
         embeddings_filter = langchain.retrievers.document_compressors.EmbeddingsFilter(embeddings=embeddings, similarity_threshold=0.76)
         compression_retriever = langchain.retrievers.ContextualCompressionRetriever(
             base_compressor=embeddings_filter, base_retriever=db_retriever

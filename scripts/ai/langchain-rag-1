@@ -154,7 +154,7 @@ def corpus_list(ctx) -> list[str]:
     list_result = services.corpus.list_all(db_url=db_url)
 
     if list_result.code == 0:
-        _print_status(f"corpus list {list_result.names}")
+        _print_status(f"corpus list {list_result.databases}")
     else:
         _print_error(f"corpus list error {list_result.code}")
 

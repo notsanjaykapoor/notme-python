@@ -27,7 +27,7 @@ def name_parse(database: str) -> Struct:
     """
     struct = Struct(0, "", database, "", [])
 
-    match = re.search("^c:([a-z0-9_]+):m:([a-z0-9_]+)$", database)
+    match = re.search("^c:([^:]+):m:([^:]+)$", database)
 
     if not match:
         struct.code = 422
