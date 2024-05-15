@@ -3,6 +3,7 @@ from .actor_log import ActorLog  # noqa: F401
 from .actor_message import ActorMessage  # noqa: F401
 from .category import Category  # noqa: F401
 from .city import City  # noqa: F401
+from .corpus import Corpus
 from .credential import Credential  # noqa: F401
 from .data_link import DataLink  # noqa: F401
 from .data_mapping import DataMapping  # noqa: F401

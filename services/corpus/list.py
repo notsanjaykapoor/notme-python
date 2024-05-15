@@ -1,44 +1,48 @@
 import dataclasses
+import re
 
 import sqlalchemy
 import sqlmodel
 
+import models
 import services.corpus
 
 @dataclasses.dataclass
 class Struct:
     code: int
-    databases: list[dict]
+    objects: list[models.User]
+    count: int
     errors: list[str]
 
 
-def list_all(db_url: str) -> Struct:
+def list_all(db: sqlmodel.Session, query: str = "", offset: int = 0, limit: int = 20) -> Struct:
     """
-    List all corpus database names by querying postgres databases
+    List all corpus collections
     """
-    struct = Struct(0, [], [])
+    struct = Struct(0, [], 0, [])
 
-    engine = sqlmodel.create_engine(db_url, echo=False)
+    model = models.User
+    dataset = sqlmodel.select(models.User)  # default database query
 
-    with engine.connect() as conn:
-        result = conn.execute(sqlalchemy.text("SELECT datname FROM pg_database WHERE datistemplate = false;"))
-        names = sorted([row[0] for row in result])
+    struct_tokens = services.mql.Parse(query).call()
 
-    for name in names:
-        parse_result = services.corpus.name_parse(database=name)
+    for token in struct_tokens.tokens:
+        value = token["value"]
 
-        if parse_result.code != 0:
-            continue
+        if token["field"] == "email":
+            # match query
+            dataset = dataset.where(model.email == value)
+        elif token["field"] == "user_id":
+            if re.match(r"^~", value):
+                # like query
+                value_normal = re.sub(r"~", "", value)
+                dataset = dataset.where(model.user_id.like("%" + value_normal + "%"))  # type: ignore
+            else:
+                # match query
+                dataset = dataset.where(model.user_id == value)
 
-        corpus = parse_result.corpus
-        model = parse_result.model
-        name = f"corpus '{corpus}' model '{model}'"
-        struct.databases.append({
-            "corpus": corpus,
-            "database": parse_result.database,
-            "model": model,
-            "name": name,
-        })
+    struct.objects = db.exec(dataset.offset(offset).limit(limit)).all()
+    struct.count = len(struct.objects)
 
     return struct
 

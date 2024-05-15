@@ -33,14 +33,17 @@ logger = log.init("api")
 
 @contextlib.asynccontextmanager
 async def lifespan(app: fastapi.FastAPI):
-    logger.info("api.startup")
+    logger.info("api.startup ...")
 
     # migrate database
     services.database.session.migrate()
 
-    # launch phoenix
-    session = phoenix.launch_app()
-    phoenix.trace.langchain.LangChainInstrumentor().instrument()
+    if os.environ.get("OPENTELEMETRY_AI"):
+        # launch phoenix
+        session = phoenix.launch_app()
+        phoenix.trace.langchain.LangChainInstrumentor().instrument()
+
+    logger.info("api.startup completed")
 
     yield
 
