@@ -16,8 +16,8 @@ class Corpus(sqlmodel.SQLModel, table=True):
     collection_name: str = sqlmodel.Field(index=True, nullable=False) # fully encoded collection name
     created_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.utcnow, nullable=False)
     docs_count: int = sqlmodel.Field(index=True, nullable=False)
-    dims_count: int = sqlmodel.Field(index=True, nullable=False)
-    embed_name: str = sqlmodel.Field(index=True, nullable=False)
+    embed_dims: int = sqlmodel.Field(index=True, nullable=False)
+    embed_model: str = sqlmodel.Field(index=True, nullable=False)
     nodes_count: int = sqlmodel.Field(index=True, nullable=False)
     org_id: int = sqlmodel.Field(index=True, nullable=False)
     state: str = sqlmodel.Field(index=True, nullable=False)

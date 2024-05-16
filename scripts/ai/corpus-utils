@@ -7,125 +7,16 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import click
 
-import langchain.agents.agent_toolkits
-import langchain.callbacks.streaming_stdout
-import langchain.chains
-import langchain.retrievers
-import langchain.retrievers.document_compressors
-import langchain_community.embeddings
-import langchain_community.llms
-import langchain_community.vectorstores
-import langchain_openai.chat_models
-from langchain import hub
-import llama_index.embeddings.huggingface
-import llama_index.vector_stores.faiss
-
 import dot_init
 
 import services.corpus
 import services.database
 import services.milvus
 
-config = {
-    "notme": {
-        "dir": "./data/notme/txt",
-    },
-    "paulg": {
-        "urls": [
-            "https://paulgraham.com/reddits.html",
-            "https://paulgraham.com/google.html",
-            "https://paulgraham.com/best.html",
-        ],
-    },
-    "sotu": {
-        "dir": "./data/sotu",
-    },
-}
 
 @click.group()
 def cli():
     pass
-
-@click.command()
-@click.option('--name', default=None, required=True, help="corpus name")
-@click.option('--query', default=None, required=True, help="question")
-@click.pass_context
-def chat(ctx, name: str, query: str) -> dict:
-    """
-    """
-    search_result = services.corpus.search(query="")
-
-    if name not in search_result.names:
-        _print_error(f"corpus '{name}' invalid")
-        exit(1)
-
-    db_name = f"faiss/{name}"
-    embedding = langchain_community.embeddings.GPT4AllEmbeddings()
-
-    db = langchain_community.vectorstores.FAISS.load_local(db_name, embedding, allow_dangerous_deserialization=True)
-
-    prompt = hub.pull("hwchase17/openai-tools-agent")
-    llm = langchain_openai.chat_models.ChatOpenAI(temperature = 0)
-
-    agent_result = services.corpus.chat_agent(db=db, llm=llm, prompt=prompt)
-    agent_executor = agent_result.agent_executor
-
-    _print_status(f"corpus '{name}' query '{query}'")
-
-    result = agent_executor.invoke({"input": query})
-
-    print(result) #
-
-    _print_ok(result.get("output"))
-
-
-@click.command()
-@click.option('--name', default=None, required=True, help="corpus name")
-@click.option('--query', default=None, required=True, help="question")
-@click.pass_context
-def oneshot(ctx, name: str, query: str) -> dict:
-    """
-    """
-    search_result = services.corpus.search(query="")
-
-    if name not in search_result.names:
-        _print_error(f"corpus '{name}' invalid")
-        exit(1)
-
-    model_path = os.environ["RAG_MODEL_PATH"]
-    db_name = f"faiss/{name}"
-
-    if "/" in model_path:
-        model_name = model_path.split("/")[-1]
-    else:
-        model_name = model_path
-
-    embedding = langchain_community.embeddings.GPT4AllEmbeddings(model=model_path)
-    db = langchain_community.vectorstores.FAISS.load_local(db_name, embedding, allow_dangerous_deserialization=True)
-
-    # callbacks = [langchain.callbacks.streaming_stdout.StreamingStdOutCallbackHandler()]
-    # llm = langchain_community.llms.Embed4All(model_name=model_path, allow_download=False)
-    llm = langchain_community.llms.GPT4All(model=model_path, allow_download=False)
-
-    # template = """Question: {question}\nAnswer: Let's think step by step."""
-    # prompt = langchain_core.prompts.PromptTemplate.from_template(template)
-
-    _print_status(f"corpus '{name}' model '{model_name}' query '{query}'")
-
-    conversation = langchain.chains.ConversationalRetrievalChain.from_llm(
-        llm,
-        retriever=db.as_retriever(),
-        return_source_documents=True,
-        verbose=False,
-    )
-    result = conversation({"question": query, "chat_history": []})
-
-    # llm_chain = langchain.chains.LLMChain(prompt=prompt, llm=llm)
-    # result = llm_chain.run(query)
-
-    print(result) #
-
-    _print_ok(result.get("answer").strip())
 
 
 @click.command()
@@ -135,14 +26,12 @@ def delete(ctx, name: str) -> list[str]:
     """
     
     """
-    db_url = os.environ.get("DATABASE_VECTOR_URL")
+    _print_status(f"corpus delete '{name}'")
 
-    delete_code = services.corpus.delete(db_url=db_url, db_name=name)
+    with services.database.session.get() as db_session:
+        delete_code = services.corpus.delete_by_name(db_session=db_session, name=name)
 
-    if delete_code == 0:
-        _print_status(f"corpus delete ok")
-    else:
-        _print_error(f"corpus delete error {delete_code}")
+    _print_status(f"corpus delete '{name}' - result {delete_code}")
 
 
 @click.command()
@@ -161,32 +50,40 @@ def ingest(ctx, dir: str, model: str) -> dict:
     dir_name = dir.split("/")[-1]
 
     name_encoded = services.corpus.name_encode(corpus=dir_name, model=model)
-    model_embeddings = services.corpus.model_embeddings(model=model)
-    model_dimensions = services.corpus.model_dimensions(model=model)
+    embed_model = services.corpus.embed_model(model=model)
+    embed_dims = services.corpus.embed_dims(model=model)
 
-    _print_status(f"corpus write dir '{dir_name}' model '{model_embeddings.model_name}' dimensions {model_dimensions} encoded '{name_encoded}'")
+    _print_status(f"corpus write dir '{dir_name}' model '{embed_model.model_name}' dimensions {embed_dims} encoded '{name_encoded}'")
 
     with services.database.session.get() as db_session:
         write_result = services.corpus.ingest(
             db_session=db_session,
             name_encoded=name_encoded,
             dir=dir,
-            embeddings=model_embeddings,
-            dimensions=model_dimensions,
+            embed_model=embed_model,
+            embed_dims=embed_dims,
         )
 
-    _print_status(f"corpus write  dir '{dir_name}' model '{model_embeddings.model_name}' encoded '{name_encoded}' result docs {write_result.docs_count} nodes {write_result.nodes_count}")
+    _print_status(f"corpus write  dir '{dir_name}' model '{embed_model.model_name}' encoded '{name_encoded}' result docs {write_result.docs_count} nodes {write_result.nodes_count}")
 
 
 @click.command()
+@click.option('--limit', default=50, required=False, help="search limit")
+@click.option('--query', default="", required=False, help="search query")
 @click.pass_context
-def list(ctx) -> list[str]:
+def list(ctx, limit: int, query: str="") -> list[str]:
     """
     
     """
-    collections = services.milvus.list_()
+    with services.database.session.get() as db_session:
+        list_result = services.corpus.list_(db_session=db_session, query=query, offset=0, limit=limit)
+    
+    objects = list_result.objects
 
-    _print_status(f"corpus list {collections}")
+    _print_status(f"corpus list - {len(objects)} results")
+
+    for i, object in enumerate(objects):
+        _print_status(f"{i+1}: {object.collection_name}")
 
 
 @click.command()
@@ -233,8 +130,7 @@ def _print_docs(docs):
         )
     )
 
-# cli.add_command(chat)
-# cli.add_command(oneshot)
+cli.add_command(delete)
 cli.add_command(list)
 cli.add_command(retrieve)
 cli.add_command(ingest)

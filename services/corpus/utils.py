@@ -14,12 +14,18 @@ class Struct:
 
 
 DIMENSIONS = {
+    "bge-large-en-v1-5-finetuned-300": 1024,
     "gte-base": 768,
     "gte-large": 1024,
     "nomic-embed-text-v1": 768,
 }
 
-def model_embeddings(model: str) -> llama_index.embeddings.huggingface.HuggingFaceEmbedding:
+
+def embed_dims(model: str) -> int:
+    return DIMENSIONS[model]
+
+
+def embed_model(model: str) -> llama_index.embeddings.huggingface.HuggingFaceEmbedding:
     models_root = os.environ["HF_MODELS_PATH"]
     models_path = f"{models_root}/{model}"
 
@@ -33,8 +39,10 @@ def model_embeddings(model: str) -> llama_index.embeddings.huggingface.HuggingFa
 
     return embeddings
 
-def model_dimensions(model: str) -> int:
-    return DIMENSIONS[model]
+
+def embed_models() -> list[str]:
+    models_root = os.environ["HF_MODELS_PATH"]
+    return os.listdir(models_root)
 
 
 def name_encode(corpus: str, model: str) -> str:

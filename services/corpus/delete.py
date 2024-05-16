@@ -1,19 +1,36 @@
-import sqlalchemy
-import sqlalchemy_utils.functions
+import sqlmodel
+
+import models
+import services.milvus
 
 
-def delete(db_url: str, db_name: str) -> int:
+def delete_by_name(db_session: sqlmodel.Session, name: str) -> int:
     """
-    Delete corpus database
+    Delete corpus object from milvus and postgres dbs
     """
-    db_name_url = f"{db_url}/{db_name}"
-    engine = sqlalchemy.create_engine(db_name_url, echo=False)
+    milvus_code = services.milvus.delete_by_name(collection=name)
 
-    if not sqlalchemy_utils.functions.database_exists(engine.url):
-        return 404
+    if milvus_code not in [0, 404]:
+        return milvus_code
 
-    sqlalchemy_utils.functions.drop_database(engine.url)
+    # its possible that postgres object exists even if milvus object doesn't
+
+    model = models.Corpus
+    dataset = sqlmodel.select(model)
+
+    dataset = dataset.where(model.collection_name == name)
+    object = db_session.exec(dataset).first()
+
+    if not object:
+        if milvus_code == 404:
+            return 404
+        else:
+            return 0 # milvus object was deleted, postgres doesn't  exist
+
+    db_session.delete(object)
+    db_session.commit()
 
     return 0
+
 
 

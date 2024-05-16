@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container grid grid-cols-12">
+  <div class="col-span-12 mt-10">
+    <h3 class="font-bold text-center">
+      {{ app_name }}
+    </h3>
+  </div>
+  <div class="col-start-2 col-span-10 mt-2 opacity-50 text-center text-xs text-zinc-400">
+    @{{ app_version }}
+  </div>
+</div>
+
+<form hx-trigger="keyup[key=='Enter']" action="/rag/query" method="get">
+  <div class="container grid grid-cols-12 mt-10">
+    <div class="col-start-2 col-span-3 font-medium text-xs">
+      <select id="collection" name="collection" onchange="" class="block py-2.5 px-0 w-full bg-transparent border-0 border-b-2 border-none appearance-none dark:text-black-600 dark:border-gray-500 focus:outline-none focus:ring-0 focus:border-gray-200 peer">
+        {% for name in collections %}
+          {% if name == collection %}
+            <option value="{{name}}" selected="1">{{name}}</option>
+          {% else %}
+            <option value="{{name}}">{{name}}</option>
+          {% endif %}
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-start-5 col-span-1 font-medium text-xs">
+      <select id="mode" name="mode" onchange="" class="block py-2.5 px-0 w-full bg-transparent border-0 border-b-2 border-none appearance-none dark:text-black-600 dark:border-gray-500 focus:outline-none focus:ring-0 focus:border-gray-200 peer">
+        {% for name in modes %}
+          {% if name == mode %}
+            <option value="{{name}}" selected="1">{{name}}</option>
+          {% else %}
+            <option value="{{name}}">{{name}}</option>
+          {% endif %}
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-start-6 col-span-6 font-bold text-xs">
+      <input type="search" name="query" value="{{query}}" placeholder="{{prompt_text}}" autocomplete="off" hx-on="htmx:beforeRequest: document.getElementById('rag-answer').innerText = 'processing ...'" class="peer px-0 py-2.5 mx-0 h-full w-full border-b bg-transparent font-sans text-blue-gray-700 outline outline-0 transition-all placeholder-shown:border-blue-gray-200 focus:border-pink-600 focus:outline-0 disabled:border-0 disabled:bg-blue-gray-50">
+    </div>
+  </div>
+</form>
+
+<div class="container grid grid-cols-12 mt-10">
+  <div class="col-start-2 col-span-10 mt-0">
+    {% if query_ok %}
+      <p class="text-xs italic font-bold text-black-700 py-2">{{query_ok}}</p>
+    {% endif %}
+    {% if query_error %}
+      <p class="text-xs italic font-bold text-red-700 py-2">{{query_error}}</p>
+    {% endif %}
+  </div>
+</div>
+
+{% if mode == "augment" %}
+<div class="container grid grid-cols-12">
+  <div class="col-start-2 col-span-10 mt-0">
+    <p class="text-xs italic font-bold text-blue-700 py-5">
+      {{query_response}}
+    </p>
+  </div>
+</div>
+{% endif %}
+
+{% if mode == "retrieve" %}
+<div class="container grid grid-cols-12">
+  <div class="col-start-2 col-span-10 mt-0">
+    {% for node in query_nodes %}
+      <p class="text-xs italic font-bold text-blue-700 py-5">
+        {{node.text}}
+        <br/>
+        <span class="font-semibold text-orange-700">
+          [score {{node.score}}]
+        </span>
+      </p>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}

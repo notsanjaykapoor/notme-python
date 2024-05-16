@@ -1,21 +1,12 @@
+import os
+
 import fastapi
+import sqlmodel
 
 import context
 import log
 import main_shared
-import os
 import services.corpus
-import starlette.responses
-
-import langchain.retrievers.document_compressors
-import langchain_openai.chat_models
-import langchain_community
-import langchain_community.embeddings
-import langchain_community.llms
-import langchain_community.vectorstores
-from langchain import hub
-import phoenix
-import phoenix.trace.langchain
 
 logger = log.init("app")
 
@@ -29,94 +20,80 @@ app = fastapi.APIRouter(
 )
 
 app_version = os.environ["APP_VERSION"]
-retriever_names = ["default", "compress"]
-
-
-@app.post("/rag/corpus", response_class=fastapi.responses.RedirectResponse)
-async def rag_corpus(request: fastapi.Request):
-    """
-    Select a corpus (deprecated)
-    """
-    bytes = await request.body()
-    value = bytes.decode("utf-8").split("=")[1]
-
-    rag_llm = request.cookies.get("rag_llm") or "local"
-
-    logger.info(f"{context.rid_get()} rag llm '{rag_llm}' corpus '{value}'")
-
-    response = fastapi.responses.RedirectResponse(f"/rag/{value}")
-    response.status_code = 302
-
-    return response
-
-
-@app.post("/rag/llm", response_class=fastapi.responses.RedirectResponse)
-async def rag_llm(request: fastapi.Request):
-    """
-    Select a llm (deprecated)
-    """
-    bytes = await request.body()
-    value = bytes.decode("utf-8").split("=")[1]
-
-    logger.info(f"{context.rid_get()} rag llm '{value}'")
-
-    response = fastapi.responses.RedirectResponse("/rag")
-    response.set_cookie(key="rag_llm", value=value, secure=False)
-    response.status_code = 302
-
-    return response
-
 
 @app.get("/rag/query", response_class=fastapi.responses.HTMLResponse)
-def rag_query(request: fastapi.Request, database_name: str, retriever_name: str, query: str):
-    logger.info(f"{context.rid_get()} rag database '{database_name}' retriever '{retriever_name}' query '{query}'")
+def rag_query(
+    request: fastapi.Request,
+    collection: str = "",
+    mode: str = "retrieve",
+    query: str = "",
+    limit: int = 10,
+    db_session: sqlmodel.Session = fastapi.Depends(main_shared.get_db),
+):
+    list_result = services.corpus.list_(db_session=db_session, query="", offset=0, limit=10)
+    collections = [object.collection_name for object in list_result.objects]
 
-    db_url = os.environ.get("DATABASE_VECTOR_URL")
+    modes = ["retrieve", "augment"]
+    models = services.corpus.embed_models()
 
-    list_result = services.corpus.list_all(db_url=db_url)
-    databases = list_result.databases
+    query_nodes = []
+    query_response = ""
+    query_ok = ""
+    query_error = ""
 
-    retrieve_result = services.corpus.retrieve(db_url=db_url, db_name=database_name, retriever_name=retriever_name, query=query)
-    docs = retrieve_result.docs
+    if collection and query:
+        logger.info(f"{context.rid_get()} rag retrieve collection '{collection}' mode '{mode}' query '{query}'")
 
-    # return starlette.responses.JSONResponse(texts)
+        try:
+            if mode == "augment":
+                response_result = services.corpus.get_response(
+                    db_session=db_session,
+                    name_encoded=collection,
+                    query=query,
+                )
+
+                if response_result.code != 0:
+                    query_error = f"error: {response_result.errors[0]}"
+                else:
+                    query_response = response_result.response
+                    query_ok = f"response generated in {round(response_result.msec, 0)} msec"
+            else:
+                nodes_result = services.corpus.get_nodes(
+                    db_session=db_session,
+                    name_encoded=collection,
+                    query=query,
+                    limit=limit,
+                )
+
+                if nodes_result.code != 0:
+                    query_error = f"error: {nodes_result.errors[0]}"
+                else:
+                    query_nodes = nodes_result.nodes
+                    query_ok = f"{len(query_nodes)} results in {round(nodes_result.msec, 0)} msec"
+
+                    # todo
+                    # services.corpus.text_ratios(texts=[node.text for node in nodes])
+        except Exception as e:
+            query_error = f"exception: {e}"
+    else:
+        logger.info(f"{context.rid_get()} rag retrieve index")
 
     return templates.TemplateResponse(
         request,
-        "rag.html",
+        "query.html",
         {
-            "app_name": "Rag Example",
+            "app_name": "Rag",
             "app_version": app_version,
-            "database_name": database_name,
-            "databases": databases,
-            "docs": docs,
+            "collection": collection,
+            "collections": collections,
+            "mode": mode,
+            "models": models,
+            "modes": modes,
             "prompt_text": "ask a question",
+            "query_error": query_error,
+            "query_ok": query_ok,
+            "query_nodes": query_nodes,
+            "query_response": query_response,
             "query": query,
-            "retriever_names": retriever_names,
-        }
-    )
-
-
-@app.get("/rag", response_class=fastapi.responses.HTMLResponse)
-def rag(request: fastapi.Request):
-    db_url = os.environ.get("DATABASE_VECTOR_URL")
-
-    list_result = services.corpus.list_all(db_url=db_url)
-    databases = list_result.databases
-
-    logger.info(f"{context.rid_get()} rag")
-
-    return templates.TemplateResponse(
-        request,
-        "rag.html",
-        {
-            "app_name": "Rag Example",
-            "app_version": app_version,
-            "corpus_name": "",
-            "databases": databases,
-            "docs": [],
-            "prompt_text": "ask a question",
-            "query": "",
-            "retriever_names": retriever_names,
         }
     )

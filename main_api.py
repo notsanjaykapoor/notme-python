@@ -33,7 +33,7 @@ logger = log.init("api")
 
 @contextlib.asynccontextmanager
 async def lifespan(app: fastapi.FastAPI):
-    logger.info("api.startup ...")
+    logger.info("api.startup init")
 
     # migrate database
     services.database.session.migrate()
