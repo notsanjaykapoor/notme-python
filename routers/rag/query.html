@@ -13,7 +13,7 @@
   </div>
 </div>
 
-<form hx-trigger="keyup[key=='Enter']" action="/rag/query" method="get">
+<form action="/rag/query" method="get" id="rag-query-form">
   <div class="container grid grid-cols-12 mt-10">
     <div class="col-start-2 col-span-3 font-medium text-xs">
       <select id="collection" name="collection" onchange="" class="block py-2.5 px-0 w-full bg-transparent border-0 border-b-2 border-none appearance-none dark:text-black-600 dark:border-gray-500 focus:outline-none focus:ring-0 focus:border-gray-200 peer">
@@ -43,7 +43,15 @@
   </div>
 </form>
 
-<div class="container grid grid-cols-12 mt-10">
+<div class="container grid grid-cols-12 mt-10" id="rag-query-processing" style="display: none">
+  <div class="col-start-2 col-span-10 mt-0">
+    <p class="text-xs italic font-bold text-black-700 py-2">
+      processing ...
+    </p>
+  </div>
+</div>
+
+<div class="container grid grid-cols-12 mt-10" id="rag-query-status">
   <div class="col-start-2 col-span-10 mt-0">
     {% if query_ok %}
       <p class="text-xs italic font-bold text-black-700 py-2">{{query_ok}}</p>
@@ -54,18 +62,18 @@
   </div>
 </div>
 
-{% if mode == "augment" %}
-<div class="container grid grid-cols-12">
+<div class="container grid grid-cols-12" id="rag-query-augment">
+  {% if mode == "augment" %}
   <div class="col-start-2 col-span-10 mt-0">
     <p class="text-xs italic font-bold text-blue-700 py-5">
       {{query_response}}
     </p>
   </div>
+  {% endif %}
 </div>
-{% endif %}
 
-{% if mode == "retrieve" %}
-<div class="container grid grid-cols-12">
+<div class="container grid grid-cols-12" id="rag-query-retrieve">
+  {% if mode == "retrieve" %}
   <div class="col-start-2 col-span-10 mt-0">
     {% for node in query_nodes %}
       <p class="text-xs italic font-bold text-blue-700 py-5">
@@ -77,7 +85,17 @@
       </p>
     {% endfor %}
   </div>
+  {% endif %}
 </div>
-{% endif %}
+
+<script type="text/javascript">
+  document.getElementById("rag-query-form").addEventListener("submit", function() { 
+    document.getElementById("rag-query-augment").style.visibility = "hidden"
+    document.getElementById("rag-query-retrieve").style.visibility = "hidden"
+    document.getElementById("rag-query-status").style.visibility = "hidden"
+
+    document.getElementById("rag-query-processing").style.display = ""
+});
+</script>
 
 {% endblock %}

@@ -6,18 +6,17 @@ import fastapi
 import fastapi.middleware.cors
 import fastapi.templating
 import phoenix
-import phoenix.trace
+import phoenix.trace.langchain
 import sqlmodel
 import starlette.middleware.sessions
 import strawberry
+import strawberry.fastapi
+import strawberry.schema.config
 import ulid
 
-# from sqlmodel import Session  # noqa: E402
-from strawberry.fastapi import GraphQLRouter  # noqa: E402
-from strawberry.schema.config import StrawberryConfig  # noqa: E402
+import dot_init  # noqa: F401
 
 import context  # noqa: E402
-import dot_init  # noqa: F401
 import gql  # noqa: E402
 import log  # noqa: E402
 import models  # noqa: E402
@@ -65,10 +64,10 @@ async def get_gql_context(db=fastapi.Depends(get_db)):
 
 gql_schema = strawberry.Schema(
     query=gql.Query,
-    config=StrawberryConfig(auto_camel_case=False),
+    config=strawberry.schema.config.StrawberryConfig(auto_camel_case=False),
 )
 
-graphql_router = GraphQLRouter(
+graphql_router = strawberry.fastapi.GraphQLRouter(
     gql_schema,
     context_getter=get_gql_context,
 )
@@ -88,7 +87,9 @@ app.add_middleware(
 )
 
 app.add_middleware(
-    starlette.middleware.sessions.SessionMiddleware, secret_key=os.environ.get("FASTAPI_SESSION_KEY"), max_age=None
+    starlette.middleware.sessions.SessionMiddleware,
+    secret_key=os.environ.get("FASTAPI_SESSION_KEY"),
+    max_age=None,
 )
 
 

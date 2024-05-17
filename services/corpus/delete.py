@@ -18,7 +18,7 @@ def delete_by_name(db_session: sqlmodel.Session, name: str) -> int:
     model = models.Corpus
     dataset = sqlmodel.select(model)
 
-    dataset = dataset.where(model.collection_name == name)
+    dataset = dataset.where(model.name == name)
     object = db_session.exec(dataset).first()
 
     if not object:

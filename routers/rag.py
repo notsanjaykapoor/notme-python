@@ -31,7 +31,7 @@ def rag_query(
     db_session: sqlmodel.Session = fastapi.Depends(main_shared.get_db),
 ):
     list_result = services.corpus.list_(db_session=db_session, query="", offset=0, limit=10)
-    collections = [object.collection_name for object in list_result.objects]
+    collections = [object.name for object in list_result.objects]
 
     modes = ["retrieve", "augment"]
     models = services.corpus.embed_models()
@@ -46,7 +46,7 @@ def rag_query(
 
         try:
             if mode == "augment":
-                response_result = services.corpus.get_response(
+                response_result = services.corpus.vector_search_response(
                     db_session=db_session,
                     name_encoded=collection,
                     query=query,
@@ -58,7 +58,7 @@ def rag_query(
                     query_response = response_result.response
                     query_ok = f"response generated in {round(response_result.msec, 0)} msec"
             else:
-                nodes_result = services.corpus.get_nodes(
+                nodes_result = services.corpus.vector_search_nodes(
                     db_session=db_session,
                     name_encoded=collection,
                     query=query,

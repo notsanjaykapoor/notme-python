@@ -64,7 +64,7 @@ def ingest(ctx, dir: str, model: str) -> dict:
             embed_dims=embed_dims,
         )
 
-    _print_status(f"corpus write  dir '{dir_name}' model '{embed_model.model_name}' encoded '{name_encoded}' result docs {write_result.docs_count} nodes {write_result.nodes_count}")
+    _print_status(f"corpus write  dir '{dir_name}' model '{embed_model.model_name}' dimensions {embed_dims} encoded '{name_encoded}' result docs {write_result.docs_count} nodes {write_result.nodes_count}")
 
 
 @click.command()
@@ -83,7 +83,7 @@ def list(ctx, limit: int, query: str="") -> list[str]:
     _print_status(f"corpus list - {len(objects)} results")
 
     for i, object in enumerate(objects):
-        _print_status(f"{i+1}: {object.collection_name}")
+        _print_status(f"{i+1}: {object.name}")
 
 
 @click.command()
@@ -99,7 +99,7 @@ def retrieve(ctx, name: str, model: str, query: str, limit: int=10) -> dict:
 
     _print_status(f"corpus retrieve '{name}' model '{model}' encoded '{name_encoded}' query '{query}'")
 
-    nodes_result = services.corpus.get_nodes(name_encoded=name_encoded, query=query, limit=limit)
+    nodes_result = services.corpus.vector_search_nodes(name_encoded=name_encoded, query=query, limit=limit)
 
     print(f"nodes result, len {len(nodes_result.nodes)}:")
     print(nodes_result.nodes)

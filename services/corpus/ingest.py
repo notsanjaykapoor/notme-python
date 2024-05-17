@@ -19,6 +19,7 @@ import services.corpus
 class Struct:
     code: int
     docs_count: int
+    epoch: int
     nodes_count: int
     seconds: int
     errors: list[str]
@@ -28,19 +29,29 @@ CHUNK_SIZE_DEFAULT = 1024
 CHUNK_OVERLAP_DEFAULT = 20
 
 
-def ingest(db_session: sqlmodel.Session, name_encoded: str, dir: str, embed_model: llama_index.embeddings, embed_dims: int) -> Struct:
+def ingest(
+    db_session: sqlmodel.Session,
+    name_encoded: str,
+    dir: str,
+    embed_model: llama_index.embeddings,
+    embed_dims: int,
+    epoch: int=0,
+) -> Struct:
     """
     Load documents, split them into chunks, and generate and store embeddings in a local vector store.
     """
-    struct = Struct(0, 0, 0, 0, [])
+    struct = Struct(0, 0, 0, 0, 0, [])
 
     t_start = time.time()
 
+    if not epoch:
+        epoch = services.corpus.epoch_generate(db_session=db_session, name_encoded=name_encoded)
+
     files = os.listdir(dir)
 
-    if files and files[0].endswith(".pdf"):
+    if len(files) == 1 and files[0].endswith(".pdf"):
         docs = _load_pdf(file=f"{dir}/{files[0]}")
-    elif files and files[0] == "urls.txt":
+    elif len(files) == 1 and files[0] == "urls.txt":
         docs = _load_urls(dir=dir)
     else:
         docs = _load_dir(dir=dir)
@@ -49,6 +60,9 @@ def ingest(db_session: sqlmodel.Session, name_encoded: str, dir: str, embed_mode
     splitter = llama_index.core.node_parser.SemanticSplitterNodeParser(
         buffer_size=1, breakpoint_percentile_threshold=95, embed_model=embed_model
     )
+    corpus_meta = {
+        "splitter": "semantic"
+    }
     nodes = splitter.get_nodes_from_documents(docs)
 
     vector_store = llama_index.vector_stores.milvus.MilvusVectorStore(
@@ -69,6 +83,7 @@ def ingest(db_session: sqlmodel.Session, name_encoded: str, dir: str, embed_mode
     )
 
     struct.docs_count = len(docs)
+    struct.epoch = epoch
     struct.nodes_count = len(nodes)
     struct.seconds = (time.time() - t_start)
 
@@ -77,11 +92,13 @@ def ingest(db_session: sqlmodel.Session, name_encoded: str, dir: str, embed_mode
 
     _db_write(
         db_session=db_session,
-        collection_name=name_encoded,
+        name=name_encoded,
         embed_model=embed_model,
         embed_dims=embed_dims,
+        epoch=epoch,
         corpus_params={
             "docs_count": struct.docs_count,
+            "meta": corpus_meta,
             "nodes_count": struct.nodes_count,
             "state": models.corpus.STATE_INGESTED,
         }
@@ -90,17 +107,18 @@ def ingest(db_session: sqlmodel.Session, name_encoded: str, dir: str, embed_mode
     return struct
 
 
-def _db_write(db_session: sqlmodel.Session, collection_name: str, embed_model: str, embed_dims: int, corpus_params: dict) -> int:
+def _db_write(db_session: sqlmodel.Session, name: str, embed_model: str, embed_dims: int, epoch: int, corpus_params: dict) -> int:
     """
     Create or update database corpus object
     """
     code = 0
 
-    db_select = sqlmodel.select(models.Corpus).where(models.Corpus.collection_name == collection_name)
-    db_object = db_session.exec(db_select).first()
+    db_object = services.corpus.get_by_name(db_session=db_session, name=name)
 
     if db_object:
         db_object.docs_count = corpus_params.get("docs_count")
+        db_object.epoch = epoch
+        db_object.meta = corpus_params.get("meta")
         db_object.nodes_count = corpus_params.get("nodes_count")
         db_object.state = corpus_params.get("state")
         db_object.updated_at = datetime.datetime.now(datetime.timezone.utc)
@@ -108,10 +126,12 @@ def _db_write(db_session: sqlmodel.Session, collection_name: str, embed_model: s
         code = 200
     else:
         db_object = models.Corpus(
-            collection_name=collection_name,
+            name=name,
             docs_count=corpus_params.get("docs_count"),
             embed_dims=embed_dims,
             embed_model=embed_model,
+            epoch=epoch,
+            meta=corpus_params.get("meta"),
             nodes_count=corpus_params.get("nodes_count"),
             org_id=0,
             state=corpus_params.get("state"),
@@ -155,7 +175,7 @@ def _load_urls(dir: str) -> list:
         raise ValueError("expected urls.txt")
 
     path = f"{dir}/{files[0]}"
-    urls = [url.strip() for url in open(path).read().split("\n")]
+    urls = [url.strip() for url in open(path).read().split("\n") if url]
 
     docs = llama_index.readers.web.SimpleWebPageReader(html_to_text=True).load_data(urls)
     return docs
