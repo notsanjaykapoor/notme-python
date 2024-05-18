@@ -11,7 +11,7 @@ def delete_by_name(collection: str) -> int:
     if collection not in collections:
         return 404
 
-    client = pymilvus.MilvusClient(uri=os.environ.get("MILVUS_URL"))
+    client = services.milvus.client()
     client.drop_collection(collection)
 
     return 0

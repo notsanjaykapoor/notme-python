@@ -1,0 +1,52 @@
+#!/usr/bin/env python
+
+import os
+import sys
+
+sys.path.insert(1, os.path.join(sys.path[0], "../.."))
+
+import click
+import pymilvus
+
+import dot_init
+
+import services.milvus
+
+
+@click.group()
+def cli():
+    pass
+
+
+@click.command()
+@click.option('--query', default="", required=False, help="question")
+@click.pass_context
+def list(ctx, query: str) -> list[str]:
+    """
+    
+    """
+    objects = services.milvus.list_details()
+
+    _print_status(f"milvus list - {len(objects)} results")
+
+    for i, object in enumerate(objects):
+        if not(query) or (query in object.get("collection_name")):
+            _print_status(f"{i+1}: {object}")
+
+
+def _print_error(s: str):
+    print("\x1b[1;31m" + s + "\x1b[0m")
+
+
+def _print_ok(s: str):
+    print("\x1b[1;32m" + s + "\x1b[0m")
+
+
+def _print_status(s: str):
+    print("\x1b[1;33m" + s + "\x1b[0m")
+
+
+cli.add_command(list)
+
+if __name__ == "__main__":
+    cli()

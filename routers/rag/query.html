@@ -73,14 +73,14 @@
 </div>
 
 <div class="container grid grid-cols-12" id="rag-query-retrieve">
-  {% if mode == "retrieve" %}
+  {% if mode in ["keyword", "retrieve"] %}
   <div class="col-start-2 col-span-10 mt-0">
     {% for node in query_nodes %}
       <p class="text-xs italic font-bold text-blue-700 py-5">
         {{node.text}}
         <br/>
         <span class="font-semibold text-orange-700">
-          [score {{node.score}}]
+          [score {{node.score or 'n/a'}}]
         </span>
       </p>
     {% endfor %}

@@ -60,10 +60,9 @@ def ingest(
     splitter = llama_index.core.node_parser.SemanticSplitterNodeParser(
         buffer_size=1, breakpoint_percentile_threshold=95, embed_model=embed_model
     )
-    corpus_meta = {
-        "splitter": "semantic"
-    }
     nodes = splitter.get_nodes_from_documents(docs)
+
+    # vector index
 
     vector_store = llama_index.vector_stores.milvus.MilvusVectorStore(
         collection_name=name_encoded,
@@ -71,21 +70,38 @@ def ingest(
         overwrite=True,
         uri=os.environ.get("MILVUS_URL"),
     )
-    storage_context = llama_index.core.StorageContext.from_defaults(
+    vector_storage_context = llama_index.core.StorageContext.from_defaults(
         vector_store=vector_store,
     )
     _vector_index = llama_index.core.VectorStoreIndex(
         nodes,
         embed_model=embed_model,
         show_progress=True,
-        storage_context=storage_context,
+        storage_context=vector_storage_context,
         store_nodes_override=True,
     )
+
+    # keyword index
+
+    keyword_storage_context = llama_index.core.StorageContext.from_defaults()
+    keyword_index = llama_index.core.SimpleKeywordTableIndex(
+        nodes,
+        embed_model=embed_model,
+        max_keywords_per_chunk=1024,
+        # keyword_extract_template="KEYWORDS: sanjay,pegmo\n",
+        storage_context=keyword_storage_context,
+    )
+    keyword_index.storage_context.persist(persist_dir=f"./storage/{name_encoded}")
 
     struct.docs_count = len(docs)
     struct.epoch = epoch
     struct.nodes_count = len(nodes)
     struct.seconds = (time.time() - t_start)
+
+    corpus_meta = {
+        "indices": ["keyword", "vector"],
+        "splitter": "semantic",
+    }
 
     parse_result = services.corpus.name_parse(name_encoded=name_encoded)
     embed_model = parse_result.model

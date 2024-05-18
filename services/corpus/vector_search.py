@@ -7,6 +7,7 @@ import llama_index.vector_stores.milvus
 import sqlmodel
 
 import services.corpus
+import services.milvus
 
 @dataclasses.dataclass
 class StructNodes:
@@ -24,23 +25,7 @@ class StructResponse:
     errors: list[str]
 
 
-def vector_search_nodes(db_session: sqlmodel.Session, name_encoded: str, query: str, limit: int) -> StructNodes:
-    """
-    """
-    struct = StructNodes(0, 0, [], [])
-
-    t_start = time.time()
-
-    vector_index = _vector_index(db_session=db_session, name_encoded=name_encoded)
-
-    retriever = vector_index.as_retriever(similarity_top_k=limit)
-    struct.nodes = retriever.retrieve(query)
-    struct.msec = (time.time() - t_start) * 1000
-
-    return struct
-
-
-def vector_search_response(db_session: sqlmodel.Session, name_encoded: str, query: str) -> StructResponse:
+def vector_search_augment(db_session: sqlmodel.Session, name_encoded: str, query: str) -> StructResponse:
     """
     """
     struct = StructResponse(0, 0, "", [])
@@ -48,9 +33,25 @@ def vector_search_response(db_session: sqlmodel.Session, name_encoded: str, quer
     t_start = time.time()
 
     vector_index = _vector_index(db_session=db_session, name_encoded=name_encoded)
-
     query_engine = vector_index.as_query_engine()
     struct.response = query_engine.query(query)
+
+    struct.msec = (time.time() - t_start) * 1000
+
+    return struct
+
+
+def vector_search_retrieve(db_session: sqlmodel.Session, name_encoded: str, query: str, limit: int) -> StructNodes:
+    """
+    """
+    struct = StructNodes(0, 0, [], [])
+
+    t_start = time.time()
+
+    vector_index = _vector_index(db_session=db_session, name_encoded=name_encoded)
+    retriever = vector_index.as_retriever(similarity_top_k=limit)
+    struct.nodes = retriever.retrieve(query)
+
     struct.msec = (time.time() - t_start) * 1000
 
     return struct

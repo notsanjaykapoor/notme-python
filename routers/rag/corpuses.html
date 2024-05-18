@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container grid grid-cols-12">
+  <div class="col-span-12 mt-10">
+    <h3 class="font-bold text-center">
+      {{ app_name }}
+    </h3>
+  </div>
+  <div class="col-start-2 col-span-10 mt-2 opacity-50 text-center text-xs text-zinc-400">
+    @{{ app_version }}
+  </div>
+</div>
+
+<div class="container grid grid-cols-12 mt-10" id="corpus-table">
+  <table class="col-start-2 col-span-10">
+    <thead class="font-normal text-left text-xs leading-6 text-zinc-800">
+      <tr>
+        <th class="p-4 pr-6">name</th>
+        <th class="p-4 pr-6">docs</th>
+        <th class="p-4 pr-6">nodes</th>
+        <th class="p-4 pr-6">model</th>
+        <th class="p-4 pr-6">dimensions</th>
+        <th class="p-4 pr-6">indices</th>
+        <th class="p-4 pr-6">state</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for corpus in corpus_list %}
+        <tr class="group hover:bg-zinc-50 odd:bg-white even:bg-slate-50 text-sm">
+          <td class="p-4 pr-6 font-normal">{{corpus.name}}</td>
+          <td class="p-4 pr-6 font-normal">{{corpus.docs_count}}</td>
+          <td class="p-4 pr-6 font-norma">{{corpus.nodes_count}}</td>
+          <td class="p-4 pr-6 font-norma">{{corpus.embed_model}}</td>
+          <td class="p-4 pr-6 font-norma">{{corpus.embed_dims}}</td>
+          <td class="p-4 pr-6 font-norma">{{", ".join(corpus.meta.get("indices") or [])}}</td>
+          <td class="p-4 pr-6 font-norma">{{corpus.state}}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}

@@ -21,6 +21,26 @@ app = fastapi.APIRouter(
 
 app_version = os.environ["APP_VERSION"]
 
+@app.get("/rag/corpuses", response_class=fastapi.responses.HTMLResponse)
+def rag_corpuses(request: fastapi.Request, db_session: sqlmodel.Session = fastapi.Depends(main_shared.get_db)):
+    """
+    """
+    list_result = services.corpus.list_(db_session=db_session, query="", offset=0, limit=50)
+    corpus_list = list_result.objects
+
+    print(corpus_list)
+
+    return templates.TemplateResponse(
+        request,
+        "corpuses.html",
+        {
+            "app_name": "Corpuses",
+            "app_version": app_version,
+            "corpus_list": corpus_list,
+        }
+    )
+
+
 @app.get("/rag/query", response_class=fastapi.responses.HTMLResponse)
 def rag_query(
     request: fastapi.Request,
@@ -33,7 +53,7 @@ def rag_query(
     list_result = services.corpus.list_(db_session=db_session, query="", offset=0, limit=10)
     collections = [object.name for object in list_result.objects]
 
-    modes = ["retrieve", "augment"]
+    modes = ["augment", "keyword", "retrieve"]
     models = services.corpus.embed_models()
 
     query_nodes = []
@@ -46,33 +66,47 @@ def rag_query(
 
         try:
             if mode == "augment":
-                response_result = services.corpus.vector_search_response(
+                augment_result = services.corpus.vector_search_augment(
                     db_session=db_session,
                     name_encoded=collection,
                     query=query,
                 )
 
-                if response_result.code != 0:
-                    query_error = f"error: {response_result.errors[0]}"
+                if augment_result.code != 0:
+                    query_error = f"error: {augment_result.errors[0]}"
                 else:
-                    query_response = response_result.response
-                    query_ok = f"response generated in {round(response_result.msec, 0)} msec"
-            else:
-                nodes_result = services.corpus.vector_search_nodes(
+                    query_response = augment_result.response
+                    query_ok = f"response generated in {round(augment_result.msec, 0)} msec"
+            elif mode == "retrieve":
+                retrieve_result = services.corpus.vector_search_retrieve(
                     db_session=db_session,
                     name_encoded=collection,
                     query=query,
                     limit=limit,
                 )
 
-                if nodes_result.code != 0:
-                    query_error = f"error: {nodes_result.errors[0]}"
+                if retrieve_result.code != 0:
+                    query_error = f"error: {retrieve_result.errors[0]}"
                 else:
-                    query_nodes = nodes_result.nodes
-                    query_ok = f"{len(query_nodes)} results in {round(nodes_result.msec, 0)} msec"
+                    query_nodes = retrieve_result.nodes
+                    query_ok = f"{len(query_nodes)} results in {round(retrieve_result.msec, 0)} msec"
 
                     # todo
                     # services.corpus.text_ratios(texts=[node.text for node in nodes])
+            elif mode == "keyword":
+                retrieve_result = services.corpus.keyword_search_retrieve(
+                    db_session=db_session,
+                    name_encoded=collection,
+                    query=query,
+                    limit=limit,
+                )
+
+                if retrieve_result.code != 0:
+                    query_error = f"error: {retrieve_result.errors[0]}"
+                else:
+                    query_nodes = retrieve_result.nodes
+                    query_ok = f"{len(query_nodes)} results in {round(retrieve_result.msec, 0)} msec"
+
         except Exception as e:
             query_error = f"exception: {e}"
     else:
