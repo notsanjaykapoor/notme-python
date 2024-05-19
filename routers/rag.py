@@ -7,6 +7,8 @@ import context
 import log
 import main_shared
 import services.corpus
+import services.corpus.keyword
+import services.corpus.vector
 
 logger = log.init("app")
 
@@ -44,14 +46,14 @@ def rag_corpuses(request: fastapi.Request, db_session: sqlmodel.Session = fastap
 @app.get("/rag/query", response_class=fastapi.responses.HTMLResponse)
 def rag_query(
     request: fastapi.Request,
-    collection: str = "",
+    corpus: str = "",  # full corpus name
     mode: str = "retrieve",
     query: str = "",
     limit: int = 10,
     db_session: sqlmodel.Session = fastapi.Depends(main_shared.get_db),
 ):
     list_result = services.corpus.list_(db_session=db_session, query="", offset=0, limit=10)
-    collections = [object.name for object in list_result.objects]
+    corpus_list = [object.name for object in list_result.objects]
 
     modes = ["augment", "keyword", "retrieve"]
     models = services.corpus.embed_models()
@@ -61,14 +63,14 @@ def rag_query(
     query_ok = ""
     query_error = ""
 
-    if collection and query:
-        logger.info(f"{context.rid_get()} rag retrieve collection '{collection}' mode '{mode}' query '{query}'")
+    if corpus and query:
+        logger.info(f"{context.rid_get()} rag retrieve corpus '{corpus}' mode '{mode}' query '{query}'")
 
         try:
             if mode == "augment":
-                augment_result = services.corpus.vector_search_augment(
+                augment_result = services.corpus.vector.search_augment(
                     db_session=db_session,
-                    name_encoded=collection,
+                    name_encoded=corpus,
                     query=query,
                 )
 
@@ -78,9 +80,9 @@ def rag_query(
                     query_response = augment_result.response
                     query_ok = f"response generated in {round(augment_result.msec, 0)} msec"
             elif mode == "retrieve":
-                retrieve_result = services.corpus.vector_search_retrieve(
+                retrieve_result = services.corpus.vector.search_retrieve(
                     db_session=db_session,
-                    name_encoded=collection,
+                    name_encoded=corpus,
                     query=query,
                     limit=limit,
                 )
@@ -94,9 +96,9 @@ def rag_query(
                     # todo
                     # services.corpus.text_ratios(texts=[node.text for node in nodes])
             elif mode == "keyword":
-                retrieve_result = services.corpus.keyword_search_retrieve(
+                retrieve_result = services.corpus.keyword.search_retrieve(
                     db_session=db_session,
-                    name_encoded=collection,
+                    name_encoded=corpus,
                     query=query,
                     limit=limit,
                 )
@@ -118,8 +120,8 @@ def rag_query(
         {
             "app_name": "Rag",
             "app_version": app_version,
-            "collection": collection,
-            "collections": collections,
+            "corpus": corpus,
+            "corpus_list": corpus_list,
             "mode": mode,
             "models": models,
             "modes": modes,

@@ -25,8 +25,10 @@ class Struct:
     errors: list[str]
 
 
-CHUNK_SIZE_DEFAULT = 1024
-CHUNK_OVERLAP_DEFAULT = 20
+KEYWORD_CHUNK_DEFAULT = 1024
+
+VECTOR_CHUNK_SIZE_DEFAULT = 1024
+VECTOR_CHUNK_OVERLAP_DEFAULT = 20
 
 
 def ingest(
@@ -56,11 +58,16 @@ def ingest(
     else:
         docs = _load_dir(dir=dir)
 
-    # splitter = llama_index.core.node_parser.SentenceSplitter(chunk_size=CHUNK_SIZE_DEFAULT, chunk_overlap=CHUNK_OVERLAP_DEFAULT)
+    # splitter = llama_index.core.node_parser.SentenceSplitter(
+    #     chunk_size=VECTOR_CHUNK_SIZE_DEFAULT, chunk_overlap=VECTOR_CHUNK_OVERLAP_DEFAULT,
+    # )
     splitter = llama_index.core.node_parser.SemanticSplitterNodeParser(
         buffer_size=1, breakpoint_percentile_threshold=95, embed_model=embed_model
     )
     nodes = splitter.get_nodes_from_documents(docs)
+
+    splitter = "semantic"
+    indices = []
 
     # vector index
 
@@ -80,6 +87,7 @@ def ingest(
         storage_context=vector_storage_context,
         store_nodes_override=True,
     )
+    indices.append("vendor")
 
     # keyword index
 
@@ -87,11 +95,13 @@ def ingest(
     keyword_index = llama_index.core.SimpleKeywordTableIndex(
         nodes,
         embed_model=embed_model,
-        max_keywords_per_chunk=1024,
         # keyword_extract_template="KEYWORDS: sanjay,pegmo\n",
+        max_keywords_per_chunk=KEYWORD_CHUNK_DEFAULT,
         storage_context=keyword_storage_context,
     )
-    keyword_index.storage_context.persist(persist_dir=f"./storage/{name_encoded}")
+    keyword_db_path = os.environ.get("KEYWORD_DB_PATH")
+    keyword_index.storage_context.persist(persist_dir=f"{keyword_db_path}/{name_encoded}")
+    indices.append("keyword")
 
     struct.docs_count = len(docs)
     struct.epoch = epoch
@@ -99,8 +109,8 @@ def ingest(
     struct.seconds = (time.time() - t_start)
 
     corpus_meta = {
-        "indices": ["keyword", "vector"],
-        "splitter": "semantic",
+        "indices": sorted(indices),
+        "splitter": splitter,
     }
 
     parse_result = services.corpus.name_parse(name_encoded=name_encoded)
@@ -132,28 +142,19 @@ def _db_write(db_session: sqlmodel.Session, name: str, embed_model: str, embed_d
     db_object = services.corpus.get_by_name(db_session=db_session, name=name)
 
     if db_object:
-        db_object.docs_count = corpus_params.get("docs_count")
-        db_object.epoch = epoch
-        db_object.meta = corpus_params.get("meta")
-        db_object.nodes_count = corpus_params.get("nodes_count")
-        db_object.state = corpus_params.get("state")
-        db_object.updated_at = datetime.datetime.now(datetime.timezone.utc)
-
         code = 200
     else:
-        db_object = models.Corpus(
-            name=name,
-            docs_count=corpus_params.get("docs_count"),
-            embed_dims=embed_dims,
-            embed_model=embed_model,
-            epoch=epoch,
-            meta=corpus_params.get("meta"),
-            nodes_count=corpus_params.get("nodes_count"),
-            org_id=0,
-            state=corpus_params.get("state"),
-        )
-
+        db_object = models.Corpus()
         code = 201
+
+    db_object.docs_count = corpus_params.get("docs_count")
+    db_object.embed_dims=embed_dims
+    db_object.embed_model=embed_model
+    db_object.epoch = epoch
+    db_object.meta = corpus_params.get("meta")
+    db_object.nodes_count = corpus_params.get("nodes_count")
+    db_object.state = corpus_params.get("state")
+    db_object.updated_at = datetime.datetime.now(datetime.timezone.utc)
 
     db_session.add(db_object)
     db_session.commit()

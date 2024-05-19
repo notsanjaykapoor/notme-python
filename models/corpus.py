@@ -24,3 +24,11 @@ class Corpus(sqlmodel.SQLModel, table=True):
     org_id: int = sqlmodel.Field(index=True, nullable=False)
     state: str = sqlmodel.Field(index=True, nullable=False)
     updated_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.utcnow, nullable=False)
+
+    @property
+    def indices(self) -> list[str]:
+        return self.meta.get("indices") or []
+
+    @property
+    def splitter(self) -> str:
+        return self.meta.get("splitter") or ""

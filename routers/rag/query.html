@@ -16,9 +16,9 @@
 <form action="/rag/query" method="get" id="rag-query-form">
   <div class="container grid grid-cols-12 mt-10">
     <div class="col-start-2 col-span-3 font-medium text-xs">
-      <select id="collection" name="collection" onchange="" class="block py-2.5 px-0 w-full bg-transparent border-0 border-b-2 border-none appearance-none dark:text-black-600 dark:border-gray-500 focus:outline-none focus:ring-0 focus:border-gray-200 peer">
-        {% for name in collections %}
-          {% if name == collection %}
+      <select id="corpus" name="corpus" onchange="" class="block py-2.5 px-0 w-full bg-transparent border-0 border-b-2 border-none appearance-none dark:text-black-600 dark:border-gray-500 focus:outline-none focus:ring-0 focus:border-gray-200 peer">
+        {% for name in corpus_list %}
+          {% if name == corpus %}
             <option value="{{name}}" selected="1">{{name}}</option>
           {% else %}
             <option value="{{name}}">{{name}}</option>
@@ -93,7 +93,6 @@
     document.getElementById("rag-query-augment").style.visibility = "hidden"
     document.getElementById("rag-query-retrieve").style.visibility = "hidden"
     document.getElementById("rag-query-status").style.visibility = "hidden"
-
     document.getElementById("rag-query-processing").style.display = ""
 });
 </script>

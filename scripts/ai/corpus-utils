@@ -10,6 +10,7 @@ import click
 import dot_init
 
 import services.corpus
+import services.corpus.vector
 import services.database
 import services.milvus
 
@@ -87,6 +88,33 @@ def list(ctx, limit: int, query: str="") -> list[str]:
 
 
 @click.command()
+@click.option('--limit', default=50, required=False, help="search limit")
+@click.option('--query', default="", required=False, help="search query")
+@click.pass_context
+def list_keyword(ctx, limit: int, query: str="") -> list:
+    """
+    
+    """
+
+
+@click.command()
+@click.option('--limit', default=50, required=False, help="search limit")
+@click.option('--query', default="", required=False, help="search query")
+@click.pass_context
+def list_vector(ctx, limit: int, query: str="") -> list:
+    """
+    
+    """
+    objects = services.milvus.list_details()
+
+    _print_status(f"vector list - {len(objects)} results")
+
+    for i, object in enumerate(objects):
+        if not(query) or (query in object.get("collection_name")):
+            _print_status(f"{i+1}: {object}")
+
+
+@click.command()
 @click.option('--name', default=None, required=True, help="corpus encoded name")
 @click.option('--query', default=None, required=True, help="question")
 @click.option('--mode', default=None, required=True, help="query mode - augment or retrieve")
@@ -106,7 +134,7 @@ def query(ctx, name: str, query: str, mode: str, limit: int=10) -> dict:
         print(response_result.response)
     else:
         with services.database.session.get() as db_session:
-            nodes_result = services.corpus.vector_search_retrieve(db_session=db_session, name_encoded=name, query=query, limit=limit)
+            nodes_result = services.corpus.vector.search_retrieve(db_session=db_session, name_encoded=name, query=query, limit=limit)
 
         print(f"nodes result, len {len(nodes_result.nodes)}:")
         _print_nodes(nodes=nodes_result.nodes)
@@ -133,6 +161,8 @@ def _print_nodes(nodes):
 
 cli.add_command(delete)
 cli.add_command(list)
+cli.add_command(list_keyword)
+cli.add_command(list_vector)
 cli.add_command(query)
 cli.add_command(ingest)
 

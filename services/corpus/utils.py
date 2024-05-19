@@ -15,6 +15,7 @@ class Struct:
 
 DIMENSIONS = {
     "bge-large-en-v1-5-finetuned-300": 1024,
+    "clip-vit-base-patch32": 512,
     "gte-base": 768,
     "gte-large": 1024,
     "nomic-embed-text-v1": 768,

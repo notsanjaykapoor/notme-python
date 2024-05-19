@@ -25,7 +25,7 @@ class StructResponse:
     errors: list[str]
 
 
-def vector_search_augment(db_session: sqlmodel.Session, name_encoded: str, query: str) -> StructResponse:
+def search_augment(db_session: sqlmodel.Session, name_encoded: str, query: str) -> StructResponse:
     """
     """
     struct = StructResponse(0, 0, "", [])
@@ -41,7 +41,7 @@ def vector_search_augment(db_session: sqlmodel.Session, name_encoded: str, query
     return struct
 
 
-def vector_search_retrieve(db_session: sqlmodel.Session, name_encoded: str, query: str, limit: int) -> StructNodes:
+def search_retrieve(db_session: sqlmodel.Session, name_encoded: str, query: str, limit: int) -> StructNodes:
     """
     """
     struct = StructNodes(0, 0, [], [])
