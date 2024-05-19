@@ -59,6 +59,7 @@ def name_encode(corpus: str, model: str) -> str:
 
 def name_parse(name_encoded: str) -> Struct:
     """
+    deprecated
     """
     struct = Struct(0, "", name_encoded, "", [])
 

@@ -3014,6 +3014,50 @@ spider-client = ">=0.0.11,<0.0.12"
 urllib3 = ">=1.1.0"
 
 [[package]]
+name = "llama-index-storage-docstore-postgres"
+version = "0.1.3"
+description = "llama-index docstore postgres integration"
+optional = false
+python-versions = "<4.0,>=3.8.1"
+files = [
+    {file = "llama_index_storage_docstore_postgres-0.1.3-py3-none-any.whl", hash = "sha256:6115dff062caebfce936a2b4224ac86ad35a168048cd6d49b6e0b9e7349d2146"},
+    {file = "llama_index_storage_docstore_postgres-0.1.3.tar.gz", hash = "sha256:91e926df7119844801b127860067fae5c0964b18140f05e89cb65a984450bacc"},
+]
+
+[package.dependencies]
+llama-index-core = ">=0.10.1,<0.11.0"
+llama-index-storage-kvstore-postgres = ">=0.1.2,<0.2.0"
+
+[[package]]
+name = "llama-index-storage-index-store-postgres"
+version = "0.1.3"
+description = "llama-index index_store postgres integration"
+optional = false
+python-versions = "<4.0,>=3.8.1"
+files = [
+    {file = "llama_index_storage_index_store_postgres-0.1.3-py3-none-any.whl", hash = "sha256:fd519c9c41edf72237ab9b5ab7469c233faedba05d3c4212b48822721d14d7e1"},
+    {file = "llama_index_storage_index_store_postgres-0.1.3.tar.gz", hash = "sha256:b326e5889eb57873bea6f2344b9a6d00c8e93572face6dc8764eaac7b2e2441b"},
+]
+
+[package.dependencies]
+llama-index-core = ">=0.10.1,<0.11.0"
+llama-index-storage-kvstore-postgres = ">=0.1.2,<0.2.0"
+
+[[package]]
+name = "llama-index-storage-kvstore-postgres"
+version = "0.1.2"
+description = "llama-index kvstore postgres integration"
+optional = false
+python-versions = ">=3.8.1,<4.0"
+files = [
+    {file = "llama_index_storage_kvstore_postgres-0.1.2-py3-none-any.whl", hash = "sha256:6b507ebd6f5c538b30322ead031a91f5111597bb6b29927f1a30db5e13b8f2bc"},
+    {file = "llama_index_storage_kvstore_postgres-0.1.2.tar.gz", hash = "sha256:cf5b84f00b9f78c26a6a89e1ec40dbc7023a3e7615f7da39414fda2196ddedb7"},
+]
+
+[package.dependencies]
+llama-index-core = ">=0.10.1,<0.11.0"
+
+[[package]]
 name = "llama-index-vector-stores-faiss"
 version = "0.1.2"
 description = "llama-index vector_stores faiss integration"
@@ -8085,4 +8129,4 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<3.12"
-content-hash = "669b3d762fa3f763a003adbcb0df10c2d70b93d144b1ca01d48a354ce763a3eb"
+content-hash = "0bd855a25e924385dab6e9eabd79dffc0f18c744588db1f6e3867ddd85653587"

@@ -58,6 +58,9 @@ def search_retrieve(db_session: sqlmodel.Session, name_encoded: str, query: str,
 
 
 def _vector_index(db_session: sqlmodel.Session, name_encoded: str) -> llama_index.core.VectorStoreIndex:
+    """
+    Load milvus vector index
+    """
     db_object = services.corpus.get_by_name(db_session=db_session, name=name_encoded)
 
     if not db_object:

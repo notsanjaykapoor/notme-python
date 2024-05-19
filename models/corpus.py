@@ -5,6 +5,7 @@ import sqlalchemy
 import sqlmodel
 
 STATE_INGESTED: str = "ingested"
+STATE_PENDING: str = "pending"
 
 class Corpus(sqlmodel.SQLModel, table=True):
     __tablename__ = "corpus"
@@ -22,12 +23,28 @@ class Corpus(sqlmodel.SQLModel, table=True):
     name: str = sqlmodel.Field(index=True, nullable=False) # fully encoded collection name
     nodes_count: int = sqlmodel.Field(index=True, nullable=False)
     org_id: int = sqlmodel.Field(index=True, nullable=False)
+    source_dir: str = sqlmodel.Field(index=True, nullable=False)
     state: str = sqlmodel.Field(index=True, nullable=False)
     updated_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.utcnow, nullable=False)
 
     @property
-    def indices(self) -> list[str]:
-        return self.meta.get("indices") or []
+    def indices(self) -> dict:
+        return self.meta.get("indices", {}).keys()
+
+    @property
+    def keyword_doc_store(self) -> str:
+        return self.meta.get("indices", {}).get("keyword", {}).get("doc_store", "")
+
+    @property
+    def keyword_index_store(self) -> str:
+        return self.meta.get("indices", {}).get("keyword", {}).get("idx_store", "")
+
+    @property
+    def keyword_tables(self) -> list[str]:
+        return [
+            f"data_{self.keyword_doc_store}",
+            f"data_{self.keyword_index_store}",
+        ]
 
     @property
     def splitter(self) -> str:

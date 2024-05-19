@@ -9,7 +9,10 @@ import llama_index.core.node_parser
 import llama_index.embeddings
 import llama_index.readers.file
 import llama_index.readers.web
+import llama_index.storage.docstore.postgres
+import llama_index.storage.index_store.postgres
 import llama_index.vector_stores.milvus
+import sqlalchemy
 import sqlmodel
 
 import models
@@ -49,6 +52,31 @@ def ingest(
     if not epoch:
         epoch = services.corpus.epoch_generate(db_session=db_session, name_encoded=name_encoded)
 
+    model_name = embed_model.model_name.split("/")[-1]
+
+    # initialize corpus state
+
+    db_object, db_code = _db_write(
+        db_session=db_session,
+        name=name_encoded,
+        embed_model=model_name,
+        embed_dims=embed_dims,
+        epoch=epoch,
+        params={
+            "source_dir": dir,
+        },
+        state=models.corpus.STATE_PENDING,
+    )
+
+    indices = {
+        "keyword": {
+            "doc_store": f"kw_doc_store_{db_object.id}",
+            "idx_store": f"kw_idx_store_{db_object.id}",
+        },
+        "vector": name_encoded,
+    }
+    splitter_name = "semantic"
+
     files = os.listdir(dir)
 
     if len(files) == 1 and files[0].endswith(".pdf"):
@@ -58,18 +86,18 @@ def ingest(
     else:
         docs = _load_dir(dir=dir)
 
-    # splitter = llama_index.core.node_parser.SentenceSplitter(
-    #     chunk_size=VECTOR_CHUNK_SIZE_DEFAULT, chunk_overlap=VECTOR_CHUNK_OVERLAP_DEFAULT,
-    # )
-    splitter = llama_index.core.node_parser.SemanticSplitterNodeParser(
-        buffer_size=1, breakpoint_percentile_threshold=95, embed_model=embed_model
-    )
-    nodes = splitter.get_nodes_from_documents(docs)
+    if splitter_name == "semantic":
+        splitter = llama_index.core.node_parser.SemanticSplitterNodeParser(
+            buffer_size=1, breakpoint_percentile_threshold=95, embed_model=embed_model
+        )
+        nodes = splitter.get_nodes_from_documents(docs)
+    else:
+        pass
+        # splitter = llama_index.core.node_parser.SentenceSplitter(
+        #     chunk_size=VECTOR_CHUNK_SIZE_DEFAULT, chunk_overlap=VECTOR_CHUNK_OVERLAP_DEFAULT,
+        # )
 
-    splitter = "semantic"
-    indices = []
-
-    # vector index
+    # vector index using milvus
 
     vector_store = llama_index.vector_stores.milvus.MilvusVectorStore(
         collection_name=name_encoded,
@@ -87,11 +115,28 @@ def ingest(
         storage_context=vector_storage_context,
         store_nodes_override=True,
     )
-    indices.append("vendor")
 
-    # keyword index
+    # keyword index using postgres
 
-    keyword_storage_context = llama_index.core.StorageContext.from_defaults()
+    if db_code == 200:
+        # truncate existing indices
+        _db_index_truncate(db_session=db_session, corpus=db_object)
+
+    postgres_doc_store = llama_index.storage.docstore.postgres.PostgresDocumentStore.from_uri(
+        perform_setup=True,
+        table_name=indices.get("keyword").get("doc_store"),
+        uri=os.environ.get("DATABASE_URL"),
+    )
+    postgres_index_store = llama_index.storage.index_store.postgres.PostgresIndexStore.from_uri(
+        perform_setup=True,
+        table_name=indices.get("keyword").get("idx_store"),
+        uri=os.environ.get("DATABASE_URL"),
+    )
+    keyword_storage_context = llama_index.core.StorageContext.from_defaults(
+        docstore=postgres_doc_store,
+        index_store=postgres_index_store,
+    )
+
     keyword_index = llama_index.core.SimpleKeywordTableIndex(
         nodes,
         embed_model=embed_model,
@@ -99,9 +144,7 @@ def ingest(
         max_keywords_per_chunk=KEYWORD_CHUNK_DEFAULT,
         storage_context=keyword_storage_context,
     )
-    keyword_db_path = os.environ.get("KEYWORD_DB_PATH")
-    keyword_index.storage_context.persist(persist_dir=f"{keyword_db_path}/{name_encoded}")
-    indices.append("keyword")
+    keyword_index.storage_context.persist()
 
     struct.docs_count = len(docs)
     struct.epoch = epoch
@@ -109,31 +152,39 @@ def ingest(
     struct.seconds = (time.time() - t_start)
 
     corpus_meta = {
-        "indices": sorted(indices),
-        "splitter": splitter,
+        "indices": indices,
+        "splitter": splitter_name,
     }
 
-    parse_result = services.corpus.name_parse(name_encoded=name_encoded)
-    embed_model = parse_result.model
+    # update corpus state
 
     _db_write(
         db_session=db_session,
         name=name_encoded,
-        embed_model=embed_model,
+        embed_model=model_name,
         embed_dims=embed_dims,
         epoch=epoch,
-        corpus_params={
+        params={
             "docs_count": struct.docs_count,
             "meta": corpus_meta,
             "nodes_count": struct.nodes_count,
-            "state": models.corpus.STATE_INGESTED,
-        }
+            "source_dir": dir,
+        },
+        state=models.corpus.STATE_INGESTED,
     )
 
     return struct
 
 
-def _db_write(db_session: sqlmodel.Session, name: str, embed_model: str, embed_dims: int, epoch: int, corpus_params: dict) -> int:
+def _db_index_truncate(db_session: sqlmodel.Session, corpus: models.Corpus) -> int:
+    """
+    """
+    for table_name in corpus.keyword_tables:
+        db_session.execute(sqlalchemy.text(f"delete from {table_name}"))
+    db_session.commit()
+
+
+def _db_write(db_session: sqlmodel.Session, name: str, embed_model: str, embed_dims: int, epoch: int, state: str, params: dict) -> tuple:
     """
     Create or update database corpus object
     """
@@ -147,19 +198,23 @@ def _db_write(db_session: sqlmodel.Session, name: str, embed_model: str, embed_d
         db_object = models.Corpus()
         code = 201
 
-    db_object.docs_count = corpus_params.get("docs_count")
+    db_object.docs_count = params.get("docs_count") or 0
     db_object.embed_dims=embed_dims
     db_object.embed_model=embed_model
     db_object.epoch = epoch
-    db_object.meta = corpus_params.get("meta")
-    db_object.nodes_count = corpus_params.get("nodes_count")
-    db_object.state = corpus_params.get("state")
+    if meta := params.get("meta"):
+        db_object.meta = meta
+    db_object.name = name
+    db_object.nodes_count = params.get("nodes_count") or 0
+    db_object.org_id = 0
+    db_object.source_dir = params.get("source_dir")
+    db_object.state = state
     db_object.updated_at = datetime.datetime.now(datetime.timezone.utc)
 
     db_session.add(db_object)
     db_session.commit()
 
-    return code
+    return db_object, code
 
 
 def _load_dir(dir: str) -> list:
