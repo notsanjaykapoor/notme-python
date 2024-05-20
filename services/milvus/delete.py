@@ -6,6 +6,9 @@ import services.milvus
 
 
 def delete_by_name(collection: str) -> int:
+    """
+    Delete milvus collection
+    """
     collections = services.milvus.list_()
 
     if collection not in collections:

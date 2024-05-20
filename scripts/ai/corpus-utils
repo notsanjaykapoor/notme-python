@@ -10,6 +10,7 @@ import click
 import dot_init
 
 import services.corpus
+import services.corpus.keyword
 import services.corpus.vector
 import services.database
 import services.milvus
@@ -38,8 +39,9 @@ def delete(ctx, name: str) -> list[str]:
 @click.command()
 @click.option('--dir', default=None, required=True, help="corpus directory")
 @click.option('--model', default=None, required=True, help="embedding model name, e.g. gpt4all, openai, gte-base, gte-large, nomic-embed-text-v1")
+@click.option('--splitter', default="semantic", required=False, help="text splitter, e.g. semantic, chunk:1024:20")
 @click.pass_context
-def ingest(ctx, dir: str, model: str) -> dict:
+def ingest(ctx, dir: str, model: str, splitter: str) -> dict:
     """
     
     """
@@ -50,11 +52,11 @@ def ingest(ctx, dir: str, model: str) -> dict:
 
     dir_name = dir.split("/")[-1]
 
-    name_encoded = services.corpus.name_encode(corpus=dir_name, model=model)
+    name_encoded = services.corpus.name_encode(corpus=dir_name, model=model, splitter=splitter)
     embed_model = services.corpus.embed_model(model=model)
     embed_dims = services.corpus.embed_dims(model=model)
 
-    _print_status(f"corpus write dir '{dir_name}' model '{embed_model.model_name}' dimensions {embed_dims} encoded '{name_encoded}'")
+    _print_status(f"corpus ingest dir '{dir_name}' model '{embed_model.model_name}' dimensions {embed_dims} splitter '{splitter}' encoded '{name_encoded}'")
 
     with services.database.session.get() as db_session:
         write_result = services.corpus.ingest(
@@ -63,9 +65,10 @@ def ingest(ctx, dir: str, model: str) -> dict:
             dir=dir,
             embed_model=embed_model,
             embed_dims=embed_dims,
+            splitter=splitter,
         )
 
-    _print_status(f"corpus write  dir '{dir_name}' model '{embed_model.model_name}' dimensions {embed_dims} encoded '{name_encoded}' result docs {write_result.docs_count} nodes {write_result.nodes_count}")
+    _print_status(f"corpus ingest  dir '{dir_name}' model '{embed_model.model_name}' dimensions {embed_dims} splitter '{splitter}' encoded '{name_encoded}' result docs {write_result.docs_count} nodes {write_result.nodes_count}")
 
 
 @click.command()
@@ -74,7 +77,7 @@ def ingest(ctx, dir: str, model: str) -> dict:
 @click.pass_context
 def list(ctx, limit: int, query: str="") -> list[str]:
     """
-    
+    List database/all stores
     """
     with services.database.session.get() as db_session:
         list_result = services.corpus.list_(db_session=db_session, query=query, offset=0, limit=limit)
@@ -84,7 +87,7 @@ def list(ctx, limit: int, query: str="") -> list[str]:
     _print_status(f"corpus list - {len(objects)} results")
 
     for i, object in enumerate(objects):
-        _print_status(f"{i+1}: {object.name}")
+        _print_status(f"{i+1}: {object.name} - indices {','.join(object.indices)}")
 
 
 @click.command()
@@ -93,8 +96,9 @@ def list(ctx, limit: int, query: str="") -> list[str]:
 @click.pass_context
 def list_keyword(ctx, limit: int, query: str="") -> list:
     """
-    
+    List keyword stores
     """
+    # todo
 
 
 @click.command()
@@ -103,7 +107,7 @@ def list_keyword(ctx, limit: int, query: str="") -> list:
 @click.pass_context
 def list_vector(ctx, limit: int, query: str="") -> list:
     """
-    
+    List vector stores
     """
     objects = services.milvus.list_details()
 
@@ -117,7 +121,7 @@ def list_vector(ctx, limit: int, query: str="") -> list:
 @click.command()
 @click.option('--name', default=None, required=True, help="corpus encoded name")
 @click.option('--query', default=None, required=True, help="question")
-@click.option('--mode', default=None, required=True, help="query mode - augment or retrieve")
+@click.option('--mode', default=None, required=True, help="query mode - augment, keyword, retrieve")
 @click.pass_context
 def query(ctx, name: str, query: str, mode: str, limit: int=10) -> dict:
     """
@@ -127,17 +131,31 @@ def query(ctx, name: str, query: str, mode: str, limit: int=10) -> dict:
 
     if mode == "augment":
         with services.database.session.get() as db_session:
-            response_result = services.corpus.get_response(db_session=db_session, name_encoded=name, query=query)
+            response_result = services.corpus.vector.search_augment(db_session=db_session, name_encoded=name, query=query)
 
-        print("")
         print("response result:")
         print(response_result.response)
-    else:
+    elif mode == "keyword":
+        with services.database.session.get() as db_session:
+            nodes_result = services.corpus.keyword.search_retrieve(db_session=db_session, name_encoded=name, query=query, limit=limit)
+
+        print(f"nodes result, len {len(nodes_result.nodes)}:")
+        _print_nodes(nodes=nodes_result.nodes)
+    elif mode == "retrieve":
         with services.database.session.get() as db_session:
             nodes_result = services.corpus.vector.search_retrieve(db_session=db_session, name_encoded=name, query=query, limit=limit)
 
         print(f"nodes result, len {len(nodes_result.nodes)}:")
         _print_nodes(nodes=nodes_result.nodes)
+
+
+@click.command()
+@click.pass_context
+def sync(ctx) -> dict:
+    """
+    
+    """
+    # todo
 
 
 def _print_error(s: str):
@@ -165,6 +183,7 @@ cli.add_command(list_keyword)
 cli.add_command(list_vector)
 cli.add_command(query)
 cli.add_command(ingest)
+cli.add_command(sync)
 
 if __name__ == "__main__":
     cli()

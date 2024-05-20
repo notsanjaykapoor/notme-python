@@ -46,13 +46,14 @@ def embed_models() -> list[str]:
     return os.listdir(models_root)
 
 
-def name_encode(corpus: str, model: str) -> str:
+def name_encode(corpus: str, model: str, splitter: str) -> str:
     """
     """
     corpus_normalized = re.sub(r'[-:\s]+', "_", corpus.lower())
     model_normalized = re.sub(r'[-:\s]+', "_", model.lower())
+    splitter_normalized = re.sub(r'[-:\s]+', "_", splitter.lower())
 
-    name_encoded = f"c_{corpus_normalized}_m_{model_normalized}"
+    name_encoded = f"c_{corpus_normalized}_m_{model_normalized}_s_{splitter_normalized}"
 
     return name_encoded
 

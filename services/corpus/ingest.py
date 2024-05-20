@@ -40,6 +40,7 @@ def ingest(
     dir: str,
     embed_model: llama_index.embeddings,
     embed_dims: int,
+    splitter: str,
     epoch: int=0,
 ) -> Struct:
     """
@@ -75,7 +76,6 @@ def ingest(
         },
         "vector": name_encoded,
     }
-    splitter_name = "semantic"
 
     files = os.listdir(dir)
 
@@ -86,16 +86,19 @@ def ingest(
     else:
         docs = _load_dir(dir=dir)
 
-    if splitter_name == "semantic":
-        splitter = llama_index.core.node_parser.SemanticSplitterNodeParser(
+    if splitter == "semantic":
+        text_splitter = llama_index.core.node_parser.SemanticSplitterNodeParser(
             buffer_size=1, breakpoint_percentile_threshold=95, embed_model=embed_model
         )
-        nodes = splitter.get_nodes_from_documents(docs)
+    elif splitter.startswith("chunk"):
+        chunk_size, chunk_overlap = _chunk_parse(name=splitter)
+        text_splitter = llama_index.core.node_parser.SentenceSplitter(
+            chunk_size=chunk_size, chunk_overlap=chunk_overlap,
+        )
     else:
-        pass
-        # splitter = llama_index.core.node_parser.SentenceSplitter(
-        #     chunk_size=VECTOR_CHUNK_SIZE_DEFAULT, chunk_overlap=VECTOR_CHUNK_OVERLAP_DEFAULT,
-        # )
+        raise "invalid splitter"
+
+    nodes = text_splitter.get_nodes_from_documents(docs)
 
     # vector index using milvus
 
@@ -153,7 +156,7 @@ def ingest(
 
     corpus_meta = {
         "indices": indices,
-        "splitter": splitter_name,
+        "splitter": splitter,
     }
 
     # update corpus state
@@ -215,6 +218,12 @@ def _db_write(db_session: sqlmodel.Session, name: str, embed_model: str, embed_d
     db_session.commit()
 
     return db_object, code
+
+
+def _chunk_parse(name: str) -> tuple:
+    _, chunk_size, chunk_overlap = name.split(":")
+
+    return int(chunk_size), int(chunk_overlap)
 
 
 def _load_dir(dir: str) -> list:
