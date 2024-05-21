@@ -6,8 +6,9 @@ RUN \
   apt-get install -y busybox curl dnsutils gettext netcat tmux xfonts-base xfonts-75dpi && \
   apt-get clean
 
-ADD ./requirements.txt ./
-RUN pip install --no-cache-dir -r ./requirements.txt
+ADD ./pyproject.toml ./
+ADD ./poetry.lock ./
+RUN pip install poetry && poetry install
 
 FROM runner as base
 ARG APP_VERSION=version

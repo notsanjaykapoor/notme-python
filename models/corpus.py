@@ -4,6 +4,7 @@ import typing
 import sqlalchemy
 import sqlmodel
 
+STATE_DIRTY: str = "dirty"
 STATE_INGESTED: str = "ingested"
 STATE_PROCESSING: str = "processing"
 STATE_QUEUED: str = "queued"
