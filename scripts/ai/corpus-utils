@@ -45,11 +45,6 @@ def ingest(ctx, dir: str, model: str, splitter: str) -> dict:
     """
     
     """
-    files_list = os.listdir(dir)
-
-    if len(files_list) > 1:
-        raise "single file only"
-
     dir_name = dir.split("/")[-1]
 
     name_encoded = services.corpus.name_encode(corpus=dir_name, model=model, splitter=splitter)
@@ -62,7 +57,7 @@ def ingest(ctx, dir: str, model: str, splitter: str) -> dict:
         write_result = services.corpus.ingest(
             db_session=db_session,
             name_encoded=name_encoded,
-            dir=dir,
+            source_dir=dir,
             embed_model=embed_model,
             embed_dims=embed_dims,
             splitter=splitter,
@@ -77,7 +72,7 @@ def ingest(ctx, dir: str, model: str, splitter: str) -> dict:
 @click.pass_context
 def list(ctx, limit: int, query: str="") -> list[str]:
     """
-    List database/all stores
+    List database stores
     """
     with services.database.session.get() as db_session:
         list_result = services.corpus.list_(db_session=db_session, query=query, offset=0, limit=limit)

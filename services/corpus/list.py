@@ -24,7 +24,9 @@ def list_(db_session: sqlmodel.Session, query: str = "", offset: int = 0, limit:
     model = models.Corpus
     dataset = sqlmodel.select(models.Corpus)  # default database query
 
-    struct_tokens = services.mql.Parse(query).call()
+    query_normalized = _query_normalize(query=query)
+
+    struct_tokens = services.mql.Parse(query_normalized).call()
 
     for token in struct_tokens.tokens:
         value = token["value"]
@@ -46,4 +48,17 @@ def list_(db_session: sqlmodel.Session, query: str = "", offset: int = 0, limit:
 
     return struct
 
+
+def _query_normalize(query: str) -> str:
+    """
+    """
+    if not query or ":" in query:
+        return str
+
+    if "~" in query:
+        query_normalized = f"name:{query}"
+    else:
+        query_normalized = f"name:~{query}"
+
+    return query_normalized
 

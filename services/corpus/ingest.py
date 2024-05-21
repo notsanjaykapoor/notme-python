@@ -1,5 +1,6 @@
 import dataclasses
 import datetime
+import hashlib
 import os
 import time
 
@@ -23,6 +24,7 @@ class Struct:
     code: int
     docs_count: int
     epoch: int
+    files_count: int
     nodes_count: int
     seconds: int
     errors: list[str]
@@ -37,7 +39,7 @@ VECTOR_CHUNK_OVERLAP_DEFAULT = 20
 def ingest(
     db_session: sqlmodel.Session,
     name_encoded: str,
-    dir: str,
+    source_dir: str,
     embed_model: llama_index.embeddings,
     embed_dims: int,
     splitter: str,
@@ -46,7 +48,7 @@ def ingest(
     """
     Load documents, split them into chunks, and generate and store embeddings in a local vector store.
     """
-    struct = Struct(0, 0, 0, 0, 0, [])
+    struct = Struct(0, 0, 0, 0, 0, 0, [])
 
     t_start = time.time()
 
@@ -64,9 +66,9 @@ def ingest(
         embed_dims=embed_dims,
         epoch=epoch,
         params={
-            "source_dir": dir,
+            "source_dir": source_dir,
         },
-        state=models.corpus.STATE_PENDING,
+        state=models.corpus.STATE_PROCESSING,
     )
 
     indices = {
@@ -77,21 +79,24 @@ def ingest(
         "vector": name_encoded,
     }
 
-    files = os.listdir(dir)
+    source_files = sorted([file for file in os.listdir(source_dir) if os.path.isfile(f"{source_dir}/{file}")])
+    struct.files_count = len(source_files)
 
-    if len(files) == 1 and files[0].endswith(".pdf"):
-        docs = _load_pdf(file=f"{dir}/{files[0]}")
-    elif len(files) == 1 and files[0] == "urls.txt":
-        docs = _load_urls(dir=dir)
+    data_signature = _files_signature(dir=source_dir, files=source_files)
+
+    if len(source_files) == 1 and source_files[0].endswith(".pdf"):
+        docs = _load_pdf(file=f"{source_dir}/{source_files[0]}")
+    elif len(source_files) == 1 and source_files[0] == "urls.txt":
+        docs = _load_urls(source_dir=source_dir)
     else:
-        docs = _load_dir(dir=dir)
+        docs = _load_dir(source_dir=source_dir)
 
     if splitter == "semantic":
         text_splitter = llama_index.core.node_parser.SemanticSplitterNodeParser(
             buffer_size=1, breakpoint_percentile_threshold=95, embed_model=embed_model
         )
     elif splitter.startswith("chunk"):
-        chunk_size, chunk_overlap = _chunk_parse(name=splitter)
+        chunk_size, chunk_overlap = _splitter_name_parse(name=splitter)
         text_splitter = llama_index.core.node_parser.SentenceSplitter(
             chunk_size=chunk_size, chunk_overlap=chunk_overlap,
         )
@@ -169,9 +174,11 @@ def ingest(
         epoch=epoch,
         params={
             "docs_count": struct.docs_count,
+            "files_count": struct.files_count,
             "meta": corpus_meta,
             "nodes_count": struct.nodes_count,
-            "source_dir": dir,
+            "signature": data_signature,
+            "source_dir": source_dir,
         },
         state=models.corpus.STATE_INGESTED,
     )
@@ -207,9 +214,11 @@ def _db_write(db_session: sqlmodel.Session, name: str, embed_model: str, embed_d
     db_object.epoch = epoch
     if meta := params.get("meta"):
         db_object.meta = meta
+    db_object.files_count = params.get("files_count") or 0
     db_object.name = name
     db_object.nodes_count = params.get("nodes_count") or 0
     db_object.org_id = 0
+    db_object.signature = params.get("data_signature") or 0
     db_object.source_dir = params.get("source_dir")
     db_object.state = state
     db_object.updated_at = datetime.datetime.now(datetime.timezone.utc)
@@ -220,17 +229,26 @@ def _db_write(db_session: sqlmodel.Session, name: str, embed_model: str, embed_d
     return db_object, code
 
 
-def _chunk_parse(name: str) -> tuple:
-    _, chunk_size, chunk_overlap = name.split(":")
+def _files_signature(dir: str, files: list[str]) -> str:
+    """
+    """
+    files_list = []
 
-    return int(chunk_size), int(chunk_overlap)
+    for file in sorted(files):
+        file_stats = os.stat(f"{dir}/{file}")
+        size_bytes = file_stats.st_size
+        files_list.append(f"{file.lower()}:{size_bytes}")
+
+    files_str = ",".join(files_list)
+
+    return hashlib.md5(files_str.encode("utf-8")).hexdigest()
 
 
-def _load_dir(dir: str) -> list:
+def _load_dir(source_dir: str) -> list:
     """
     Load docs within specified directory
     """
-    reader = llama_index.core.SimpleDirectoryReader(dir)
+    reader = llama_index.core.SimpleDirectoryReader(source_dir)
     docs = reader.load_data()
 
     return docs
@@ -246,17 +264,23 @@ def _load_pdf(file: str) -> list:
     return docs
 
 
-def _load_urls(dir: str) -> list:
+def _load_urls(source_dir: str) -> list:
     """
     Load urls
     """
-    files = os.listdir(dir)
+    files = os.listdir(source_dir)
 
     if files[0] != "urls.txt":
         raise ValueError("expected urls.txt")
 
-    path = f"{dir}/{files[0]}"
+    path = f"{source_dir}/{files[0]}"
     urls = [url.strip() for url in open(path).read().split("\n") if url]
 
     docs = llama_index.readers.web.SimpleWebPageReader(html_to_text=True).load_data(urls)
     return docs
+
+
+def _splitter_name_parse(name: str) -> tuple:
+    _, chunk_size, chunk_overlap = name.split(":")
+
+    return int(chunk_size), int(chunk_overlap)

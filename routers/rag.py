@@ -1,12 +1,15 @@
 import os
 
 import fastapi
+import fastapi.responses
 import sqlmodel
 
 import context
 import log
 import main_shared
+import models
 import services.corpus
+import services.corpus.fs
 import services.corpus.keyword
 import services.corpus.vector
 
@@ -24,13 +27,17 @@ app = fastapi.APIRouter(
 app_version = os.environ["APP_VERSION"]
 
 @app.get("/rag/corpuses", response_class=fastapi.responses.HTMLResponse)
-def rag_corpuses(request: fastapi.Request, db_session: sqlmodel.Session = fastapi.Depends(main_shared.get_db)):
+def rag_corpuses(request: fastapi.Request, query: str = "", db_session: sqlmodel.Session = fastapi.Depends(main_shared.get_db)):
     """
     """
-    list_result = services.corpus.list_(db_session=db_session, query="", offset=0, limit=50)
-    corpus_list = list_result.objects
+    logger.info(f"{context.rid_get()} rag corpuses query '{query}'")
 
-    print(corpus_list)
+    try:
+        list_result = services.corpus.list_(db_session=db_session, query=query, offset=0, limit=50)
+        corpus_list = list_result.objects
+    except Exception as e:
+        corpus_list = []
+        logger.error(f"{context.rid_get()} rag corpuses query exception '{e}'")
 
     return templates.TemplateResponse(
         request,
@@ -39,8 +46,81 @@ def rag_corpuses(request: fastapi.Request, db_session: sqlmodel.Session = fastap
             "app_name": "Corpuses",
             "app_version": app_version,
             "corpus_list": corpus_list,
+            "prompt_text": "search query",
+            "query": query,
         }
     )
+
+
+@app.get("/rag/fs", response_class=fastapi.responses.HTMLResponse)
+def rag_fs(request: fastapi.Request, db_session: sqlmodel.Session = fastapi.Depends(main_shared.get_db)):
+    """
+    """
+    logger.info(f"{context.rid_get()} rag fs")
+
+    list_result = services.corpus.fs.list_(db_session=db_session, dir="./data/rag")
+
+    return templates.TemplateResponse(
+        request,
+        "fs.html",
+        {
+            "app_name": "Dirs",
+            "app_version": app_version,
+            "corpuses": list_result.corpuses,
+        }
+    )
+
+
+@app.get("/rag/ingest", response_class=fastapi.responses.HTMLResponse)
+async def rag_ingest(
+    background_tasks: fastapi.BackgroundTasks,
+    corpus_id: int=0,
+    source_dir: str="",
+    db_session: sqlmodel.Session = fastapi.Depends(main_shared.get_db),
+):
+    """
+    """
+    try:
+        corpus = services.corpus.get_by_id(db_session=db_session, id=corpus_id)
+
+        if corpus:
+            # existing corpus
+            logger.info(f"{context.rid_get()} rag ingest corpus_id {corpus_id} source_dir '{source_dir}'")
+        else:
+            # new corpus
+            model_name = "gte-large"
+            splitter_name = "semantic"
+            corpus_name = source_dir.split("/")[-1]
+
+            corpus = models.Corpus(
+                embed_dims=services.corpus.embed_dims(model=model_name),
+                embed_model = model_name,
+                name=services.corpus.name_encode(corpus=corpus_name, model=model_name, splitter=splitter_name),
+                source_dir=source_dir,
+            )
+
+            logger.info(f"{context.rid_get()} rag ingest corpus 'new' source_dir '{source_dir}'")
+
+        if corpus.id:
+            # update corpus state
+            corpus.state = models.corpus.STATE_QUEUED
+            db_session.add(corpus)
+            db_session.commit()
+
+        background_tasks.add_task(
+            services.corpus.ingest,
+            db_session=db_session,
+            name_encoded=corpus.name,
+            source_dir=corpus.source_dir,
+            embed_model=services.corpus.embed_model(model=corpus.embed_model),
+            embed_dims=corpus.embed_dims,
+            splitter=corpus.splitter or splitter_name,
+        )
+    except Exception as e:
+        logger.error(f"{context.rid_get()} rag ingest exception '{e}'")
+        return fastapi.responses.RedirectResponse("/rag/fs")
+
+    return fastapi.responses.RedirectResponse("/rag/corpuses")
 
 
 @app.get("/rag/query", response_class=fastapi.responses.HTMLResponse)
@@ -126,10 +206,10 @@ def rag_query(
             "models": models,
             "modes": modes,
             "prompt_text": "ask a question",
+            "query": query,
             "query_error": query_error,
             "query_ok": query_ok,
             "query_nodes": query_nodes,
             "query_response": query_response,
-            "query": query,
         }
     )

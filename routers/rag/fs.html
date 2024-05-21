@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container grid grid-cols-12">
+  <div class="col-span-12 mt-10">
+    <h3 class="font-bold text-center">
+      {{ app_name }}
+    </h3>
+  </div>
+  <div class="col-start-2 col-span-10 mt-2 opacity-50 text-center text-xs text-zinc-400">
+    @{{ app_version }}
+  </div>
+</div>
+
+<div class="container grid grid-cols-12 mt-10" id="corpus-table">
+    <table class="col-start-2 col-span-12">
+      <thead class="font-normal text-left text-xs leading-6 text-zinc-800">
+        <tr>
+          <th class="p-4 pr-6">source dir</th>
+          <th class="p-4 pr-6">state</th>
+          <th class="p-4 pr-6">epoch</th>
+          <th class="p-4 pr-6">name</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for corpus in corpuses %}
+          <tr class="group hover:bg-zinc-50 odd:bg-white even:bg-slate-50 text-xs">
+            <td class="p-4 pr-6 font-norma">{{corpus.source_dir}}</td>
+            <td class="p-4 pr-6 font-norma">
+                {% if corpus.state == "new" %}
+                    <a href="/rag/ingest?source_dir={{corpus.source_dir}}" class="font-bold text-orange-700">ingest</a>
+                {% else %}
+                    {{corpus.state}}
+                {% endif %}
+            </td>
+            <td class="p-4 pr-6 font-normal">{{corpus.epoch or ''}}</td>
+            <td class="p-4 pr-6 font-normal">{{corpus.name}}</td>
+          </tr>
+          {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  
+{% endblock %}
