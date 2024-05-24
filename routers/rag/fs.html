@@ -17,25 +17,31 @@
     <table class="col-start-2 col-span-12">
       <thead class="font-normal text-left text-xs leading-6 text-zinc-800">
         <tr>
-          <th class="p-4 pr-6">source dir</th>
-          <th class="p-4 pr-6">state</th>
+          <th class="p-4 pr-6">uri</th>
+          <th class="p-4 pr-6">corpus</th>
           <th class="p-4 pr-6">epoch</th>
-          <th class="p-4 pr-6">name</th>
         </tr>
       </thead>
       <tbody>
-        {% for corpus in corpuses %}
+        {% for source_uri in source_uris %}
           <tr class="group hover:bg-zinc-50 odd:bg-white even:bg-slate-50 text-xs">
-            <td class="p-4 pr-6 font-norma">{{corpus.source_dir}}</td>
-            <td class="p-4 pr-6 font-norma">
-                {% if corpus.state == "new" %}
-                    <a href="/rag/ingest?source_dir={{corpus.source_dir}}" class="font-bold text-orange-700">ingest</a>
+            <td class="p-4 pr-6 font-normal">{{source_uri}}</td>
+            <td class="p-4 pr-6 font-normal">
+              {% if corpus_map.get(source_uri) %}
+                {{ corpus_map.get(source_uri)[0].name }}
+              {% endif %}
+            </td>
+            <td class="p-4 pr-6 font-normal">
+                {% if not corpus_map.get(source_uri) %}
+                    <a href="/rag/ingest?source_uri={{source_uri}}" class="font-bold text-orange-700">
+                      ingest
+                    </a>
                 {% else %}
-                    {{corpus.state}}
+                  <a href="/rag/ingest?source_uri={{source_uri}}" class="font-bold text-orange-700">
+                    {{ corpus_map.get(source_uri)[0].epoch }}
+                  </a>
                 {% endif %}
             </td>
-            <td class="p-4 pr-6 font-normal">{{corpus.epoch or ''}}</td>
-            <td class="p-4 pr-6 font-normal">{{corpus.name}}</td>
           </tr>
           {% endfor %}
       </tbody>

@@ -37,7 +37,7 @@ def delete(ctx, name: str) -> list[str]:
 
 
 @click.command()
-@click.option('--dir', default=None, required=True, help="corpus directory")
+@click.option('--dir', default=None, required=True, help="corpus directory, e.g. file://localhost/./data/rag/yyy")
 @click.option('--model', default=None, required=True, help="embedding model name, e.g. gpt4all, openai, gte-base, gte-large, nomic-embed-text-v1")
 @click.option('--splitter', default="semantic", required=False, help="text splitter, e.g. semantic, chunk:1024:20")
 @click.pass_context
@@ -45,25 +45,22 @@ def ingest(ctx, dir: str, model: str, splitter: str) -> dict:
     """
     
     """
-    dir_name = dir.split("/")[-1]
-
-    name_encoded = services.corpus.name_encode(corpus=dir_name, model=model, splitter=splitter)
-    embed_model = services.corpus.embed_model(model=model)
-    embed_dims = services.corpus.embed_dims(model=model)
-
-    _print_status(f"corpus ingest dir '{dir_name}' model '{embed_model.model_name}' dimensions {embed_dims} splitter '{splitter}' encoded '{name_encoded}'")
-
     with services.database.session.get() as db_session:
-        write_result = services.corpus.ingest(
+        corpus = services.corpus.init(
             db_session=db_session,
-            name_encoded=name_encoded,
-            source_dir=dir,
-            embed_model=embed_model,
-            embed_dims=embed_dims,
+            source_uri=dir,
+            model=model,
             splitter=splitter,
         )
 
-    _print_status(f"corpus ingest  dir '{dir_name}' model '{embed_model.model_name}' dimensions {embed_dims} splitter '{splitter}' encoded '{name_encoded}' result docs {write_result.docs_count} nodes {write_result.nodes_count}")
+        _print_status(f"corpus {corpus.id} name '{corpus.name}' epoch {corpus.epoch} ingest starting")
+
+        _write_result = services.corpus.ingest(
+            db_session=db_session,
+            corpus_id=corpus.id,
+        )
+
+    _print_status(f"corpus {corpus.id} name '{corpus.name}' epoch {corpus.epoch} ingest completed")
 
 
 @click.command()

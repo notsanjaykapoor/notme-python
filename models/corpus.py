@@ -5,6 +5,7 @@ import sqlalchemy
 import sqlmodel
 
 STATE_DIRTY: str = "dirty"
+STATE_DRAFT: str = "draft"
 STATE_INGESTED: str = "ingested"
 STATE_PROCESSING: str = "processing"
 STATE_QUEUED: str = "queued"
@@ -27,7 +28,7 @@ class Corpus(sqlmodel.SQLModel, table=True):
     nodes_count: int = sqlmodel.Field(index=True, nullable=False)
     org_id: int = sqlmodel.Field(index=True, nullable=False)
     signature: str = sqlmodel.Field(index=False, nullable=False)
-    source_dir: str = sqlmodel.Field(index=True, nullable=False)
+    source_uri: str = sqlmodel.Field(index=True, nullable=False)
     state: str = sqlmodel.Field(index=True, nullable=False)
     updated_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.utcnow, nullable=False)
 

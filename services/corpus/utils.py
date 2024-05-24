@@ -21,6 +21,9 @@ DIMENSIONS = {
     "nomic-embed-text-v1": 768,
 }
 
+MODEL_NAME_DEFAULT = "gte-large"
+SPLITTER_NAME_DEFAULT = "chunk:1024:40"
+
 
 def embed_dims(model: str) -> int:
     return DIMENSIONS[model]
@@ -58,19 +61,22 @@ def name_encode(corpus: str, model: str, splitter: str) -> str:
     return name_encoded
 
 
-def name_parse(name_encoded: str) -> Struct:
+def source_uri_parse(source_uri: str) -> tuple[str, str, str, str]:
     """
-    deprecated
     """
-    struct = Struct(0, "", name_encoded, "", [])
+    if not (match := re.match(r'^file:\/\/([^\/]+)\/(.+)$', source_uri)):
+        raise ValueError(f"invalid source_uri {source_uri}")
 
-    match = re.search("^c_([^:]+)_m_([^:]+)$", name_encoded)
+    source_host, source_path = (match[1], match[2])
 
-    if not match:
-        struct.code = 422
-        return struct
+    if source_host == "localhost":
+        # check if file/dir exists
+        if not os.path.exists(source_path):
+            raise ValueError(f"invalid path {source_path}")
 
-    struct.corpus = match[1]
-    struct.model = re.sub("_", "-", match[2])
+        source_name = re.sub(r'[\.\/]+', "_", source_path).strip("_")
+        source_id = source_uri
+    else:
+        raise ValueError(f"invalid host {source_host}")
 
-    return struct
+    return source_name, source_id, source_host, source_path

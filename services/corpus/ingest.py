@@ -16,16 +16,14 @@ import llama_index.vector_stores.milvus
 import sqlalchemy
 import sqlmodel
 
+import log
 import models
 import services.corpus
 
 @dataclasses.dataclass
 class Struct:
     code: int
-    docs_count: int
-    epoch: int
-    files_count: int
-    nodes_count: int
+    corpus: models.Corpus
     seconds: int
     errors: list[str]
 
@@ -36,67 +34,60 @@ VECTOR_CHUNK_SIZE_DEFAULT = 1024
 VECTOR_CHUNK_OVERLAP_DEFAULT = 20
 
 
-def ingest(
-    db_session: sqlmodel.Session,
-    name_encoded: str,
-    source_dir: str,
-    embed_model: llama_index.embeddings,
-    embed_dims: int,
-    splitter: str,
-    epoch: int=0,
-) -> Struct:
+def ingest(db_session: sqlmodel.Session, corpus_id: int) -> Struct:
     """
     Load documents, split them into chunks, and generate and store embeddings in a local vector store.
     """
-    struct = Struct(0, 0, 0, 0, 0, 0, [])
+    corpus = services.corpus.get_by_id(db_session=db_session, id=corpus_id)
+
+    struct = Struct(
+        code=0,
+        corpus=None,
+        seconds=0,
+        errors=[],
+    )
+
+    logger = log.init("app")
 
     t_start = time.time()
 
-    if not epoch:
-        epoch = services.corpus.epoch_generate(db_session=db_session, name_encoded=name_encoded)
-
-    model_name = embed_model.model_name.split("/")[-1]
-
     # initialize corpus state
 
-    db_object, db_code = _db_write(
-        db_session=db_session,
-        name=name_encoded,
-        embed_model=model_name,
-        embed_dims=embed_dims,
-        epoch=epoch,
-        params={
-            "source_dir": source_dir,
-        },
-        state=models.corpus.STATE_PROCESSING,
-    )
+    corpus.state = models.corpus.STATE_PROCESSING
+    db_session.add(corpus)
+    db_session.commit()
 
     indices = {
         "keyword": {
-            "doc_store": f"kw_doc_store_{db_object.id}",
-            "idx_store": f"kw_idx_store_{db_object.id}",
+            "doc_store": f"kw_doc_store_{corpus.id}",
+            "idx_store": f"kw_idx_store_{corpus.id}",
         },
-        "vector": name_encoded,
+        "vector": corpus.name,
     }
 
-    source_files = sorted([file for file in os.listdir(source_dir) if os.path.isfile(f"{source_dir}/{file}")])
-    struct.files_count = len(source_files)
+    # download corpus source_uri to the local fs
 
-    data_signature = _files_signature(dir=source_dir, files=source_files)
+    local_dir, local_files = services.corpus.download(source_uri=corpus.source_uri)
+    files_count = len(local_files)
+    data_signature = _files_signature(files=local_files)
 
-    if len(source_files) == 1 and source_files[0].endswith(".pdf"):
-        docs = _load_pdf(file=f"{source_dir}/{source_files[0]}")
-    elif len(source_files) == 1 and source_files[0] == "urls.txt":
-        docs = _load_urls(source_dir=source_dir)
+    logger.info(f"corpus {corpus.id} ingest '{corpus.name}' epoch {corpus.epoch} state '{corpus.state}'")
+
+    if len(local_files) == 1 and local_files[0].endswith(".pdf"):
+        docs = _load_pdf(file=local_files[0])
+    elif len(local_files) == 1 and local_files[0] == "urls.txt":
+        docs = _load_urls(local_dir=local_dir)
     else:
-        docs = _load_dir(source_dir=source_dir)
+        docs = _load_dir(local_dir=local_dir)
 
-    if splitter == "semantic":
+    embed_model = services.corpus.embed_model(model=corpus.embed_model)
+
+    if corpus.splitter == "semantic":
         text_splitter = llama_index.core.node_parser.SemanticSplitterNodeParser(
             buffer_size=1, breakpoint_percentile_threshold=95, embed_model=embed_model
         )
-    elif splitter.startswith("chunk"):
-        chunk_size, chunk_overlap = _splitter_name_parse(name=splitter)
+    elif corpus.splitter.startswith("chunk"):
+        chunk_size, chunk_overlap = _splitter_name_parse(name=corpus.splitter)
         text_splitter = llama_index.core.node_parser.SentenceSplitter(
             chunk_size=chunk_size, chunk_overlap=chunk_overlap,
         )
@@ -105,11 +96,16 @@ def ingest(
 
     nodes = text_splitter.get_nodes_from_documents(docs)
 
+    docs_count = len(docs)
+    nodes_count = len(nodes)
+
+    logger.info(f"corpus {corpus.id} ingest '{corpus.name}' epoch {corpus.epoch} state '{corpus.state}' docs {docs_count} nodes {nodes_count}")
+
     # vector index using milvus
 
     vector_store = llama_index.vector_stores.milvus.MilvusVectorStore(
-        collection_name=name_encoded,
-        dim=embed_dims,
+        collection_name=corpus.name,
+        dim=corpus.embed_dims,
         overwrite=True,
         uri=os.environ.get("MILVUS_URL"),
     )
@@ -126,9 +122,8 @@ def ingest(
 
     # keyword index using postgres
 
-    if db_code == 200:
-        # truncate existing indices
-        _db_index_truncate(db_session=db_session, corpus=db_object)
+    # drop existing keyword indices
+    _db_keyword_indices_drop(db_session=db_session, corpus=corpus)
 
     postgres_doc_store = llama_index.storage.docstore.postgres.PostgresDocumentStore.from_uri(
         perform_setup=True,
@@ -154,88 +149,46 @@ def ingest(
     )
     keyword_index.storage_context.persist()
 
-    struct.docs_count = len(docs)
-    struct.epoch = epoch
-    struct.nodes_count = len(nodes)
     struct.seconds = (time.time() - t_start)
 
     corpus_meta = {
         "indices": indices,
-        "splitter": splitter,
     }
 
-    # update corpus state
+    # update corpus
 
-    _db_write(
-        db_session=db_session,
-        name=name_encoded,
-        embed_model=model_name,
-        embed_dims=embed_dims,
-        epoch=epoch,
-        params={
-            "docs_count": struct.docs_count,
-            "files_count": struct.files_count,
-            "meta": corpus_meta,
-            "nodes_count": struct.nodes_count,
-            "signature": data_signature,
-            "source_dir": source_dir,
-        },
-        state=models.corpus.STATE_INGESTED,
-    )
+    corpus.docs_count = docs_count
+    corpus.files_count = files_count
+    corpus.meta = corpus.meta | corpus_meta
+    corpus.nodes_count = nodes_count
+    corpus.signature = data_signature
+    corpus.state = models.corpus.STATE_INGESTED
+
+    db_session.add(corpus)
+    db_session.commit()
+
+    struct.corpus = corpus
+
+    logger.info(f"corpus {corpus.id} ingest '{corpus.name}' epoch {corpus.epoch} state '{corpus.state}'")
 
     return struct
 
 
-def _db_index_truncate(db_session: sqlmodel.Session, corpus: models.Corpus) -> int:
+def _db_keyword_indices_drop(db_session: sqlmodel.Session, corpus: models.Corpus) -> int:
     """
     """
     for table_name in corpus.keyword_tables:
-        db_session.execute(sqlalchemy.text(f"delete from {table_name}"))
+        db_session.execute(sqlalchemy.text(f"drop table if exists {table_name}"))
     db_session.commit()
 
 
-def _db_write(db_session: sqlmodel.Session, name: str, embed_model: str, embed_dims: int, epoch: int, state: str, params: dict) -> tuple:
-    """
-    Create or update database corpus object
-    """
-    code = 0
-
-    db_object = services.corpus.get_by_name(db_session=db_session, name=name)
-
-    if db_object:
-        code = 200
-    else:
-        db_object = models.Corpus()
-        code = 201
-
-    db_object.docs_count = params.get("docs_count") or 0
-    db_object.embed_dims=embed_dims
-    db_object.embed_model=embed_model
-    db_object.epoch = epoch
-    if meta := params.get("meta"):
-        db_object.meta = meta
-    db_object.files_count = params.get("files_count") or 0
-    db_object.name = name
-    db_object.nodes_count = params.get("nodes_count") or 0
-    db_object.org_id = 0
-    db_object.signature = params.get("data_signature") or 0
-    db_object.source_dir = params.get("source_dir")
-    db_object.state = state
-    db_object.updated_at = datetime.datetime.now(datetime.timezone.utc)
-
-    db_session.add(db_object)
-    db_session.commit()
-
-    return db_object, code
-
-
-def _files_signature(dir: str, files: list[str]) -> str:
+def _files_signature(files: list[str]) -> str:
     """
     """
     files_list = []
 
     for file in sorted(files):
-        file_stats = os.stat(f"{dir}/{file}")
+        file_stats = os.stat(file)
         size_bytes = file_stats.st_size
         files_list.append(f"{file.lower()}:{size_bytes}")
 
@@ -244,11 +197,11 @@ def _files_signature(dir: str, files: list[str]) -> str:
     return hashlib.md5(files_str.encode("utf-8")).hexdigest()
 
 
-def _load_dir(source_dir: str) -> list:
+def _load_dir(local_dir: str) -> list:
     """
     Load docs within specified directory
     """
-    reader = llama_index.core.SimpleDirectoryReader(source_dir)
+    reader = llama_index.core.SimpleDirectoryReader(local_dir)
     docs = reader.load_data()
 
     return docs
@@ -264,16 +217,16 @@ def _load_pdf(file: str) -> list:
     return docs
 
 
-def _load_urls(source_dir: str) -> list:
+def _load_urls(local_dir: str) -> list:
     """
     Load urls
     """
-    files = os.listdir(source_dir)
+    files = os.listdir(local_dir)
 
     if files[0] != "urls.txt":
         raise ValueError("expected urls.txt")
 
-    path = f"{source_dir}/{files[0]}"
+    path = f"{local_dir}/{files[0]}"
     urls = [url.strip() for url in open(path).read().split("\n") if url]
 
     docs = llama_index.readers.web.SimpleWebPageReader(html_to_text=True).load_data(urls)

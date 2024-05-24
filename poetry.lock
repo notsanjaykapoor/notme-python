@@ -3058,20 +3058,6 @@ files = [
 llama-index-core = ">=0.10.1,<0.11.0"
 
 [[package]]
-name = "llama-index-vector-stores-faiss"
-version = "0.1.2"
-description = "llama-index vector_stores faiss integration"
-optional = false
-python-versions = ">=3.8.1,<4.0"
-files = [
-    {file = "llama_index_vector_stores_faiss-0.1.2-py3-none-any.whl", hash = "sha256:6db18f4f11fdcce9294d7b1725805992006094766b9dcbd3967065f8997f0be9"},
-    {file = "llama_index_vector_stores_faiss-0.1.2.tar.gz", hash = "sha256:e462641e4f99ae140a4725103a3d5cad2caf1849cbb782ca405b1a6eb5de65dc"},
-]
-
-[package.dependencies]
-llama-index-core = ">=0.10.1,<0.11.0"
-
-[[package]]
 name = "llama-index-vector-stores-milvus"
 version = "0.1.12"
 description = "llama-index vector_stores milvus integration"
@@ -8130,4 +8116,4 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<3.12"
-content-hash = "9d362f04420765d099bca609e8b252f12434ba39e81354141a9842263e103afd"
+content-hash = "258d9923009c2ea597529130e11dbed08f0f19692389831171c943de7418f117"

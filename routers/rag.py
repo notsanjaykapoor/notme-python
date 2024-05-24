@@ -26,6 +26,11 @@ app = fastapi.APIRouter(
 
 app_version = os.environ["APP_VERSION"]
 
+@app.get("/rag")
+def rag_home():
+    return fastapi.responses.RedirectResponse("/rag/corpuses")
+
+
 @app.get("/rag/corpuses", response_class=fastapi.responses.HTMLResponse)
 def rag_corpuses(request: fastapi.Request, query: str = "", db_session: sqlmodel.Session = fastapi.Depends(main_shared.get_db)):
     """
@@ -58,15 +63,16 @@ def rag_fs(request: fastapi.Request, db_session: sqlmodel.Session = fastapi.Depe
     """
     logger.info(f"{context.rid_get()} rag fs")
 
-    list_result = services.corpus.fs.list_(db_session=db_session, dir="./data/rag")
+    list_result = services.corpus.fs.list_(db_session=db_session, local_dir="./data/rag")
 
     return templates.TemplateResponse(
         request,
         "fs.html",
         {
-            "app_name": "Dirs",
+            "app_name": "Files",
             "app_version": app_version,
-            "corpuses": list_result.corpuses,
+            "corpus_map": list_result.corpus_map,
+            "source_uris": list_result.source_uris,
         }
     )
 
@@ -75,7 +81,7 @@ def rag_fs(request: fastapi.Request, db_session: sqlmodel.Session = fastapi.Depe
 async def rag_ingest(
     background_tasks: fastapi.BackgroundTasks,
     corpus_id: int=0,
-    source_dir: str="",
+    source_uri: str="",
     db_session: sqlmodel.Session = fastapi.Depends(main_shared.get_db),
 ):
     """
@@ -83,38 +89,25 @@ async def rag_ingest(
     try:
         corpus = services.corpus.get_by_id(db_session=db_session, id=corpus_id)
 
-        if corpus:
-            # existing corpus
-            logger.info(f"{context.rid_get()} rag ingest corpus_id {corpus_id} source_dir '{source_dir}'")
-        else:
-            # new corpus
-            model_name = "gte-large"
-            splitter_name = "semantic"
-            corpus_name = source_dir.split("/")[-1]
-
-            corpus = models.Corpus(
-                embed_dims=services.corpus.embed_dims(model=model_name),
-                embed_model = model_name,
-                name=services.corpus.name_encode(corpus=corpus_name, model=model_name, splitter=splitter_name),
-                source_dir=source_dir,
+        if not corpus:
+            corpus = services.corpus.init(
+                db_session=db_session,
+                source_uri=source_uri,
+                model=services.corpus.utils.MODEL_NAME_DEFAULT,
+                splitter=services.corpus.utils.SPLITTER_NAME_DEFAULT,
             )
 
-            logger.info(f"{context.rid_get()} rag ingest corpus 'new' source_dir '{source_dir}'")
+            logger.info(f"{context.rid_get()} rag ingest corpus '{corpus.name}' id {corpus.id}")
 
-        if corpus.id:
-            # update corpus state
-            corpus.state = models.corpus.STATE_QUEUED
-            db_session.add(corpus)
-            db_session.commit()
+        corpus.state = models.corpus.STATE_QUEUED
+
+        db_session.add(corpus)
+        db_session.commit()
 
         background_tasks.add_task(
             services.corpus.ingest,
             db_session=db_session,
-            name_encoded=corpus.name,
-            source_dir=corpus.source_dir,
-            embed_model=services.corpus.embed_model(model=corpus.embed_model),
-            embed_dims=corpus.embed_dims,
-            splitter=corpus.splitter or splitter_name,
+            corpus_id=corpus.id
         )
     except Exception as e:
         logger.error(f"{context.rid_get()} rag ingest exception '{e}'")

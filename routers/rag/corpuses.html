@@ -32,7 +32,6 @@
         <th class="p-4 pr-6">model</th>
         <th class="p-4 pr-6">dims</th>
         <th class="p-4 pr-6">splitter</th>
-        <th class="p-4 pr-6">indices</th>
         <th class="p-4 pr-6">epoch</th>
         <th class="p-4 pr-6">state</th>
         <th class="p-4 pr-6">id</th>
@@ -49,7 +48,6 @@
           <td class="p-4 pr-6 font-norma">{{corpus.embed_model}}</td>
           <td class="p-4 pr-6 font-norma">{{corpus.embed_dims}}</td>
           <td class="p-4 pr-6 font-norma">{{corpus.splitter}}</td>
-          <td class="p-4 pr-6 font-normal">{{", ".join(corpus.indices)}}</td>
           <td class="p-4 pr-6 font-normal">
             {% if corpus.state == "ingested" %}
               <a href="/rag/ingest?corpus_id={{corpus.id}}" class="font-black text-orange-700">
