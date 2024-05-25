@@ -15,14 +15,14 @@
 
 <form action="/rag/corpuses" method="get" id="rag-corpus-search">
   <div class="container grid grid-cols-12 mt-10">
-    <div class="col-start-2 col-span-4 font-normal text-xs mx-5">
+    <div class="col-start-2 col-span-4 font-normal text-xs mx-3">
       <input type="search" name="query" value="{{query}}" placeholder="{{prompt_text}}" autocomplete="off" class="peer px-0 py-2.5 mx-0 h-full w-full border-b bg-transparent font-sans text-blue-gray-700 outline outline-0 transition-all placeholder-shown:border-blue-gray-200 focus:border-pink-600 focus:outline-0 disabled:border-0 disabled:bg-blue-gray-50">
     </div>
   </div>
 </form>
 
 <div class="container grid grid-cols-12 mt-10" id="corpus-table">
-  <table class="col-start-2 col-span-12">
+  <table class="col-start-2 col-span-10">
     <thead class="font-normal text-left text-xs leading-6 text-zinc-800">
       <tr>
         <th class="p-4 pr-6">name</th>
@@ -60,7 +60,11 @@
             {% endif %}
           </td>
           <td class="p-4 pr-6 font-normal">{{corpus.state}}</td>
-          <td class="p-4 pr-6 font-normal">{{corpus.id}}</td>
+          <td class="p-4 pr-6 font-normal">
+            <a href="/rag/corpus/{{corpus.id}}" class="font-black text-blue-700">
+              {{corpus.id}}
+            </a>
+          </td>
         </tr>
         {% endfor %}
     </tbody>

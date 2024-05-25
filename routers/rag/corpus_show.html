@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container grid grid-cols-12">
+  <div class="col-span-12 mt-10">
+    <h3 class="font-bold text-center">
+      {{ app_name }}
+    </h3>
+  </div>
+  <div class="col-start-2 col-span-10 mt-2 opacity-50 text-center text-xs text-zinc-400">
+    @{{ app_version }}
+  </div>
+</div>
+
+
+<div class="container grid grid-cols-12 mt-10">
+  <div class="col-span-12">
+    <h5 class="font-bold text-center">
+      {{ corpus.name }}
+    </h5>
+  </div>
+</div>
+
+<div class="container grid grid-cols-12 mt-5" id="corpus-table">
+  <table class="col-start-5 col-span-4">
+    <thead class="font-normal text-center text-xs leading-6 text-zinc-800">
+      <tr>
+        <th class="p-4 pr-6">epoch</th>
+        <th class="p-4 pr-6">state</th>
+      </tr>
+      <tr class="group hover:bg-zinc-50 bg-white text-xs">
+        <td class="p-4 pr-6 font-normal">{{corpus.epoch}}</td>
+        <td class="p-4 pr-6 font-normal">{{corpus.state}}</td>
+      </td>
+  </thead>
+    <tbody>
+  </table>
+</div>
+
+{% endblock %}
+

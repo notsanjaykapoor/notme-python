@@ -4,11 +4,14 @@ import sqlmodel
 import services.corpus
 
 
-def init(db_session: sqlmodel.Session, source_uri: str, model: str, splitter: str) -> models.Corpus:
+def init(db_session: sqlmodel.Session, corpus_id: int, source_uri: str, model: str, splitter: str) -> models.Corpus:
     """
     
     """
-    corpus = services.corpus.get_by_source_uri(db_session=db_session, source_uri=source_uri)
+    if corpus_id:
+        corpus = services.corpus.get_by_id(db_session=db_session, id=corpus_id)
+    else:
+        corpus = services.corpus.get_by_source_uri(db_session=db_session, source_uri=source_uri)
 
     if corpus:
         # update corpus

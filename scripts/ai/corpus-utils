@@ -48,6 +48,7 @@ def ingest(ctx, dir: str, model: str, splitter: str) -> dict:
     with services.database.session.get() as db_session:
         corpus = services.corpus.init(
             db_session=db_session,
+            corpus_id=0,
             source_uri=dir,
             model=model,
             splitter=splitter,
@@ -72,7 +73,7 @@ def list(ctx, limit: int, query: str="") -> list[str]:
     List database stores
     """
     with services.database.session.get() as db_session:
-        list_result = services.corpus.list_(db_session=db_session, query=query, offset=0, limit=limit)
+        list_result = services.corpus.list(db_session=db_session, query=query, offset=0, limit=limit)
     
     objects = list_result.objects
 

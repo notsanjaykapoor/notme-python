@@ -25,3 +25,4 @@ from .variant_vrule_document import VariantVruleDocument  # noqa: F401
 from .variant_vrule_schema import VariantVruleSchema  # noqa: F401
 from .vendor import Vendor  # noqa: F401
 from .vendor_stock_location import VendorStockLocation  # noqa: F401
+from .work_queue import WorkQueue

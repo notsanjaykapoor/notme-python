@@ -15,9 +15,9 @@ class Struct:
     errors: list[str]
 
 
-def list_(db_session: sqlmodel.Session, query: str = "", offset: int = 0, limit: int = 20) -> Struct:
+def list(db_session: sqlmodel.Session, query: str = "", offset: int = 0, limit: int = 20) -> Struct:
     """
-    List all corpus collections
+    Search corpus objects
     """
     struct = Struct(0, [], 0, [])
 

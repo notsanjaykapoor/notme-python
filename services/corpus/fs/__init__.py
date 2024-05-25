@@ -1,1 +1,1 @@
-from .list import list_
+from .list import list

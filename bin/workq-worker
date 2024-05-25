@@ -1,0 +1,100 @@
+#!/usr/bin/env python
+
+import os
+import signal
+import sys
+import time
+
+sys.path.append(".")
+
+import dot_init
+
+import click
+
+import log
+import services.database
+import services.work_queue
+
+
+logger = log.init("api")
+
+shutdown: bool = False
+
+@click.group()
+def cli():
+    pass
+
+
+@click.command()
+@click.option('--db-uri', default="", required=False, help="db uri string, e.g. postgresql://postgres:postgres@postgres-dev:5433/db_src")
+@click.option('--queue', default=None, required=True, help="work queue name")
+@click.option('--partition', default=None, required=True, help="work queue partition")
+@click.option('--interval', default=5, required=False, help="")
+@click.pass_context
+def run(ctx, db_uri: str, queue: str, partition: int, interval: int) -> dict:
+    db_uri = db_uri or os.environ.get("DATABASE_URL")
+
+    if not db_uri:
+        raise ValueError("db_uri is invalid or missing")
+
+    def signal_handler(signum, frame):
+        global shutdown
+        shutdown = True
+        logger.info("worker signal handler ... preparing to shutdown")
+
+    # install signal handler
+    signal.signal(signal.SIGINT, signal_handler)
+
+    with services.database.session.get() as db_session:
+        cleanup_count = services.work_queue.cleanup(
+            db_session=db_session,
+            queue=queue,
+            partition=partition,
+        )
+
+    if not services.work_queue.route(queue=queue):
+        logger.error(f"worker queue '{queue}' no handler defined")
+        exit(1)
+
+    logger.info(f"worker queue '{queue}' partition {partition} cleanup {cleanup_count}")
+
+    logger.info(f"worker queue '{queue}' partition {partition} polling")
+
+    while not shutdown:
+        with services.database.session.get() as db_session:
+            work_object = services.work_queue.get_queued(
+                db_session=db_session,
+                queue=queue,
+                partition=partition,
+            )
+
+            if not work_object:
+                logger.info(f"worker queue '{queue}' partition {partition} sleep {interval}")
+                time.sleep(interval)
+                continue
+
+            # update work object state
+
+            services.work_queue.state_processing(db_session=db_session, work_object=work_object)
+
+            try:
+                # process message
+                handler = services.work_queue.route(queue=queue)
+                handler.call(db_session=db_session, work_object=work_object)
+
+                # update work object state
+                services.work_queue.state_completed(db_session=db_session, work_object=work_object)
+            except Exception as e:
+                # update work object state
+                services.work_queue.state_error(db_session=db_session, work_object=work_object)
+                logger.error(f"worker queue '{queue}' partition {partition} exception {e}")
+
+
+
+    logger.info(f"worker queue '{queue}' partition {partition} shutdown")
+
+
+cli.add_command(run)
+
+if __name__ == "__main__":
+    cli()

@@ -12,11 +12,12 @@ import services.corpus
 import services.corpus.fs
 import services.corpus.keyword
 import services.corpus.vector
+import services.work_queue
 
 logger = log.init("app")
 
 # initialize templates dir
-templates = fastapi.templating.Jinja2Templates(directory="routers/rag")
+templates = fastapi.templating.Jinja2Templates(directory="routers")
 
 app = fastapi.APIRouter(
     tags=["app.rag"],
@@ -31,54 +32,93 @@ def rag_home():
     return fastapi.responses.RedirectResponse("/rag/corpuses")
 
 
-@app.get("/rag/corpuses", response_class=fastapi.responses.HTMLResponse)
-def rag_corpuses(request: fastapi.Request, query: str = "", db_session: sqlmodel.Session = fastapi.Depends(main_shared.get_db)):
+@app.get("/rag/corpus", response_class=fastapi.responses.HTMLResponse)
+def corpus_list(request: fastapi.Request, query: str = "", db_session: sqlmodel.Session = fastapi.Depends(main_shared.get_db)):
     """
     """
-    logger.info(f"{context.rid_get()} rag corpuses query '{query}'")
+    logger.info(f"{context.rid_get()} rag corpus query '{query}'")
 
     try:
-        list_result = services.corpus.list_(db_session=db_session, query=query, offset=0, limit=50)
+        list_result = services.corpus.list(db_session=db_session, query=query, offset=0, limit=50)
         corpus_list = list_result.objects
     except Exception as e:
         corpus_list = []
-        logger.error(f"{context.rid_get()} rag corpuses query exception '{e}'")
+        logger.error(f"{context.rid_get()} rag corpus query exception '{e}'")
 
     return templates.TemplateResponse(
         request,
-        "corpuses.html",
+        "rag/corpus_list.html",
         {
-            "app_name": "Corpuses",
+            "app_name": "Corpus",
             "app_version": app_version,
             "corpus_list": corpus_list,
-            "prompt_text": "search query",
+            "prompt_text": "search",
             "query": query,
         }
     )
 
 
+@app.get("/rag/corpus/{corpus_id}", response_class=fastapi.responses.HTMLResponse)
+def corpus_show(request: fastapi.Request, corpus_id: int, db_session: sqlmodel.Session = fastapi.Depends(main_shared.get_db)):
+    """
+    """
+    logger.info(f"{context.rid_get()} rag corpus show {corpus_id}")
+
+    try:
+        corpus = services.corpus.get_by_id(db_session=db_session, id=corpus_id)
+    except Exception as e:
+        logger.error(f"{context.rid_get()} rag corpus show exception '{e}'")
+
+    return templates.TemplateResponse(
+        request,
+        "rag/corpus_show.html",
+        {
+            "app_name": "Corpus",
+            "app_version": app_version,
+            "corpus": corpus,
+        }
+    )
+
+
 @app.get("/rag/fs", response_class=fastapi.responses.HTMLResponse)
-def rag_fs(request: fastapi.Request, db_session: sqlmodel.Session = fastapi.Depends(main_shared.get_db)):
+def fs_list(
+    request: fastapi.Request,
+    query: str="",
+    db_session: sqlmodel.Session = fastapi.Depends(main_shared.get_db),
+):
     """
     """
     logger.info(f"{context.rid_get()} rag fs")
 
-    list_result = services.corpus.fs.list_(db_session=db_session, local_dir=os.environ.get("APP_FS_ROOT"))
+    try:
+        list_result = services.corpus.fs.list(
+            db_session=db_session,
+            local_dir=os.environ.get("APP_FS_ROOT"),
+            query=query,
+        )
+        corpus_map = list_result.corpus_map
+        source_uris = list_result.source_uris
+    except Exception as e:
+        corpus_map = {}
+        source_uris = []
+        logger.error(f"{context.rid_get()} rag fs exception '{e}'")
 
     return templates.TemplateResponse(
         request,
-        "fs.html",
+        "rag/fs_list.html",
         {
             "app_name": "Files",
             "app_version": app_version,
-            "corpus_map": list_result.corpus_map,
-            "source_uris": list_result.source_uris,
+            "corpus_map": corpus_map,
+            "query": query,
+            "prompt_text": "search",
+            "source_uris": source_uris,
         }
     )
 
 
 @app.get("/rag/ingest", response_class=fastapi.responses.HTMLResponse)
-async def rag_ingest(
+async def corpus_ingest(
     background_tasks: fastapi.BackgroundTasks,
     corpus_id: int=0,
     source_uri: str="",
@@ -87,28 +127,39 @@ async def rag_ingest(
     """
     """
     try:
-        corpus = services.corpus.get_by_id(db_session=db_session, id=corpus_id)
+        corpus = services.corpus.init(
+            db_session=db_session,
+            corpus_id=corpus_id,
+            source_uri=source_uri,
+            model=services.corpus.utils.MODEL_NAME_DEFAULT,
+            splitter=services.corpus.utils.SPLITTER_NAME_DEFAULT,
+        )
 
-        if not corpus:
-            corpus = services.corpus.init(
-                db_session=db_session,
-                source_uri=source_uri,
-                model=services.corpus.utils.MODEL_NAME_DEFAULT,
-                splitter=services.corpus.utils.SPLITTER_NAME_DEFAULT,
-            )
-
-            logger.info(f"{context.rid_get()} rag ingest corpus '{corpus.name}' id {corpus.id}")
+        logger.info(f"{context.rid_get()} rag ingest corpus '{corpus.name}' id {corpus.id}")
 
         corpus.state = models.corpus.STATE_QUEUED
 
         db_session.add(corpus)
         db_session.commit()
 
-        background_tasks.add_task(
-            services.corpus.ingest,
+        services.work_queue.add(
             db_session=db_session,
-            corpus_id=corpus.id
+            data={
+                "corpus_id": corpus.id
+            },
+            msg="ingest",
+            queue=models.work_queue.QUEUE_CORPUS_INGEST,
+            partition=services.work_queue.partition(
+                buckets=models.work_queue.QUEUE_CORPUS_INGEST_PARTITIONS,
+                id=corpus.id,
+            ),
         )
+
+        # background_tasks.add_task(
+        #     services.corpus.ingest,
+        #     db_session=db_session,
+        #     corpus_id=corpus.id
+        # )
     except Exception as e:
         logger.error(f"{context.rid_get()} rag ingest exception '{e}'")
         return fastapi.responses.RedirectResponse("/rag/fs")
@@ -117,7 +168,7 @@ async def rag_ingest(
 
 
 @app.get("/rag/query", response_class=fastapi.responses.HTMLResponse)
-def rag_query(
+def corpus_query(
     request: fastapi.Request,
     corpus: str = "",  # full corpus name
     mode: str = "retrieve",
@@ -125,7 +176,7 @@ def rag_query(
     limit: int = 10,
     db_session: sqlmodel.Session = fastapi.Depends(main_shared.get_db),
 ):
-    list_result = services.corpus.list_(db_session=db_session, query="", offset=0, limit=10)
+    list_result = services.corpus.list(db_session=db_session, query="", offset=0, limit=10)
     corpus_list = [object.name for object in list_result.objects]
 
     modes = ["augment", "keyword", "retrieve"]
@@ -184,12 +235,14 @@ def rag_query(
 
         except Exception as e:
             query_error = f"exception: {e}"
+            logger.error(f"{context.rid_get()} rag retrieve exception '{e}'")
+
     else:
         logger.info(f"{context.rid_get()} rag retrieve index")
 
     return templates.TemplateResponse(
         request,
-        "query.html",
+        "rag/query.html",
         {
             "app_name": "Rag",
             "app_version": app_version,
