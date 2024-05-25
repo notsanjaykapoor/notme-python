@@ -63,7 +63,7 @@ def rag_fs(request: fastapi.Request, db_session: sqlmodel.Session = fastapi.Depe
     """
     logger.info(f"{context.rid_get()} rag fs")
 
-    list_result = services.corpus.fs.list_(db_session=db_session, local_dir="./data/rag")
+    list_result = services.corpus.fs.list_(db_session=db_session, local_dir=os.environ.get("APP_FS_ROOT"))
 
     return templates.TemplateResponse(
         request,

@@ -1,18 +1,13 @@
-import log
 import models
 import sqlmodel
 
 import services.corpus
 
+
 def init(db_session: sqlmodel.Session, source_uri: str, model: str, splitter: str) -> models.Corpus:
     """
     
     """
-    logger = log.init("app")
-
-    source_name, source_id, _, _ = services.corpus.source_uri_parse(source_uri=source_uri)
-    corpus_name = services.corpus.name_encode(corpus=source_name, model=model, splitter=splitter)
-
     corpus = services.corpus.get_by_source_uri(db_session=db_session, source_uri=source_uri)
 
     if corpus:
@@ -22,6 +17,10 @@ def init(db_session: sqlmodel.Session, source_uri: str, model: str, splitter: st
         db_session.add(corpus)
         db_session.commit()
     else:
+        # generate corpus name
+        source_name, _, _, _ = services.corpus.source_uri_parse(source_uri=source_uri)
+        corpus_name = services.corpus.name_encode(corpus=source_name, model=model, splitter=splitter)
+
         # create corpus
         corpus = services.corpus.create(
             db_session=db_session,
@@ -38,7 +37,5 @@ def init(db_session: sqlmodel.Session, source_uri: str, model: str, splitter: st
             source_uri=source_uri,
             state=models.corpus.STATE_DRAFT,
         )
-
-        logger.info(f"corpus {corpus.id} created")
 
     return corpus
