@@ -162,8 +162,17 @@ def scan(ctx) -> dict:
 def sync(ctx) -> dict:
     """
     """
-    # todo
+    with services.database.session.get() as db_session:
+        corpus_list = services.corpus.list(db_session=db_session, query="", offset=0, limit=1024)
+        corpus_objects = corpus_list.objects
 
+        milvus_collections = services.milvus.list()
+
+        for corpus in corpus_objects:
+            if corpus.name not in milvus_collections:
+                _print_status(f"corpus '{corpus.name}' missing milvus collection")
+                delete_code = services.corpus.delete_by_name(db_session=db_session, name=corpus.name)
+                _print_status(f"corpus delete '{corpus.name}' - result {delete_code}")
 
 def _print_error(s: str):
     print("\x1b[1;31m" + s + "\x1b[0m")

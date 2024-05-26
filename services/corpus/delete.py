@@ -9,7 +9,10 @@ def delete_by_name(db_session: sqlmodel.Session, name: str) -> tuple:
     """
     Delete corpus object from milvus and postgres dbs
     """
-    milvus_code = services.milvus.delete_by_name(collection=name)
+    try:
+        milvus_code = services.milvus.delete_by_name(collection=name)
+    except Exception:
+        milvus_code = 500
 
     # its possible that postgres object exists even if milvus object doesn't
 
@@ -30,7 +33,6 @@ def delete_by_name(db_session: sqlmodel.Session, name: str) -> tuple:
     # delete corpus object
 
     db_session.delete(corpus)
-
     db_session.commit()
 
     return milvus_code, 0

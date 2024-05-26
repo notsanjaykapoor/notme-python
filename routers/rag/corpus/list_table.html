@@ -1,0 +1,45 @@
+<div class="col-start-2 col-span-10 mt-0 mx-3">
+  {% if query_code == 0 %}
+    <p class="text-xs italic font-bold text-black-700 py-2">{{query_result}}</p>
+  {% else %}
+    <p class="text-xs italic font-bold text-red-700 py-2">{{query_result}}</p>
+  {% endif %}
+</div>
+
+<table class="col-start-2 col-span-10" id="corpus-table">
+  <thead class="font-normal text-left text-xs leading-6 text-zinc-800">
+    <tr>
+      <th class="p-4 pr-6">name</th>
+      <th class="p-4 pr-6">files</th>
+      <th class="p-4 pr-6">docs</th>
+      <th class="p-4 pr-6">nodes</th>
+      <th class="p-4 pr-6">model</th>
+      <th class="p-4 pr-6">dims</th>
+      <th class="p-4 pr-6">splitter</th>
+      <th class="p-4 pr-6">epoch</th>
+      <th class="p-4 pr-6">state</th>
+      <th class="p-4 pr-6">id</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for corpus in corpus_list %}
+      <tr class="group hover:bg-zinc-50 odd:bg-white even:bg-slate-50 text-xs">
+        <td class="p-4 pr-6 font-normal">
+          <a href="/rag/query?corpus={{corpus.name}}" class="font-semibold text-blue-700">{{corpus.name}}</a>
+        <td class="p-4 pr-6 font-normal">{{corpus.files_count}}</td>
+        <td class="p-4 pr-6 font-normal">{{corpus.docs_count}}</td>
+        <td class="p-4 pr-6 font-norma">{{corpus.nodes_count}}</td>
+        <td class="p-4 pr-6 font-norma">{{corpus.embed_model}}</td>
+        <td class="p-4 pr-6 font-norma">{{corpus.embed_dims}}</td>
+        <td class="p-4 pr-6 font-norma">{{corpus.splitter}}</td>
+        <td class="p-4 pr-6 font-normal">{{corpus.epoch}}</td>
+        <td class="p-4 pr-6 font-normal">{{corpus.state}}</td>
+        <td class="p-4 pr-6 font-normal">
+          <a href="/rag/corpus/{{corpus.id}}" class="font-black text-blue-700">
+            {{corpus.id}}
+          </a>
+        </td>
+      </tr>
+      {% endfor %}
+  </tbody>
+</table>

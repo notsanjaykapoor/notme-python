@@ -25,11 +25,11 @@ def create(
         embed_model=embed_model,
         epoch=epoch,
         files_count=params.get("files_count") or 0,
+        fingerprint=params.get("fingerprint") or "",
         meta=params.get("meta") or {},
         name=name,
         nodes_count=params.get("nodes_count") or 0,
         org_id=org_id,
-        signature=params.get("signature") or "",
         source_uri=source_uri,
         state=state,
         updated_at=datetime.datetime.now(datetime.timezone.utc)

@@ -2,6 +2,7 @@ import dataclasses
 import datetime
 import re
 
+import sqlalchemy
 import sqlmodel
 
 import models
@@ -12,6 +13,7 @@ class Struct:
     code: int
     objects: list[models.WorkQueue]
     count: int
+    total: int
     errors: list[str]
 
 
@@ -20,13 +22,16 @@ def list(db_session: sqlmodel.Session, query: str, offset: int, limit: int) -> S
         code=0,
         objects=[],
         count=0,
+        total=0,
         errors=[],
     )
 
     model = models.WorkQueue
     dataset = sqlmodel.select(model)
 
-    struct_tokens = services.mql.Parse(query).call()
+    query_normalized = _query_normalize(query=query)
+
+    struct_tokens = services.mql.Parse(query_normalized).call()
 
     for token in struct_tokens.tokens:
         value = token["value"]
@@ -53,5 +58,16 @@ def list(db_session: sqlmodel.Session, query: str, offset: int, limit: int) -> S
 
     struct.objects = db_session.exec(dataset.offset(offset).limit(limit).order_by(model.id.desc())).all()
     struct.count = len(struct.objects)
+    struct.total = db_session.scalar(sqlmodel.select(sqlalchemy.func.count("*")).select_from(dataset.subquery()))
 
     return struct
+
+
+def _query_normalize(query: str) -> str:
+    """
+    """
+    if not query or (":" in query):
+        return query
+
+    return f"name:~{query.replace('~', '')}"
+

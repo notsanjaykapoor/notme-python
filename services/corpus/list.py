@@ -1,6 +1,7 @@
 import dataclasses
 import re
 
+import sqlalchemy
 import sqlmodel
 
 import models
@@ -12,6 +13,7 @@ class Struct:
     code: int
     objects: list[models.User]
     count: int
+    total: int
     errors: list[str]
 
 
@@ -19,7 +21,13 @@ def list(db_session: sqlmodel.Session, query: str = "", offset: int = 0, limit: 
     """
     Search corpus objects
     """
-    struct = Struct(0, [], 0, [])
+    struct = Struct(
+        code=0,
+        objects=[],
+        count=0,
+        total=0,
+        errors=[],
+    )
 
     model = models.Corpus
     dataset = sqlmodel.select(models.Corpus)  # default database query
@@ -45,6 +53,7 @@ def list(db_session: sqlmodel.Session, query: str = "", offset: int = 0, limit: 
 
     struct.objects = db_session.exec(dataset.offset(offset).limit(limit).order_by(model.name.asc())).all()
     struct.count = len(struct.objects)
+    struct.total = db_session.scalar(sqlmodel.select(sqlalchemy.func.count("*")).select_from(dataset.subquery()))
 
     return struct
 
@@ -52,13 +61,7 @@ def list(db_session: sqlmodel.Session, query: str = "", offset: int = 0, limit: 
 def _query_normalize(query: str) -> str:
     """
     """
-    if not query or ":" in query:
-        return str
+    if not query or (":" in query):
+        return query
 
-    if query.startswith("~"):
-        query_normalized = f"name:{query}"
-    else:
-        query_normalized = f"name:~{query}"
-
-    return query_normalized
-
+    return f"name:~{query.replace('~', '')}"

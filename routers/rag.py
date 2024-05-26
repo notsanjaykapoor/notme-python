@@ -33,90 +33,54 @@ def rag_home():
 
 
 @app.get("/rag/corpus", response_class=fastapi.responses.HTMLResponse)
-def corpus_list(request: fastapi.Request, query: str = "", db_session: sqlmodel.Session = fastapi.Depends(main_shared.get_db)):
+def corpus_list(
+    request: fastapi.Request,
+    query: str = "",
+    db_session: sqlmodel.Session = fastapi.Depends(main_shared.get_db),
+):
     """
     """
-    logger.info(f"{context.rid_get()} rag corpus query '{query}'")
+    if "HX-Request" in request.headers:
+        htmx_request = 1
+    else:
+        htmx_request = 0
+
+    logger.info(f"{context.rid_get()} rag corpus htmx {htmx_request} query '{query}'")
 
     try:
         list_result = services.corpus.list(db_session=db_session, query=query, offset=0, limit=50)
         corpus_list = list_result.objects
+        query_code = 0
+        query_result = f"{list_result.total} results"
     except Exception as e:
         corpus_list = []
+        query_code = 400
+        query_result = f"exception {e}"
         logger.error(f"{context.rid_get()} rag corpus query exception '{e}'")
 
-    return templates.TemplateResponse(
+    if htmx_request == 1:
+        template = "rag/corpus/list_table.html"
+    else:
+        template = "rag/corpus/list.html"
+
+    response = templates.TemplateResponse(
         request,
-        "rag/corpus_list.html",
+        template,
         {
             "app_name": "Corpus",
             "app_version": app_version,
             "corpus_list": corpus_list,
             "prompt_text": "search",
             "query": query,
+            "query_code": query_code,
+            "query_result": query_result,
         }
     )
 
+    if htmx_request == 1:
+        response.headers["HX-Push-Url"] = f"{request.get('path')}?query={query}"
 
-@app.get("/rag/corpus/{corpus_id}", response_class=fastapi.responses.HTMLResponse)
-def corpus_show(request: fastapi.Request, corpus_id: int, db_session: sqlmodel.Session = fastapi.Depends(main_shared.get_db)):
-    """
-    """
-    logger.info(f"{context.rid_get()} rag corpus show {corpus_id}")
-
-    try:
-        corpus = services.corpus.get_by_id(db_session=db_session, id=corpus_id)
-    except Exception as e:
-        logger.error(f"{context.rid_get()} rag corpus show exception '{e}'")
-
-    return templates.TemplateResponse(
-        request,
-        "rag/corpus_show.html",
-        {
-            "app_name": "Corpus",
-            "app_version": app_version,
-            "corpus": corpus,
-        }
-    )
-
-
-@app.get("/rag/fs", response_class=fastapi.responses.HTMLResponse)
-def fs_list(
-    request: fastapi.Request,
-    query: str="",
-    db_session: sqlmodel.Session = fastapi.Depends(main_shared.get_db),
-):
-    """
-    """
-    logger.info(f"{context.rid_get()} rag fs")
-
-    try:
-        list_result = services.corpus.fs.list(
-            db_session=db_session,
-            local_dir=os.environ.get("APP_FS_ROOT"),
-            query=query,
-            offset=0,
-            limit=50,
-        )
-        corpus_map = list_result.corpus_map
-        source_uris = list_result.source_uris
-    except Exception as e:
-        corpus_map = {}
-        source_uris = []
-        logger.error(f"{context.rid_get()} rag fs exception '{e}'")
-
-    return templates.TemplateResponse(
-        request,
-        "rag/fs_list.html",
-        {
-            "app_name": "Files",
-            "app_version": app_version,
-            "corpus_map": corpus_map,
-            "query": query,
-            "prompt_text": "search",
-            "source_uris": source_uris,
-        }
-    )
+    return response
 
 
 @app.get("/rag/ingest", response_class=fastapi.responses.HTMLResponse)
@@ -244,7 +208,7 @@ def corpus_query(
 
     return templates.TemplateResponse(
         request,
-        "rag/query.html",
+        "rag/corpus/query.html",
         {
             "app_name": "Rag",
             "app_version": app_version,
@@ -261,3 +225,85 @@ def corpus_query(
             "query_response": query_response,
         }
     )
+
+
+@app.get("/rag/corpus/{corpus_id}", response_class=fastapi.responses.HTMLResponse)
+def corpus_show(request: fastapi.Request, corpus_id: int, db_session: sqlmodel.Session = fastapi.Depends(main_shared.get_db)):
+    """
+    """
+    logger.info(f"{context.rid_get()} rag corpus show {corpus_id}")
+
+    try:
+        corpus = services.corpus.get_by_id(db_session=db_session, id=corpus_id)
+    except Exception as e:
+        logger.error(f"{context.rid_get()} rag corpus show exception '{e}'")
+
+    return templates.TemplateResponse(
+        request,
+        "rag/corpus/show.html",
+        {
+            "app_name": "Corpus",
+            "app_version": app_version,
+            "corpus": corpus,
+        }
+    )
+
+
+@app.get("/rag/fs", response_class=fastapi.responses.HTMLResponse)
+def fs_list(
+    request: fastapi.Request,
+    query: str="",
+    db_session: sqlmodel.Session = fastapi.Depends(main_shared.get_db),
+):
+    """
+    """
+    if "HX-Request" in request.headers:
+        htmx_request = 1
+    else:
+        htmx_request = 0
+
+    logger.info(f"{context.rid_get()} rag fs htmx {htmx_request} query '{query}'")
+
+    try:
+        list_result = services.corpus.fs.list(
+            db_session=db_session,
+            local_dir=os.environ.get("APP_FS_ROOT"),
+            query=query,
+            offset=0,
+            limit=50,
+        )
+        corpus_map = list_result.corpus_map
+        source_uris = list_result.source_uris
+        query_code = 0
+        query_result = f"{len(source_uris)} results"
+    except Exception as e:
+        corpus_map = {}
+        source_uris = []
+        query_code = 400
+        query_result = f"exception {e}"
+        logger.error(f"{context.rid_get()} rag fs exception '{e}'")
+
+    if htmx_request == 1:
+        template = "rag/fs/list_table.html"
+    else:
+        template = "rag/fs/list.html"
+
+    response = templates.TemplateResponse(
+        request,
+        template,
+        {
+            "app_name": "Files",
+            "app_version": app_version,
+            "corpus_map": corpus_map,
+            "query": query,
+            "prompt_text": "search",
+            "source_uris": source_uris,
+            "query_code": query_code,
+            "query_result": query_result,
+        }
+    )
+
+    if htmx_request == 1:
+        response.headers["HX-Push-Url"] = f"{request.get('path')}?query={query}"
+
+    return response

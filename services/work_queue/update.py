@@ -29,6 +29,7 @@ def state_error(db_session: sqlmodel.Session, work_object: models.WorkQueue) -> 
         return 409
 
     work_object.state = models.work_queue.STATE_ERROR
+    work_object.completed_at = datetime.datetime.now(datetime.timezone.utc)
 
     db_session.add(work_object)
     db_session.commit()

@@ -53,7 +53,7 @@ def run(ctx, db_uri: str, queue: str, partition: int, interval: int) -> dict:
         )
 
     if not services.work_queue.route(queue=queue):
-        logger.error(f"worker queue '{queue}' no handler defined")
+        logger.error(f"worker queue '{queue}' handler required")
         exit(1)
 
     logger.info(f"worker queue '{queue}' partition {partition} cleanup {cleanup_count}")
@@ -73,6 +73,8 @@ def run(ctx, db_uri: str, queue: str, partition: int, interval: int) -> dict:
                 time.sleep(interval)
                 continue
 
+            logger.info(f"worker queue '{queue}' partition {partition} id {work_object.id} processing")
+
             # update work object state
 
             services.work_queue.state_processing(db_session=db_session, work_object=work_object)
@@ -84,12 +86,12 @@ def run(ctx, db_uri: str, queue: str, partition: int, interval: int) -> dict:
 
                 # update work object state
                 services.work_queue.state_completed(db_session=db_session, work_object=work_object)
+
+                logger.info(f"worker queue '{queue}' partition {partition} id {work_object.id} completed")
             except Exception as e:
                 # update work object state
                 services.work_queue.state_error(db_session=db_session, work_object=work_object)
-                logger.error(f"worker queue '{queue}' partition {partition} exception {e}")
-
-
+                logger.error(f"worker queue '{queue}' partition {partition} id {work_object.id} exception {e}")
 
     logger.info(f"worker queue '{queue}' partition {partition} shutdown")
 

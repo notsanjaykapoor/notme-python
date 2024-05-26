@@ -15,7 +15,7 @@
 
 <div class="container grid grid-cols-12 mt-10">
   <div class="col-span-12">
-    <h5 class="font-bold text-center">
+    <h5 class="font-bold text-center text-blue-700">
       {{ corpus.name }}
     </h5>
   </div>
@@ -54,19 +54,25 @@
 {% endif %}
 
 <div class="container grid grid-cols-12 mt-10">
-  <div class="col-start-5 col-span-4">
+  <div class="col-start-4 col-span-6">
     <div class="p-6 bg-white border border-gray-200 rounded-lg shadow">
       <table style="width: 100%">
         <thead class="text-center text-sm leading-6 text-zinc-800">
           <tr>
             <th class="p-4 pr-6">epoch</th>
             <th class="p-4 pr-6">state</th>
+            <th class="p-4 pr-6">files</th>
+            <th class="p-4 pr-6">nodes</th>
+            <th class="p-4 pr-6">docs</th>
           </tr>
         </thead>
         <tbody class="text-center text-sm leading-6 text-zinc-800">
           <tr class="group hover:bg-zinc-50 bg-white font-bold">
             <td class="p-4 pr-6 font-normal">{{corpus.epoch}}</td>
             <td class="p-4 pr-6 font-normal">{{corpus.state}}</td>
+            <td class="p-4 pr-6 font-normal">{{corpus.files_count}}</td>
+            <td class="p-4 pr-6 font-normal">{{corpus.nodes_count}}</td>
+            <td class="p-4 pr-6 font-normal">{{corpus.docs_count}}</td>
           </tr>
         </tbody>
       </table>

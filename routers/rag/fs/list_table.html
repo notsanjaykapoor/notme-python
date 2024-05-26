@@ -1,0 +1,49 @@
+<div class="col-start-2 col-span-10 mt-0 mx-3">
+  {% if query_code == 0 %}
+    <p class="text-xs italic font-bold text-black-700 py-2">{{query_result}}</p>
+  {% else %}
+    <p class="text-xs italic font-bold text-red-700 py-2">{{query_result}}</p>
+  {% endif %}
+</div>
+
+<table class="col-start-2 col-span-10">
+  <thead class="font-normal text-left text-xs leading-6 text-zinc-800">
+    <tr>
+      <th class="p-4 pr-6">uri</th>
+      <th class="p-4 pr-6">corpus</th>
+      <th class="p-4 pr-6">epoch</th>
+      <th class="p-4 pr-6">id</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for source_uri in source_uris %}
+      {% if corpus_map.get(source_uri) %}
+        {% set corpus = corpus_map.get(source_uri)[0] %}
+      {% endif %}
+      <tr class="group hover:bg-zinc-50 odd:bg-white even:bg-slate-50 text-xs">
+        <td class="p-4 pr-6 font-normal">{{source_uri}}</td>
+        <td class="p-4 pr-6 font-normal">
+          {% if corpus %}
+            {{ corpus.name }}
+          {% else %}
+            <a href="/rag/ingest?source_uri={{source_uri}}" class="font-bold text-red-700">
+              ingest
+            </a>
+          {% endif %}
+        </td>
+        <td class="p-4 pr-6 font-normal">
+            {% if corpus %}
+              {{corpus.epoch}}
+            {% endif %}
+        </td>
+        <td class="p-4 pr-6 font-normal">
+          {% if corpus %}
+            <a href="/rag/corpus/{{corpus.id}}" class="font-semibold text-blue-700">
+              {{ corpus.id }}
+            </a>
+        {% endif %}
+      </td>
+    </tr>
+      {% endfor %}
+  </tbody>
+</table>
