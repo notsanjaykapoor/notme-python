@@ -29,3 +29,12 @@ class WorkQueue(sqlmodel.SQLModel, table=True):
     processing_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.utcnow, nullable=True)
     state: str = sqlmodel.Field(index=True, nullable=False, max_length=50)
     updated_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.utcnow, nullable=False)
+
+    @property
+    def work_time(self) -> str:
+        if not self.completed_at or not self.processing_at:
+            return ""
+
+        seconds = (self.completed_at - self.processing_at).seconds
+
+        return f"{seconds}s"

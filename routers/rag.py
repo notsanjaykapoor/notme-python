@@ -95,6 +95,8 @@ def fs_list(
             db_session=db_session,
             local_dir=os.environ.get("APP_FS_ROOT"),
             query=query,
+            offset=0,
+            limit=50,
         )
         corpus_map = list_result.corpus_map
         source_uris = list_result.source_uris
@@ -164,7 +166,7 @@ async def corpus_ingest(
         logger.error(f"{context.rid_get()} rag ingest exception '{e}'")
         return fastapi.responses.RedirectResponse("/rag/fs")
 
-    return fastapi.responses.RedirectResponse("/rag/corpuses")
+    return fastapi.responses.RedirectResponse(f"/rag/corpus/{corpus.id}")
 
 
 @app.get("/rag/query", response_class=fastapi.responses.HTMLResponse)
@@ -202,7 +204,7 @@ def corpus_query(
                     query_error = f"error: {augment_result.errors[0]}"
                 else:
                     query_response = augment_result.response
-                    query_ok = f"response generated in {round(augment_result.msec, 0)} msec"
+                    query_ok = f"response in {round(augment_result.msec, 0)} msec"
             elif mode == "retrieve":
                 retrieve_result = services.corpus.vector.search_retrieve(
                     db_session=db_session,

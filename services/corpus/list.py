@@ -55,7 +55,7 @@ def _query_normalize(query: str) -> str:
     if not query or ":" in query:
         return str
 
-    if "~" in query:
+    if query.startswith("~"):
         query_normalized = f"name:{query}"
     else:
         query_normalized = f"name:~{query}"

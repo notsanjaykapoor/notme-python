@@ -68,7 +68,7 @@ def ingest(db_session: sqlmodel.Session, corpus_id: int) -> Struct:
 
     local_dir, local_files = services.corpus.download(source_uri=corpus.source_uri)
     files_count = len(local_files)
-    data_signature = _files_signature(files=local_files)
+    files_md5 = services.corpus.files_fingerprint(files=local_files)
 
     logger.info(f"corpus {corpus.id} ingest '{corpus.name}' epoch {corpus.epoch} state '{corpus.state}'")
 
@@ -160,7 +160,7 @@ def ingest(db_session: sqlmodel.Session, corpus_id: int) -> Struct:
     corpus.files_count = files_count
     corpus.meta = corpus.meta | corpus_meta
     corpus.nodes_count = nodes_count
-    corpus.signature = data_signature
+    corpus.fingerprint = files_md5
     corpus.state = models.corpus.STATE_INGESTED
 
     db_session.add(corpus)
@@ -179,21 +179,6 @@ def _db_keyword_indices_drop(db_session: sqlmodel.Session, corpus: models.Corpus
     for table_name in corpus.keyword_tables:
         db_session.execute(sqlalchemy.text(f"drop table if exists {table_name}"))
     db_session.commit()
-
-
-def _files_signature(files: list[str]) -> str:
-    """
-    """
-    files_list = []
-
-    for file in sorted(files):
-        file_stats = os.stat(file)
-        size_bytes = file_stats.st_size
-        files_list.append(f"{file.lower()}:{size_bytes}")
-
-    files_str = ",".join(files_list)
-
-    return hashlib.md5(files_str.encode("utf-8")).hexdigest()
 
 
 def _load_dir(local_dir: str) -> list:

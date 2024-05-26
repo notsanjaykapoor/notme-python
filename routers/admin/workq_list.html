@@ -13,7 +13,7 @@
   </div>
 </div>
 
-<form action="/rag/workq" method="get" id="workq-search">
+<form action="/admin/workq" method="get" id="workq-search">
   <div class="container grid grid-cols-12 mt-10">
     <div class="col-start-2 col-span-4 font-normal text-xs mx-3">
       <input type="search" name="query" value="{{query}}" placeholder="{{prompt_text}}" autocomplete="off" class="peer px-0 py-2.5 mx-0 h-full w-full border-b bg-transparent font-sans text-blue-gray-700 outline outline-0 transition-all placeholder-shown:border-blue-gray-200 focus:border-pink-600 focus:outline-0 disabled:border-0 disabled:bg-blue-gray-50">
@@ -29,6 +29,7 @@
         <th class="p-4 pr-6">partition</th>
         <th class="p-4 pr-6">msg</th>
         <th class="p-4 pr-6">state</th>
+        <th class="p-4 pr-6">time</th>
         <th class="p-4 pr-6">id</th>
       </tr>
     </thead>
@@ -38,7 +39,20 @@
           <td class="p-4 pr-6 font-normal">{{work_object.name}}</td>
           <td class="p-4 pr-6 font-normal">{{work_object.partition}}</td>
           <td class="p-4 pr-6 font-normal">{{work_object.msg}}</td>
-          <td class="p-4 pr-6 font-normal">{{work_object.state}}</td>
+          <td class="p-4 pr-6 font-normal">
+            {% if work_object.state == "error" %}
+              <span class="font-bold text-red-800">
+                {{work_object.state}}
+              </span>
+            {% elif work_object.state == "completed" %}
+              <span class="font-bold text-blue-700">
+                {{work_object.state}}
+              </span>
+            {% else %}
+              {{work_object.state}}
+            {% endif %}
+          </td>
+          <td class="p-4 pr-6 font-normal">{{work_object.work_time}}</td>
           <td class="p-4 pr-6 font-normal">{{work_object.id}}</td>
         </tr>
         {% endfor %}

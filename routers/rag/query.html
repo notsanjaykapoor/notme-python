@@ -15,7 +15,7 @@
 
 <form action="/rag/query" method="get" id="rag-query-form">
   <div class="container grid grid-cols-12 mt-10">
-    <div class="col-start-2 col-span-3 font-medium text-xs">
+    <div class="col-start-2 col-span-4 font-bold text-xs">
       <select id="corpus" name="corpus" onchange="" class="block py-2.5 px-0 w-full bg-transparent border-0 border-b-2 border-none appearance-none dark:text-black-600 dark:border-gray-500 focus:outline-none focus:ring-0 focus:border-gray-200 peer">
         {% for name in corpus_list %}
           {% if name == corpus %}
@@ -26,7 +26,7 @@
         {% endfor %}
       </select>
     </div>
-    <div class="col-start-5 col-span-1 font-medium text-xs">
+    <div class="col-start-6 col-span-1 font-medium text-xs">
       <select id="mode" name="mode" onchange="" class="block py-2.5 px-0 w-full bg-transparent border-0 border-b-2 border-none appearance-none dark:text-black-600 dark:border-gray-500 focus:outline-none focus:ring-0 focus:border-gray-200 peer">
         {% for name in modes %}
           {% if name == mode %}
@@ -37,7 +37,7 @@
         {% endfor %}
       </select>
     </div>
-    <div class="col-start-6 col-span-6 font-bold text-xs">
+    <div class="col-start-7 col-span-5 font-bold text-xs">
       <input type="search" name="query" value="{{query}}" placeholder="{{prompt_text}}" autocomplete="off" class="peer px-0 py-2.5 mx-0 h-full w-full border-b bg-transparent font-sans text-blue-gray-700 outline outline-0 transition-all placeholder-shown:border-blue-gray-200 focus:border-pink-600 focus:outline-0 disabled:border-0 disabled:bg-blue-gray-50">
     </div>
   </div>

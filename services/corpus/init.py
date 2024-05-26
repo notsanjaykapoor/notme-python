@@ -21,7 +21,7 @@ def init(db_session: sqlmodel.Session, corpus_id: int, source_uri: str, model: s
         db_session.commit()
     else:
         # generate corpus name
-        source_name, _, _, _ = services.corpus.source_uri_parse(source_uri=source_uri)
+        source_name, _, _ = services.corpus.source_uri_parse(source_uri=source_uri)
         corpus_name = services.corpus.name_encode(corpus=source_name, model=model, splitter=splitter)
 
         # create corpus

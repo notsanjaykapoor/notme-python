@@ -1,10 +1,10 @@
 import models
-import services.corpus
+import services.corpus.queue
 
 from .protocol import WorkObjectHandler
 
 handlers = {
-    models.work_queue.QUEUE_CORPUS_INGEST : services.corpus.CorpusIngestHandler
+    models.work_queue.QUEUE_CORPUS_INGEST : services.corpus.queue.CorpusIngestHandler
 }
 
 

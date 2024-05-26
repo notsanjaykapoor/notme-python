@@ -144,9 +144,23 @@ def query(ctx, name: str, query: str, mode: str, limit: int=10) -> dict:
 
 @click.command()
 @click.pass_context
+def scan(ctx) -> dict:
+    """
+    """
+    _print_status("corpus scan")
+
+    with services.database.session.get() as db_session:
+        scan_result = services.corpus.scan(db_session=db_session, mode="update")
+
+        _print_status(f"corpus scanned {scan_result.scan_count} dirty {len(scan_result.dirty_objects)}")
+
+        for corpus in scan_result.dirty_objects:
+            _print_status(f"corpus {corpus.id} name '{corpus.name}' dirty")
+
+@click.command()
+@click.pass_context
 def sync(ctx) -> dict:
     """
-    
     """
     # todo
 
@@ -176,6 +190,7 @@ cli.add_command(list_keyword)
 cli.add_command(list_vector)
 cli.add_command(query)
 cli.add_command(ingest)
+cli.add_command(scan)
 cli.add_command(sync)
 
 if __name__ == "__main__":

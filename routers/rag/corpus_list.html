@@ -48,17 +48,7 @@
           <td class="p-4 pr-6 font-norma">{{corpus.embed_model}}</td>
           <td class="p-4 pr-6 font-norma">{{corpus.embed_dims}}</td>
           <td class="p-4 pr-6 font-norma">{{corpus.splitter}}</td>
-          <td class="p-4 pr-6 font-normal">
-            {% if corpus.state == "ingested" %}
-              <a href="/rag/ingest?corpus_id={{corpus.id}}" class="font-black text-orange-700">
-                {{corpus.epoch}}
-              </a>
-            {% else %}
-              <span class="text-black-700 italic">
-                {{corpus.epoch}}
-              </span>
-            {% endif %}
-          </td>
+          <td class="p-4 pr-6 font-normal">{{corpus.epoch}}</td>
           <td class="p-4 pr-6 font-normal">{{corpus.state}}</td>
           <td class="p-4 pr-6 font-normal">
             <a href="/rag/corpus/{{corpus.id}}" class="font-black text-blue-700">

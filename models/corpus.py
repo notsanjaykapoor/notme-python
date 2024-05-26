@@ -23,14 +23,20 @@ class Corpus(sqlmodel.SQLModel, table=True):
     embed_model: str = sqlmodel.Field(index=True, nullable=False)
     epoch: int = sqlmodel.Field(index=True, nullable=False)
     files_count: int = sqlmodel.Field(index=True, nullable=False)
+    fingerprint: str = sqlmodel.Field(index=False, nullable=False)
     meta: dict = sqlmodel.Field(default_factory=dict, sa_column=sqlmodel.Column(sqlmodel.JSON))
     name: str = sqlmodel.Field(index=True, nullable=False) # fully encoded collection name
     nodes_count: int = sqlmodel.Field(index=True, nullable=False)
     org_id: int = sqlmodel.Field(index=True, nullable=False)
-    signature: str = sqlmodel.Field(index=False, nullable=False)
     source_uri: str = sqlmodel.Field(index=True, nullable=False)
     state: str = sqlmodel.Field(index=True, nullable=False)
     updated_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.utcnow, nullable=False)
+
+    @property
+    def ingestable(self) -> int:
+        if self.state in ["dirty", "ingested"]:
+            return 0
+        return 1
 
     @property
     def indices(self) -> dict:
@@ -50,6 +56,12 @@ class Corpus(sqlmodel.SQLModel, table=True):
             f"data_{self.keyword_doc_store}",
             f"data_{self.keyword_index_store}",
         ]
+
+    @property
+    def queryable(self) -> int:
+        if self.state in ["dirty", "ingested"]:
+            return 0
+        return 1
 
     @property
     def splitter(self) -> str:

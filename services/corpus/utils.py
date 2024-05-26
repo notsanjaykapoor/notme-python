@@ -1,5 +1,6 @@
 import dataclasses
 import os
+import hashlib
 import re
 
 import llama_index.embeddings.huggingface
@@ -49,6 +50,22 @@ def embed_models() -> list[str]:
     return os.listdir(models_root)
 
 
+def files_fingerprint(files: list[str]) -> str:
+    """
+    Generate md5 fingerprint for fileset
+    """
+    files_list = []
+
+    for file in sorted(files):
+        file_stats = os.stat(file)
+        size_bytes = file_stats.st_size
+        files_list.append(f"{file.lower()}:{size_bytes}")
+
+    files_str = ",".join(files_list)
+
+    return hashlib.md5(files_str.encode("utf-8")).hexdigest()
+
+
 def name_encode(corpus: str, model: str, splitter: str) -> str:
     """
     """
@@ -75,8 +92,7 @@ def source_uri_parse(source_uri: str) -> tuple[str, str, str, str]:
             raise ValueError(f"invalid path {source_path}")
 
         source_name = re.sub(r'[\.\/]+', "_", source_path).strip("_")
-        source_id = source_uri
     else:
         raise ValueError(f"invalid host {source_host}")
 
-    return source_name, source_id, source_host, source_path
+    return source_name, source_host, source_path

@@ -6,7 +6,7 @@ import services.corpus
 def download(source_uri: str) -> tuple[str, list[str]]:
     """
     """
-    _, _, source_host, source_path = services.corpus.source_uri_parse(source_uri=source_uri)
+    _, source_host, source_path = services.corpus.source_uri_parse(source_uri=source_uri)
 
     if source_host == "localhost":
         # files are in local fs

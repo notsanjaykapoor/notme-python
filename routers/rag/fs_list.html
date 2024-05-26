@@ -32,22 +32,25 @@
       </thead>
       <tbody>
         {% for source_uri in source_uris %}
+          {% if corpus_map.get(source_uri) %}
+            {% set corpus = corpus_map.get(source_uri)[0] %}
+          {% endif %}
           <tr class="group hover:bg-zinc-50 odd:bg-white even:bg-slate-50 text-xs">
             <td class="p-4 pr-6 font-normal">{{source_uri}}</td>
             <td class="p-4 pr-6 font-normal">
-              {% if corpus_map.get(source_uri) %}
-                {{ corpus_map.get(source_uri)[0].name }}
+              {% if corpus %}
+                <a href="/rag/corpus/{{corpus.id}}" class="font-semibold text-blue-700">
+                  {{ corpus.name }}
+                </a>
+              {% else %}
+                <a href="/rag/ingest?source_uri={{source_uri}}" class="font-bold text-orange-700">
+                  ingest
+                </a>
               {% endif %}
             </td>
             <td class="p-4 pr-6 font-normal">
-                {% if not corpus_map.get(source_uri) %}
-                    <a href="/rag/ingest?source_uri={{source_uri}}" class="font-bold text-orange-700">
-                      ingest
-                    </a>
-                {% else %}
-                  <a href="/rag/ingest?source_uri={{source_uri}}" class="font-bold text-orange-700">
-                    {{ corpus_map.get(source_uri)[0].epoch }}
-                  </a>
+                {% if corpus %}
+                  {{corpus.epoch}}
                 {% endif %}
             </td>
           </tr>
