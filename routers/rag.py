@@ -29,112 +29,11 @@ app_version = os.environ["APP_VERSION"]
 
 @app.get("/rag")
 def rag_home():
-    return fastapi.responses.RedirectResponse("/rag/corpuses")
-
-
-@app.get("/rag/corpus", response_class=fastapi.responses.HTMLResponse)
-def corpus_list(
-    request: fastapi.Request,
-    query: str = "",
-    db_session: sqlmodel.Session = fastapi.Depends(main_shared.get_db),
-):
-    """
-    """
-    if "HX-Request" in request.headers:
-        htmx_request = 1
-    else:
-        htmx_request = 0
-
-    logger.info(f"{context.rid_get()} rag corpus htmx {htmx_request} query '{query}'")
-
-    try:
-        list_result = services.corpus.list(db_session=db_session, query=query, offset=0, limit=50)
-        corpus_list = list_result.objects
-        query_code = 0
-        query_result = f"{list_result.total} results"
-    except Exception as e:
-        corpus_list = []
-        query_code = 400
-        query_result = f"exception {e}"
-        logger.error(f"{context.rid_get()} rag corpus query exception '{e}'")
-
-    if htmx_request == 1:
-        template = "rag/corpus/list_table.html"
-    else:
-        template = "rag/corpus/list.html"
-
-    response = templates.TemplateResponse(
-        request,
-        template,
-        {
-            "app_name": "Corpus",
-            "app_version": app_version,
-            "corpus_list": corpus_list,
-            "prompt_text": "search",
-            "query": query,
-            "query_code": query_code,
-            "query_result": query_result,
-        }
-    )
-
-    if htmx_request == 1:
-        response.headers["HX-Push-Url"] = f"{request.get('path')}?query={query}"
-
-    return response
-
-
-@app.get("/rag/ingest", response_class=fastapi.responses.HTMLResponse)
-async def corpus_ingest(
-    background_tasks: fastapi.BackgroundTasks,
-    corpus_id: int=0,
-    source_uri: str="",
-    db_session: sqlmodel.Session = fastapi.Depends(main_shared.get_db),
-):
-    """
-    """
-    try:
-        corpus = services.corpus.init(
-            db_session=db_session,
-            corpus_id=corpus_id,
-            source_uri=source_uri,
-            model=services.corpus.utils.MODEL_NAME_DEFAULT,
-            splitter=services.corpus.utils.SPLITTER_NAME_DEFAULT,
-        )
-
-        logger.info(f"{context.rid_get()} rag ingest corpus '{corpus.name}' id {corpus.id}")
-
-        corpus.state = models.corpus.STATE_QUEUED
-
-        db_session.add(corpus)
-        db_session.commit()
-
-        services.work_queue.add(
-            db_session=db_session,
-            data={
-                "corpus_id": corpus.id
-            },
-            msg="ingest",
-            queue=models.work_queue.QUEUE_CORPUS_INGEST,
-            partition=services.work_queue.partition(
-                buckets=models.work_queue.QUEUE_CORPUS_INGEST_PARTITIONS,
-                id=corpus.id,
-            ),
-        )
-
-        # background_tasks.add_task(
-        #     services.corpus.ingest,
-        #     db_session=db_session,
-        #     corpus_id=corpus.id
-        # )
-    except Exception as e:
-        logger.error(f"{context.rid_get()} rag ingest exception '{e}'")
-        return fastapi.responses.RedirectResponse("/rag/fs")
-
-    return fastapi.responses.RedirectResponse(f"/rag/corpus/{corpus.id}")
+    return fastapi.responses.RedirectResponse("/rag/query")
 
 
 @app.get("/rag/query", response_class=fastapi.responses.HTMLResponse)
-def corpus_query(
+def rag_query(
     request: fastapi.Request,
     corpus: str = "",  # full corpus name
     mode: str = "retrieve",
@@ -146,7 +45,7 @@ def corpus_query(
     corpus_list = [object.name for object in list_result.objects]
 
     modes = ["augment", "keyword", "retrieve"]
-    models = services.corpus.embed_models()
+    models_list = services.corpus.embed_models()
 
     query_nodes = []
     query_response = ""
@@ -208,14 +107,14 @@ def corpus_query(
 
     return templates.TemplateResponse(
         request,
-        "rag/corpus/query.html",
+        "rag/query.html",
         {
             "app_name": "Rag",
             "app_version": app_version,
             "corpus": corpus,
             "corpus_list": corpus_list,
             "mode": mode,
-            "models": models,
+            "models": models_list,
             "modes": modes,
             "prompt_text": "ask a question",
             "query": query,
@@ -225,85 +124,3 @@ def corpus_query(
             "query_response": query_response,
         }
     )
-
-
-@app.get("/rag/corpus/{corpus_id}", response_class=fastapi.responses.HTMLResponse)
-def corpus_show(request: fastapi.Request, corpus_id: int, db_session: sqlmodel.Session = fastapi.Depends(main_shared.get_db)):
-    """
-    """
-    logger.info(f"{context.rid_get()} rag corpus show {corpus_id}")
-
-    try:
-        corpus = services.corpus.get_by_id(db_session=db_session, id=corpus_id)
-    except Exception as e:
-        logger.error(f"{context.rid_get()} rag corpus show exception '{e}'")
-
-    return templates.TemplateResponse(
-        request,
-        "rag/corpus/show.html",
-        {
-            "app_name": "Corpus",
-            "app_version": app_version,
-            "corpus": corpus,
-        }
-    )
-
-
-@app.get("/rag/fs", response_class=fastapi.responses.HTMLResponse)
-def fs_list(
-    request: fastapi.Request,
-    query: str="",
-    db_session: sqlmodel.Session = fastapi.Depends(main_shared.get_db),
-):
-    """
-    """
-    if "HX-Request" in request.headers:
-        htmx_request = 1
-    else:
-        htmx_request = 0
-
-    logger.info(f"{context.rid_get()} rag fs htmx {htmx_request} query '{query}'")
-
-    try:
-        list_result = services.corpus.fs.list(
-            db_session=db_session,
-            local_dir=os.environ.get("APP_FS_ROOT"),
-            query=query,
-            offset=0,
-            limit=50,
-        )
-        corpus_map = list_result.corpus_map
-        source_uris = list_result.source_uris
-        query_code = 0
-        query_result = f"{len(source_uris)} results"
-    except Exception as e:
-        corpus_map = {}
-        source_uris = []
-        query_code = 400
-        query_result = f"exception {e}"
-        logger.error(f"{context.rid_get()} rag fs exception '{e}'")
-
-    if htmx_request == 1:
-        template = "rag/fs/list_table.html"
-    else:
-        template = "rag/fs/list.html"
-
-    response = templates.TemplateResponse(
-        request,
-        template,
-        {
-            "app_name": "Files",
-            "app_version": app_version,
-            "corpus_map": corpus_map,
-            "query": query,
-            "prompt_text": "search",
-            "source_uris": source_uris,
-            "query_code": query_code,
-            "query_result": query_result,
-        }
-    )
-
-    if htmx_request == 1:
-        response.headers["HX-Push-Url"] = f"{request.get('path')}?query={query}"
-
-    return response

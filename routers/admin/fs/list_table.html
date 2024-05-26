@@ -26,7 +26,7 @@
           {% if corpus %}
             {{ corpus.name }}
           {% else %}
-            <a href="/rag/ingest?source_uri={{source_uri}}" class="font-bold text-red-700">
+            <a href="/admin/corpus/ingest?source_uri={{source_uri}}" class="font-bold text-red-700">
               ingest
             </a>
           {% endif %}
@@ -38,7 +38,7 @@
         </td>
         <td class="p-4 pr-6 font-normal">
           {% if corpus %}
-            <a href="/rag/corpus/{{corpus.id}}" class="font-semibold text-blue-700">
+            <a href="/admin/corpus/{{corpus.id}}" class="font-semibold text-blue-700">
               {{ corpus.id }}
             </a>
         {% endif %}
