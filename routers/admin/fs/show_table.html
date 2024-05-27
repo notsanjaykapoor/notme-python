@@ -12,13 +12,13 @@
     {% for file in files_list %}
       <tr class="group hover:bg-zinc-50 odd:bg-white even:bg-slate-50 text-xs">
         <td class="p-4 pr-6 font-normal">
-          {{source_uri}}
+          {{files_map.get(file).get("local_dir")}}
         </td>
         <td class="p-4 pr-6 font-normal">
           {{file}}
         </td>
         <td class="p-4 pr-6 font-normal">
-          {{files_map.get(file).get("size")}}
+          {{files_map.get(file).get("file_size")}}
         </td>
         <td class="p-4 pr-6 font-normal">
           {{state}}

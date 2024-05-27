@@ -31,16 +31,17 @@ def files(source_uri: str) -> Struct:
         local_dir = source_uri
 
     for file in os.listdir(local_dir):
-        # filter out directories
-        path = f"{local_dir}/{file}"
-        stats = os.stat(path)
+        local_path = f"{local_dir}/{file}"
+        stats = os.stat(local_path)
 
-        if not os.path.isfile(path):
+        # exclude directories
+        if not os.path.isfile(local_path):
             continue
 
         struct.files_map[file] = {
-            "path": path,
-            "size": stats.st_size,
+            "file_size": stats.st_size,
+            "local_dir": local_dir,
+            "local_path": local_path,
         }
 
     struct.files_list = sorted(struct.files_map.keys())
