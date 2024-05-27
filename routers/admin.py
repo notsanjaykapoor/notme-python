@@ -30,6 +30,7 @@ def admin_home():
 
 @app.get("/admin/corpus/ingest", response_class=fastapi.responses.HTMLResponse)
 async def admin_corpus_ingest(
+    request: fastapi.Request,
     corpus_id: int=0,
     source_uri: str="",
     db_session: sqlmodel.Session = fastapi.Depends(main_shared.get_db),
@@ -72,9 +73,9 @@ async def admin_corpus_ingest(
         # )
     except Exception as e:
         logger.error(f"{context.rid_get()} admin corpus ingest exception '{e}'")
-        return fastapi.responses.RedirectResponse("/admin/fs")
+        return fastapi.responses.RedirectResponse(request.headers.get("referer"))
 
-    return fastapi.responses.RedirectResponse(f"/admin/corpus/{corpus.id}")
+    return fastapi.responses.RedirectResponse(f"/admin/corpus?query={corpus.name}")
 
 
 @app.get("/admin/corpus", response_class=fastapi.responses.HTMLResponse)
@@ -175,7 +176,7 @@ def admin_fs_list(
     logger.info(f"{context.rid_get()} rag fs htmx {htmx_request} query '{query}'")
 
     try:
-        list_result = services.corpus.fs.list(
+        list_result = services.corpus.fs.dirs(
             db_session=db_session,
             local_dir=os.environ.get("APP_FS_ROOT"),
             query=query,
@@ -215,6 +216,51 @@ def admin_fs_list(
 
     if htmx_request == 1:
         response.headers["HX-Push-Url"] = f"{request.get('path')}?query={query}"
+
+    return response
+
+
+@app.get("/admin/fs/show", response_class=fastapi.responses.HTMLResponse)
+def admin_fs_show(
+    request: fastapi.Request,
+    source_uri: str,
+    db_session: sqlmodel.Session = fastapi.Depends(main_shared.get_db),
+):
+    """
+    """
+    logger.info(f"{context.rid_get()} rag fs show '{source_uri}'")
+
+    corpus = services.corpus.get_by_source_uri(db_session=db_session, source_uri=source_uri)
+
+    if corpus:
+        state = corpus.state
+    else:
+        state = "n/a"
+
+    try:
+        files_result = services.corpus.fs.files(
+            source_uri=source_uri,
+        )
+        files_list = files_result.files_list
+        files_map = files_result.files_map
+    except Exception as e:
+        files_list = []
+        files_map = {}
+        logger.error(f"{context.rid_get()} rag fs exception '{e}'")
+
+    response = templates.TemplateResponse(
+        request,
+        "admin/fs/show.html",
+        {
+            "app_name": "Files",
+            "app_version": app_version,
+            "corpus": corpus,
+            "files_list": files_list,
+            "files_map": files_map,
+            "source_uri": source_uri,
+            "state": state,
+        }
+    )
 
     return response
 

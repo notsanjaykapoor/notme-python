@@ -1,1 +1,2 @@
-from .list import list
+from .dirs import dirs
+from .files import files

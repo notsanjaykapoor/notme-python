@@ -14,7 +14,7 @@ class Struct:
     errors: list[str]
 
 
-def list(db_session: sqlmodel.Session, local_dir: str, query: str, offset: int, limit: int) -> Struct:
+def dirs(db_session: sqlmodel.Session, local_dir: str, query: str, offset: int, limit: int) -> Struct:
     """
     List all directories, with corpuses mapped to their source directories
     """
