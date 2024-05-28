@@ -1,3 +1,5 @@
+import os
+
 import models
 import sqlmodel
 
@@ -22,7 +24,11 @@ def init(db_session: sqlmodel.Session, corpus_id: int, source_uri: str, model: s
     else:
         # generate corpus name
         source_name, _, _ = services.corpus.source_uri_parse(source_uri=source_uri)
-        corpus_name = services.corpus.name_encode(corpus=source_name, model=model, splitter=splitter)
+
+        corpus_name = services.corpus.name_generate(
+            corpus=source_name,
+            prefix=os.environ.get("APP_FS_PREFIX", ""),
+        )
 
         # create corpus
         corpus = services.corpus.create(

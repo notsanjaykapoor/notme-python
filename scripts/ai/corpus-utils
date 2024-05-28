@@ -13,8 +13,7 @@ import services.corpus
 import services.corpus.keyword
 import services.corpus.vector
 import services.database
-import services.milvus
-
+import services.qdrant
 
 @click.group()
 def cli():
@@ -38,8 +37,8 @@ def delete(ctx, name: str) -> list[str]:
 
 @click.command()
 @click.option('--dir', default=None, required=True, help="corpus directory, e.g. file://localhost/./data/rag/yyy")
-@click.option('--model', default=None, required=True, help="embedding model name, e.g. gpt4all, openai, gte-base, gte-large, nomic-embed-text-v1")
-@click.option('--splitter', default="semantic", required=False, help="text splitter, e.g. semantic, chunk:1024:20")
+@click.option('--model', default="gte-large", required=False, help="embedding model name, e.g. gpt4all, openai, gte-base, gte-large, nomic-embed-text-v1")
+@click.option('--splitter', default="chunk:1024:40", required=False, help="text splitter, e.g. semantic, chunk:1024:40")
 @click.pass_context
 def ingest(ctx, dir: str, model: str, splitter: str) -> dict:
     """
@@ -80,7 +79,7 @@ def list(ctx, limit: int, query: str="") -> list[str]:
     _print_status(f"corpus list - {len(objects)} results")
 
     for i, object in enumerate(objects):
-        _print_status(f"{i+1}: {object.name} - indices {','.join(object.indices)}")
+        _print_status(f"{i+1}: {object.name}")
 
 
 @click.command()
@@ -102,7 +101,7 @@ def list_vector(ctx, limit: int, query: str="") -> list:
     """
     List vector stores
     """
-    objects = services.milvus.list_details()
+    objects = services.faiss.list()
 
     _print_status(f"vector list - {len(objects)} results")
 
@@ -157,6 +156,7 @@ def scan(ctx) -> dict:
         for corpus in scan_result.dirty_objects:
             _print_status(f"corpus {corpus.id} name '{corpus.name}' dirty")
 
+
 @click.command()
 @click.pass_context
 def sync(ctx) -> dict:
@@ -166,13 +166,21 @@ def sync(ctx) -> dict:
         corpus_list = services.corpus.list(db_session=db_session, query="", offset=0, limit=1024)
         corpus_objects = corpus_list.objects
 
-        milvus_collections = services.milvus.list()
+        client = services.qdrant.client()
+
+        qdrant_collections = client.get_collections().collections
+        qdrant_names = [collection.name for collection in qdrant_collections]
 
         for corpus in corpus_objects:
-            if corpus.name not in milvus_collections:
-                _print_status(f"corpus '{corpus.name}' missing milvus collection")
+            collection_name = corpus.storage_meta.get("vector", {}).get("collection", "")
+            print(f"corpus sync '{corpus.name}' with collection '{collection_name}'", end=" ... ", flush=True)
+
+            if collection_name not in qdrant_names:
                 delete_code = services.corpus.delete_by_name(db_session=db_session, name=corpus.name)
-                _print_status(f"corpus delete '{corpus.name}' - result {delete_code}")
+                _print_status(f"qdrant missing, corpus deleted - result {delete_code}")
+            else:
+                _print_ok("ok")
+
 
 def _print_error(s: str):
     print("\x1b[1;31m" + s + "\x1b[0m")

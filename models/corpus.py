@@ -39,25 +39,6 @@ class Corpus(sqlmodel.SQLModel, table=True):
         return 1
 
     @property
-    def indices(self) -> dict:
-        return self.meta.get("indices", {}).keys()
-
-    @property
-    def keyword_doc_store(self) -> str:
-        return self.meta.get("indices", {}).get("keyword", {}).get("doc_store", "")
-
-    @property
-    def keyword_index_store(self) -> str:
-        return self.meta.get("indices", {}).get("keyword", {}).get("idx_store", "")
-
-    @property
-    def keyword_tables(self) -> list[str]:
-        return [
-            f"data_{self.keyword_doc_store}",
-            f"data_{self.keyword_index_store}",
-        ]
-
-    @property
     def queryable(self) -> int:
         if self.state in ["dirty", "ingested"]:
             return 0
@@ -66,3 +47,22 @@ class Corpus(sqlmodel.SQLModel, table=True):
     @property
     def splitter(self) -> str:
         return self.meta.get("splitter") or ""
+
+    @property
+    def storage_keyword(self) -> dict:
+        """keyword storage metadata"""
+        return self.meta.get("storage", {}).get("keyword", {})
+
+    @property
+    def storage_keyword_tables(self) -> list[str]:
+        """keyword storage postgres tables"""
+        ks = self.storage_keyword
+        return [
+            f"data_{ks.get('doc_store')}",
+            f"data_{ks.get('idx_store')}",
+        ]
+
+    @property
+    def storage_meta(self) -> dict:
+        """get storage metadata"""
+        return self.meta.get("storage", {})

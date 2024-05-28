@@ -52,7 +52,7 @@ def embed_models() -> list[str]:
 
 def files_fingerprint(files: list[str]) -> str:
     """
-    Generate md5 fingerprint for fileset
+    Generate md5 fingerprint using file metadata
     """
     files_list = []
 
@@ -66,16 +66,44 @@ def files_fingerprint(files: list[str]) -> str:
     return hashlib.md5(files_str.encode("utf-8")).hexdigest()
 
 
-def name_encode(corpus: str, model: str, splitter: str) -> str:
+def name_encode(corpus: str, prefix: str, model: str, splitter: str) -> str:
     """
+    Encode corpus name with the following constraints:
+      - lowercase, underscore only
+      - somewhat human readable
+      - ensure name starts with prefix, if specified
     """
     corpus_normalized = re.sub(r'[-:\s]+', "_", corpus.lower())
     model_normalized = re.sub(r'[-:\s]+', "_", model.lower())
     splitter_normalized = re.sub(r'[-:\s]+', "_", splitter.lower())
 
+    if prefix:
+        if not (match := re.match(rf"(.*)({prefix})(.*)", corpus_normalized)):
+            raise ValueError(f"invalid corpus name {corpus}")
+
+        corpus_normalized = f"{match[2]}{match[3]}"
+
     name_encoded = f"c_{corpus_normalized}_m_{model_normalized}_s_{splitter_normalized}"
 
     return name_encoded
+
+
+def name_generate(corpus: str, prefix: str) -> str:
+    """
+    Encode corpus name with the following constraints:
+      - lowercase, underscore only
+      - somewhat human readable
+      - ensure name starts with prefix, if specified
+    """
+    corpus_normalized = re.sub(r'[-:\s]+', "_", corpus.lower())
+
+    if prefix:
+        if not (match := re.match(rf"(.*)({prefix})(.*)", corpus_normalized)):
+            raise ValueError(f"invalid corpus name {corpus}")
+
+        corpus_normalized = f"{match[2]}{match[3]}"
+
+    return corpus_normalized
 
 
 def source_uri_parse(source_uri: str) -> tuple[str, str, str, str]:

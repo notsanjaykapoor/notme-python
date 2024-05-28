@@ -3,11 +3,12 @@ import os
 import time
 
 import llama_index.core
-import llama_index.vector_stores.milvus
+import llama_index.core.storage.docstore
+import llama_index.vector_stores.qdrant
+import qdrant_client
 import sqlmodel
 
 import services.corpus
-import services.milvus
 
 @dataclasses.dataclass
 class StructNodes:
@@ -59,30 +60,63 @@ def search_retrieve(db_session: sqlmodel.Session, name_encoded: str, query: str,
 
 def _vector_index(db_session: sqlmodel.Session, name_encoded: str) -> llama_index.core.VectorStoreIndex:
     """
-    Load milvus vector index
+    Load vector index
     """
-    db_object = services.corpus.get_by_name(db_session=db_session, name=name_encoded)
+    corpus = services.corpus.get_by_name(db_session=db_session, name=name_encoded)
 
-    if not db_object:
+    if not corpus:
         raise f"invalid corpus {name_encoded}"
     
-    embed_model = services.corpus.embed_model(model=db_object.embed_model)
-    embed_dims = services.corpus.embed_dims(model=db_object.embed_model)
+    embed_model = services.corpus.embed_model(model=corpus.embed_model)
+    embed_dims = services.corpus.embed_dims(model=corpus.embed_model)
 
-    vector_store = llama_index.vector_stores.milvus.MilvusVectorStore(
-        collection_name=name_encoded,
-        dim=embed_dims,
-        overwrite=False,
-        uri=os.environ.get("MILVUS_URL"),
-    )
-    storage_context = llama_index.core.StorageContext.from_defaults(
-        vector_store=vector_store,
-    )
-    vector_index = llama_index.core.VectorStoreIndex.from_vector_store(
-        vector_store=vector_store,
-        embed_model=embed_model,
-        storage_context=storage_context,
-    )
+    vector_store_name = os.environ.get("VECTOR_STORE")
+
+    if vector_store_name == "faiss":
+        import faiss #
+
+        vector_storage_uri = corpus.storage_meta.get("vector").get("uri")
+        _, _, vector_storage_path = services.corpus.source_uri_parse(source_uri=vector_storage_uri)
+
+        vector_store = llama_index.vector_stores.faiss.FaissVectorStore.from_persist_dir(
+            persist_dir=vector_storage_path
+        )
+
+        doc_store = llama_index.core.storage.docstore.SimpleDocumentStore.from_persist_dir(
+            persist_dir=vector_storage_path
+        )
+
+        storage_context = llama_index.core.StorageContext.from_defaults(
+            docstore=doc_store,
+            vector_store=vector_store,
+            persist_dir=vector_storage_path,
+        )
+
+        vector_index = llama_index.core.VectorStoreIndex.from_vector_store(
+            vector_store=vector_store,
+            embed_model=embed_model,
+            storage_context=storage_context,
+        )
+    elif vector_store_name == "postgres":
+        vector_store = llama_index.vector_stores.postgres.PGVectorStore(
+        )
+    elif vector_store_name == "qdrant":
+        client = qdrant_client.QdrantClient(url=os.environ.get("QDRANT_URL"))
+
+        vector_store = llama_index.vector_stores.qdrant.QdrantVectorStore(
+            client=client,
+            collection_name=corpus.name,
+        )
+
+        storage_context = llama_index.core.StorageContext.from_defaults(
+            vector_store=vector_store,
+        )
+
+        vector_index = llama_index.core.VectorStoreIndex.from_vector_store(
+            vector_store=vector_store,
+            embed_model=embed_model,
+            storage_context=storage_context,
+        )
 
     return vector_index
 

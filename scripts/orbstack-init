@@ -24,16 +24,16 @@ ORB_CONTAINERS = [
     #         jaegertracing/all-in-one:latest",
     #     "name": "jaeger-dev",
     # },
-    {
-        "cmd": "docker run -d --rm --net host --name milvus-dev \
-            -e ETCD_USE_EMBED=true \
-            -e COMMON_STORAGETYPE=local \
-            --security-opt seccomp:unconfined \
-            --platform linux/amd64 \
-            -p 19530:19530 \
-            milvusdb/milvus:master-latest milvus run standalone",
-        "name": "milvus-dev",
-    },
+    # {
+    #     "cmd": "docker run -d --rm --net host --name milvus-dev \
+    #         -e ETCD_USE_EMBED=true \
+    #         -e COMMON_STORAGETYPE=local \
+    #         --security-opt seccomp:unconfined \
+    #         --platform linux/amd64 \
+    #         -p 19530:19530 \
+    #         milvusdb/milvus:master-latest milvus run standalone",
+    #     "name": "milvus-dev",
+    # },
     {
         "cmd": "docker run -d --rm --net host --name neo-dev -v neo-vol:/data -p 7687:7687 -p 7474:7474 --env NEO4J_AUTH=none --env=NEO4J_ACCEPT_LICENSE_AGREEMENT=yes neo4j:enterprise",
         "name": "neo-dev",
@@ -49,6 +49,10 @@ ORB_CONTAINERS = [
     {
         "cmd": "docker run -d --rm --net host --name postgres-dev -v postgres-vol:/data --platform linux/amd64 -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=development -e PGDATA=/data -e PGPORT=5433 postgis/postgis:14-3.3",
         "name": "postgres-dev",
+    },
+    {
+        "cmd": "docker run -d --rm --net host --name qdrant-dev -p 6333:6333 --platform linux/arm64 qdrant/qdrant",
+        "name": "qdrant-dev",
     },
     # {
     #     "cmd": "docker run -d --rm --net host --name quickwit-dev -v quickwit-vol:/quickwit/qwdata -p 7280:7280 --platform linux/arm64 quickwit/quickwit run",

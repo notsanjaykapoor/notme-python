@@ -24,18 +24,20 @@ def search_retrieve(db_session: sqlmodel.Session, name_encoded: str, query: str,
 
     t_start = time.time()
 
-    db_object = services.corpus.get_by_name(db_session=db_session, name=name_encoded)
+    corpus = services.corpus.get_by_name(db_session=db_session, name=name_encoded)
 
     # build storage context from existing postgres keyword indices
 
+    keyword_storage = corpus.storage_keyword
+
     postgres_doc_store = llama_index.storage.docstore.postgres.PostgresDocumentStore.from_uri(
         perform_setup=False,
-        table_name=db_object.keyword_doc_store,
+        table_name=keyword_storage.get("doc_store"),
         uri=os.environ.get("DATABASE_URL"),
     )
     postgres_index_store = llama_index.storage.index_store.postgres.PostgresIndexStore.from_uri(
         perform_setup=True,
-        table_name=db_object.keyword_index_store,
+        table_name=keyword_storage.get("idx_store"),
         uri=os.environ.get("DATABASE_URL"),
     )
     keyword_storage_context = llama_index.core.StorageContext.from_defaults(

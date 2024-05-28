@@ -2,20 +2,15 @@ import sqlalchemy
 import sqlmodel
 
 import models
-import services.milvus
+import services.qdrant
 
 
-def delete_by_name(db_session: sqlmodel.Session, name: str) -> tuple:
+def delete_by_name(db_session: sqlmodel.Session, name: str) -> tuple[int, int]:
     """
-    Delete corpus object from milvus and postgres dbs
+    Delete corpus object and all attached data, including:
+      - postgres tables used for indices
+      - qdrant vector store persisted via qdrant server
     """
-    try:
-        milvus_code = services.milvus.delete_by_name(collection=name)
-    except Exception:
-        milvus_code = 500
-
-    # its possible that postgres object exists even if milvus object doesn't
-
     model = models.Corpus
     dataset = sqlmodel.select(model)
 
@@ -23,11 +18,23 @@ def delete_by_name(db_session: sqlmodel.Session, name: str) -> tuple:
     corpus = db_session.exec(dataset).first()
 
     if not corpus:
-        return milvus_code, 404
+        return 404, 404
 
-    # delete index tables
+    try:
+        # delete qdrant store
+        collection = corpus.storage_meta.get("vector").get("collection")
+        client = services.qdrant.client()
 
-    for table_name in corpus.keyword_tables:
+        if not client.delete_collection(collection):
+            qdrant_code = 404
+        else:
+            qdrant_code = 0
+    except Exception:
+        qdrant_code = 500
+
+    # delete postgres index tables
+
+    for table_name in corpus.storage_keyword_tables:
         db_session.execute(sqlalchemy.text(f"drop table if exists {table_name}"))
 
     # delete corpus object
@@ -35,7 +42,7 @@ def delete_by_name(db_session: sqlmodel.Session, name: str) -> tuple:
     db_session.delete(corpus)
     db_session.commit()
 
-    return milvus_code, 0
+    return 0, qdrant_code
 
 
 

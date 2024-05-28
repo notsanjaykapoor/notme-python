@@ -1,5 +1,4 @@
 import dataclasses
-import hashlib
 import os
 import time
 
@@ -10,14 +9,14 @@ import llama_index.embeddings
 import llama_index.readers.file
 import llama_index.readers.web
 import llama_index.storage.docstore.postgres
-import llama_index.storage.index_store.postgres
-import llama_index.vector_stores.milvus
+import llama_index.vector_stores.qdrant
 import sqlalchemy
 import sqlmodel
 
 import log
 import models
 import services.corpus
+import services.qdrant
 
 @dataclasses.dataclass
 class Struct:
@@ -56,13 +55,7 @@ def ingest(db_session: sqlmodel.Session, corpus_id: int) -> Struct:
     db_session.add(corpus)
     db_session.commit()
 
-    indices = {
-        "keyword": {
-            "doc_store": f"kw_doc_store_{corpus.id}",
-            "idx_store": f"kw_idx_store_{corpus.id}",
-        },
-        "vector": corpus.name,
-    }
+    storage = {}
 
     # download corpus source_uri to the local fs
 
@@ -100,58 +93,131 @@ def ingest(db_session: sqlmodel.Session, corpus_id: int) -> Struct:
 
     logger.info(f"corpus {corpus.id} ingest '{corpus.name}' epoch {corpus.epoch} state '{corpus.state}' docs {docs_count} nodes {nodes_count}")
 
-    # vector index using milvus
+    vector_store_name = os.environ.get("VECTOR_STORE")
 
-    vector_store = llama_index.vector_stores.milvus.MilvusVectorStore(
-        collection_name=corpus.name,
-        dim=corpus.embed_dims,
-        overwrite=True,
-        uri=os.environ.get("MILVUS_URL"),
-    )
-    vector_storage_context = llama_index.core.StorageContext.from_defaults(
-        vector_store=vector_store,
-    )
-    _vector_index = llama_index.core.VectorStoreIndex(
-        nodes,
-        embed_model=embed_model,
-        show_progress=True,
-        storage_context=vector_storage_context,
-        store_nodes_override=True,
-    )
+    if vector_store_name == "faiss":
+        logger.info(f"corpus {corpus.id} ingest '{corpus.name}' epoch {corpus.epoch} store 'postgres'")
 
-    # keyword index using postgres
+        # vector index using faiss
+        vector_store = llama_index.vector_stores.faiss.FaissVectorStore(faiss_index=faiss.IndexFlatL2(corpus.embed_dims))
 
-    # drop existing keyword indices
-    _db_keyword_indices_drop(db_session=db_session, corpus=corpus)
+        vector_storage_context = llama_index.core.StorageContext.from_defaults(
+            vector_store=vector_store,
+        )
 
-    postgres_doc_store = llama_index.storage.docstore.postgres.PostgresDocumentStore.from_uri(
-        perform_setup=True,
-        table_name=indices.get("keyword").get("doc_store"),
-        uri=os.environ.get("DATABASE_URL"),
-    )
-    postgres_index_store = llama_index.storage.index_store.postgres.PostgresIndexStore.from_uri(
-        perform_setup=True,
-        table_name=indices.get("keyword").get("idx_store"),
-        uri=os.environ.get("DATABASE_URL"),
-    )
-    keyword_storage_context = llama_index.core.StorageContext.from_defaults(
-        docstore=postgres_doc_store,
-        index_store=postgres_index_store,
-    )
+        vector_index = llama_index.core.VectorStoreIndex(
+            nodes,
+            embed_model=embed_model,
+            show_progress=True,
+            storage_context=vector_storage_context,
+            store_nodes_override=True,
+        )
 
-    keyword_index = llama_index.core.SimpleKeywordTableIndex(
-        nodes,
-        embed_model=embed_model,
-        # keyword_extract_template="KEYWORDS: sanjay,pegmo\n",
-        max_keywords_per_chunk=KEYWORD_CHUNK_DEFAULT,
-        storage_context=keyword_storage_context,
-    )
-    keyword_index.storage_context.persist()
+        vector_storage_path = f"{local_dir}/vs"
+        vector_storage_uri = f"file://localhost/{local_dir}/vs"
+
+        vector_index.storage_context.persist(
+            persist_dir=vector_storage_path,
+        )
+
+        storage["vector"] = {
+            "store": "faiss",
+            "uri": vector_storage_uri,
+        }
+    elif vector_store_name == "postgres":
+        logger.info(f"corpus {corpus.id} ingest '{corpus.name}' epoch {corpus.epoch} store 'postgres'")
+
+        vector_store = llama_index.vector_stores.postgres.PGVectorStore(
+            async_connection_string=os.environ.get("DATABASE_VECTOR_URL"),
+            connection_string=os.environ.get("DATABASE_VECTOR_URL"),
+            schema_name="public",
+            table_name="test",
+        )
+        vector_storage_context = llama_index.core.StorageContext.from_defaults(
+            vector_store=vector_store,
+        )
+        _vector_index = llama_index.core.VectorStoreIndex(
+            nodes,
+            embed_model=embed_model,
+            show_progress=True,
+            storage_context=vector_storage_context,
+            store_nodes_override=True,
+        )
+
+        storage["vector"] = {
+            "store": "postgres",
+            "uri": "",
+        }
+    elif vector_store_name == "qdrant":
+        logger.info(f"corpus {corpus.id} ingest '{corpus.name}' epoch {corpus.epoch} store 'qdrant'")
+
+        client = services.qdrant.client()
+
+        # delete collection if it exists
+        client.delete_collection(corpus.name)
+
+        vector_store = llama_index.vector_stores.qdrant.QdrantVectorStore(
+            client=client,
+            collection_name=corpus.name,
+        )
+
+        vector_storage_context = llama_index.core.StorageContext.from_defaults(
+            vector_store=vector_store,
+        )
+
+        _vector_index = llama_index.core.VectorStoreIndex(
+            nodes,
+            embed_model=embed_model,
+            show_progress=True,
+            storage_context=vector_storage_context,
+            store_nodes_override=True,
+        )
+
+        storage["vector"] = {
+            "store": "qdrant",
+            "collection": corpus.name,
+        }
+
+    if False:
+        # keyword index using postgres
+
+        storage["keyword"] = {
+            "name": "postgres",
+            "doc_store": f"kw_doc_store_{corpus.id}",
+            "idx_store": f"kw_idx_store_{corpus.id}",
+        }
+
+        # drop existing keyword indices
+        _db_keyword_indices_drop(db_session=db_session, corpus=corpus)
+
+        postgres_doc_store = llama_index.storage.docstore.postgres.PostgresDocumentStore.from_uri(
+            perform_setup=True,
+            table_name=storage.get("keyword").get("doc_store"),
+            uri=os.environ.get("DATABASE_URL"),
+        )
+        postgres_index_store = llama_index.storage.index_store.postgres.PostgresIndexStore.from_uri(
+            perform_setup=True,
+            table_name=storage.get("keyword").get("idx_store"),
+            uri=os.environ.get("DATABASE_URL"),
+        )
+        keyword_storage_context = llama_index.core.StorageContext.from_defaults(
+            docstore=postgres_doc_store,
+            index_store=postgres_index_store,
+        )
+
+        keyword_index = llama_index.core.SimpleKeywordTableIndex(
+            nodes,
+            embed_model=embed_model,
+            # keyword_extract_template="KEYWORDS: sanjay,pegmo\n",
+            max_keywords_per_chunk=KEYWORD_CHUNK_DEFAULT,
+            storage_context=keyword_storage_context,
+        )
+        keyword_index.storage_context.persist()
 
     struct.seconds = (time.time() - t_start)
 
     corpus_meta = {
-        "indices": indices,
+        "storage": storage,
     }
 
     # update corpus
@@ -176,7 +242,7 @@ def ingest(db_session: sqlmodel.Session, corpus_id: int) -> Struct:
 def _db_keyword_indices_drop(db_session: sqlmodel.Session, corpus: models.Corpus) -> int:
     """
     """
-    for table_name in corpus.keyword_tables:
+    for table_name in corpus.storage_keyword_tables:
         db_session.execute(sqlalchemy.text(f"drop table if exists {table_name}"))
     db_session.commit()
 

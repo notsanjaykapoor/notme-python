@@ -6,4 +6,4 @@ from .ingest import ingest
 from .init import init
 from .list import list
 from .scan import scan
-from .utils import embed_dims, embed_model, embed_models, files_fingerprint, name_encode, source_uri_parse
+from .utils import embed_dims, embed_model, embed_models, files_fingerprint, name_encode, name_generate, source_uri_parse
