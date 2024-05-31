@@ -5,7 +5,7 @@
       <th class="p-4 pr-6">name</th>
       <th class="p-4 pr-6">size</th>
       <th class="p-4 pr-6">state</th>
-      <th class="p-4 pr-6"></th>
+      <th class="p-4 pr-6">ingest</th>
     </tr>
   </thead>
   <tbody>
@@ -21,19 +21,19 @@
           {{files_map.get(file).get("file_size")}}
         </td>
         <td class="p-4 pr-6 font-normal">
-          {{state}}
+          {% if corpus %}
+            <a href="/admin/corpus?query=name:{{corpus.name}}" class="font-bold text-blue-700">
+              {{ corpus.state }}
+            </a>
+          {% else %}
+            new
+          {% endif %}
         </td>
-        <td>
-          {% if not corpus %}
+        <td class="p-4 pr-6 font-normal">
+          {% if not corpus or (corpus and corpus.ingestable == 0) %}
             <a href="/admin/corpus/ingest?source_uri={{source_uri}}" class="text-red-700">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
                 <path fill-rule="evenodd" d="M10.5 3.75a6 6 0 0 0-5.98 6.496A5.25 5.25 0 0 0 6.75 20.25H18a4.5 4.5 0 0 0 2.206-8.423 3.75 3.75 0 0 0-4.133-4.303A6.001 6.001 0 0 0 10.5 3.75Zm2.03 5.47a.75.75 0 0 0-1.06 0l-3 3a.75.75 0 1 0 1.06 1.06l1.72-1.72v4.94a.75.75 0 0 0 1.5 0v-4.94l1.72 1.72a.75.75 0 1 0 1.06-1.06l-3-3Z" clip-rule="evenodd" />
-              </svg>
-            </a>
-          {% else %}
-            <a href="/admin/corpus?query={{corpus.name}}" class="text-blue-700">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
-                <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25Zm4.28 10.28a.75.75 0 0 0 0-1.06l-3-3a.75.75 0 1 0-1.06 1.06l1.72 1.72H8.25a.75.75 0 0 0 0 1.5h5.69l-1.72 1.72a.75.75 0 1 0 1.06 1.06l3-3Z" clip-rule="evenodd" />
               </svg>
             </a>
           {% endif %}

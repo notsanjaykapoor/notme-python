@@ -25,7 +25,7 @@ class Corpus(sqlmodel.SQLModel, table=True):
     files_count: int = sqlmodel.Field(index=True, nullable=False)
     fingerprint: str = sqlmodel.Field(index=False, nullable=False)
     meta: dict = sqlmodel.Field(default_factory=dict, sa_column=sqlmodel.Column(sqlmodel.JSON))
-    name: str = sqlmodel.Field(index=True, nullable=False) # fully encoded collection name
+    name: str = sqlmodel.Field(index=True, nullable=False) # fully encoded name
     nodes_count: int = sqlmodel.Field(index=True, nullable=False)
     org_id: int = sqlmodel.Field(index=True, nullable=False)
     source_uri: str = sqlmodel.Field(index=True, nullable=False)

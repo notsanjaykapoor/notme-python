@@ -50,6 +50,20 @@ def embed_models() -> list[str]:
     return os.listdir(models_root)
 
 
+def file_uri_parse(source_uri: str) -> tuple[str, str, str]:
+    """
+    """
+    if not (match := re.match(r'^file:\/\/([^\/]+)\/(.+)$', source_uri)):
+        raise ValueError(f"invalid source_uri {source_uri}")
+
+    source_host, source_path = (match[1], match[2])
+
+    match = re.match(r'^(.+)\/(.+)$$', source_path)
+    source_dir = match[1]
+
+    return source_host, source_dir, source_path
+
+
 def files_fingerprint(files: list[str]) -> str:
     """
     Generate md5 fingerprint using file metadata
@@ -106,7 +120,7 @@ def name_generate(corpus: str, prefix: str) -> str:
     return corpus_normalized
 
 
-def source_uri_parse(source_uri: str) -> tuple[str, str, str, str]:
+def source_uri_parse(source_uri: str) -> tuple[str, str, str]:
     """
     """
     if not (match := re.match(r'^file:\/\/([^\/]+)\/(.+)$', source_uri)):

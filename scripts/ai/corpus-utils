@@ -9,6 +9,7 @@ import click
 
 import dot_init
 
+import models
 import services.corpus
 import services.corpus.keyword
 import services.corpus.vector
@@ -36,22 +37,36 @@ def delete(ctx, name: str) -> list[str]:
 
 
 @click.command()
-@click.option('--dir', default=None, required=True, help="corpus directory, e.g. file://localhost/./data/rag/yyy")
+@click.option('--source-uri', default=None, required=True, help="corpus directory, e.g. file://localhost/./data/rag/yyy")
 @click.option('--model', default="gte-large", required=False, help="embedding model name, e.g. gpt4all, openai, gte-base, gte-large, nomic-embed-text-v1")
 @click.option('--splitter', default="chunk:1024:40", required=False, help="text splitter, e.g. semantic, chunk:1024:40")
 @click.pass_context
-def ingest(ctx, dir: str, model: str, splitter: str) -> dict:
+def ingest(ctx, source_uri: str, model: str, splitter: str) -> dict:
     """
     
     """
     with services.database.session.get() as db_session:
-        corpus = services.corpus.init(
-            db_session=db_session,
-            corpus_id=0,
-            source_uri=dir,
-            model=model,
-            splitter=splitter,
-        )
+        corpus = services.corpus.get_by_source_uri(db_session=db_session, source_uri=source_uri)
+
+        if not corpus:
+            corpus = services.corpus.create(
+                db_session=db_session,
+                epoch=0,
+                model=model,
+                org_id=0,
+                params={
+                    "meta": {
+                        "splitter": splitter,
+                    }
+                },
+                source_uri=source_uri,
+                state=models.corpus.STATE_DRAFT,
+            )
+
+        # update corpus epoch
+        corpus.epoch = corpus.epoch + 1
+        db_session.add(corpus)
+        db_session.commit()
 
         _print_status(f"corpus {corpus.id} name '{corpus.name}' epoch {corpus.epoch} ingest starting")
 

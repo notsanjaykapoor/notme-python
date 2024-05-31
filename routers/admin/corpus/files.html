@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container grid grid-cols-12">
+  <div class="col-span-12 mt-10">
+    <h3 class="font-bold text-center">
+      {{ app_name }}
+    </h3>
+  </div>
+  <div class="col-start-2 col-span-10 mt-2 opacity-50 text-center text-xs text-zinc-400">
+    @{{ app_version }}
+  </div>
+</div>
+
+<div class="container grid grid-cols-12 mt-10">
+  {% include "admin/corpus/files_table.html" %}
+</div>
+  
+{% endblock %}

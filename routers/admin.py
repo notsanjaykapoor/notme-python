@@ -38,18 +38,30 @@ async def admin_corpus_ingest(
     """
     """
     try:
-        corpus = services.corpus.init(
-            db_session=db_session,
-            corpus_id=corpus_id,
-            source_uri=source_uri,
-            model=services.corpus.utils.MODEL_NAME_DEFAULT,
-            splitter=services.corpus.utils.SPLITTER_NAME_DEFAULT,
-        )
+        if corpus_id:
+            corpus = services.corpus.get_by_id(db_session=db_session, id=corpus_id)
+        else:
+            corpus = services.corpus.get_by_source_uri(db_session=db_session, source_uri=source_uri)
 
-        logger.info(f"{context.rid_get()} admin corpus '{corpus.name}' id {corpus.id} ingest")
+        if not corpus:
+            corpus = services.corpus.create(
+                db_session=db_session,
+                epoch=0,
+                model=services.corpus.utils.MODEL_NAME_DEFAULT,
+                org_id=0,
+                params={
+                    "meta": {
+                        "splitter": services.corpus.utils.SPLITTER_NAME_DEFAULT,
+                    }
+                },
+                source_uri=source_uri,
+                state=models.corpus.STATE_DRAFT,
+            )
 
+        logger.info(f"{context.rid_get()} admin corpus {corpus.id} name '{corpus.name}' ingest")
+
+        corpus.epoch += 1
         corpus.state = models.corpus.STATE_QUEUED
-
         db_session.add(corpus)
         db_session.commit()
 
@@ -158,6 +170,50 @@ def admin_corpus_show(request: fastapi.Request, corpus_id: int, db_session: sqlm
     )
 
 
+@app.get("/admin/corpus/{corpus_id}/files", response_class=fastapi.responses.HTMLResponse)
+def admin_corpus_files(
+    request: fastapi.Request,
+    corpus_id: int,
+    source_uri: str="",
+    db_session: sqlmodel.Session = fastapi.Depends(main_shared.get_db),
+):
+    """
+    """
+    logger.info(f"{context.rid_get()} corpus {corpus_id} source '{source_uri}' files")
+
+    try:
+        corpus = services.corpus.get_by_id(db_session=db_session, id=corpus_id)
+
+        source_uri = source_uri or corpus.source_uri
+
+        files_result = services.corpus.fs.files(
+            source_uri=source_uri,
+        )
+        files_list = files_result.files_list
+        files_map = files_result.files_map
+    except Exception as e:
+        logger.error(f"{context.rid_get()} corpus {corpus_id} files exception '{e}'")
+
+    try:
+        response = templates.TemplateResponse(
+            request,
+            "admin/corpus/files.html",
+            {
+                "app_name": "Corpus",
+                "app_version": app_version,
+                "corpus": corpus,
+                "files_list": files_list,
+                "files_map": files_map,
+                "source_uri": source_uri,
+            }
+        )
+    except Exception as e:
+        logger.error(f"{context.rid_get()} corpus {corpus_id} files render exception '{e}'")
+        return templates.TemplateResponse(request, "500.html", {})
+
+    return response
+
+
 @app.get("/admin/fs", response_class=fastapi.responses.HTMLResponse)
 def admin_fs_list(
     request: fastapi.Request,
@@ -168,12 +224,12 @@ def admin_fs_list(
 ):
     """
     """
+    logger.info(f"{context.rid_get()} admin fs query '{query}'")
+
     if "HX-Request" in request.headers:
         htmx_request = 1
     else:
         htmx_request = 0
-
-    logger.info(f"{context.rid_get()} rag fs htmx {htmx_request} query '{query}'")
 
     try:
         list_result = services.corpus.fs.dirs(
@@ -192,75 +248,34 @@ def admin_fs_list(
         source_uris = []
         query_code = 400
         query_result = f"exception {e}"
-        logger.error(f"{context.rid_get()} rag fs exception '{e}'")
+        logger.error(f"{context.rid_get()} admin fs exception '{e}'")
 
     if htmx_request == 1:
         template = "admin/fs/list_table.html"
     else:
         template = "admin/fs/list.html"
 
-    response = templates.TemplateResponse(
-        request,
-        template,
-        {
-            "app_name": "Files",
-            "app_version": app_version,
-            "corpus_map": corpus_map,
-            "query": query,
-            "prompt_text": "search",
-            "source_uris": source_uris,
-            "query_code": query_code,
-            "query_result": query_result,
-        }
-    )
+    try:
+        response = templates.TemplateResponse(
+            request,
+            template,
+            {
+                "app_name": "Files",
+                "app_version": app_version,
+                "corpus_map": corpus_map,
+                "query": query,
+                "prompt_text": "search",
+                "source_uris": source_uris,
+                "query_code": query_code,
+                "query_result": query_result,
+            }
+        )
+    except Exception as e:
+        logger.error(f"{context.rid_get()} admin fs render exception '{e}'")
+        return templates.TemplateResponse(request, "500.html", {})
 
     if htmx_request == 1:
         response.headers["HX-Push-Url"] = f"{request.get('path')}?query={query}"
-
-    return response
-
-
-@app.get("/admin/fs/show", response_class=fastapi.responses.HTMLResponse)
-def admin_fs_show(
-    request: fastapi.Request,
-    source_uri: str,
-    db_session: sqlmodel.Session = fastapi.Depends(main_shared.get_db),
-):
-    """
-    """
-    logger.info(f"{context.rid_get()} rag fs show '{source_uri}'")
-
-    corpus = services.corpus.get_by_source_uri(db_session=db_session, source_uri=source_uri)
-
-    if corpus:
-        state = corpus.state
-    else:
-        state = "n/a"
-
-    try:
-        files_result = services.corpus.fs.files(
-            source_uri=source_uri,
-        )
-        files_list = files_result.files_list
-        files_map = files_result.files_map
-    except Exception as e:
-        files_list = []
-        files_map = {}
-        logger.error(f"{context.rid_get()} rag fs exception '{e}'")
-
-    response = templates.TemplateResponse(
-        request,
-        "admin/fs/show.html",
-        {
-            "app_name": "Files",
-            "app_version": app_version,
-            "corpus": corpus,
-            "files_list": files_list,
-            "files_map": files_map,
-            "source_uri": source_uri,
-            "state": state,
-        }
-    )
 
     return response
 
@@ -298,19 +313,23 @@ def admin_workq_list(
     else:
         template = "admin/workq/list.html"
 
-    response = templates.TemplateResponse(
-        request,
-        template,
-        {
-            "app_name": "WorkQ",
-            "app_version": app_version,
-            "prompt_text": "search",
-            "query": query,
-            "work_objects": work_objects,
-            "query_code": query_code,
-            "query_result": query_result,
-        }
-    )
+    try:
+        response = templates.TemplateResponse(
+            request,
+            template,
+            {
+                "app_name": "WorkQ",
+                "app_version": app_version,
+                "prompt_text": "search",
+                "query": query,
+                "work_objects": work_objects,
+                "query_code": query_code,
+                "query_result": query_result,
+            }
+        )
+    except Exception as e:
+        logger.error(f"{context.rid_get()} admin workq render exception '{e}'")
+        return templates.TemplateResponse(request, "500.html", {})
 
     if htmx_request == 1:
         response.headers["HX-Push-Url"] = f"{request.get('path')}?query={query}"
