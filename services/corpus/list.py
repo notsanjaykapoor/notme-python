@@ -40,13 +40,9 @@ def list(db_session: sqlmodel.Session, query: str = "", offset: int = 0, limit: 
         value = token["value"]
 
         if token["field"].startswith("name"):
-            if re.match(r"^~", value):
-                # like query
-                value_normal = re.sub(r"~", "", value)
-                dataset = dataset.where(model.name.like("%" + value_normal + "%"))  # type: ignore
-            else:
-                # match query
-                dataset = dataset.where(model.name == value)
+            # like query
+            value_normal = re.sub(r"~", "", value)
+            dataset = dataset.where(model.name.like("%" + value_normal + "%"))
         elif token["field"] == "state":
             # match query
             dataset = dataset.where(model.state == value)
