@@ -22,7 +22,13 @@
         </td>
         <td class="p-4 pr-6 font-normal">
           {% if corpus %}
-            <a href="/admin/corpus?query=name:{{corpus.name}}" class="font-bold text-blue-700">
+            {% if corpus.ingestable == 0 %}
+              {% set text_color = "text-blue-700" %}
+            {% else %}
+              {% set text_color = "text-red-700" %}
+            {% endif %}
+
+            <a href="/admin/corpus?query=name:{{corpus.name}}" class="font-bold {{text_color}}">
               {{ corpus.state }}
             </a>
           {% else %}

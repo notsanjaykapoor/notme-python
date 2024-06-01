@@ -60,4 +60,4 @@ def _query_normalize(query: str) -> str:
     if not query or (":" in query):
         return query
 
-    return f"name:~{query.replace('~', '')}"
+    return f"name:{query}"

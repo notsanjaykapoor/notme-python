@@ -22,17 +22,17 @@ def create(
 
     corpus_name = services.corpus.name_generate(
         corpus=source_name,
-        prefix=os.environ.get("APP_FS_PREFIX", ""),
+        strip=os.environ.get("APP_FS_STRIP", ""),
     )
 
     corpus = models.Corpus(
         docs_count=params.get("docs_count") or 0,
-        embed_dims=services.corpus.embed_dims(model=model),
-        embed_model=model,
         epoch=epoch,
         files_count=params.get("files_count") or 0,
         fingerprint=params.get("fingerprint") or "",
         meta=params.get("meta") or {},
+        model_dims=services.corpus.model_dims(model=model),
+        model_name=model,
         name=corpus_name,
         nodes_count=params.get("nodes_count") or 0,
         org_id=org_id,

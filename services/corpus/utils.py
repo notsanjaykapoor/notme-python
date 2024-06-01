@@ -26,30 +26,6 @@ MODEL_NAME_DEFAULT = "gte-large"
 SPLITTER_NAME_DEFAULT = "chunk:1024:40"
 
 
-def embed_dims(model: str) -> int:
-    return DIMENSIONS[model]
-
-
-def embed_model(model: str) -> llama_index.embeddings.huggingface.HuggingFaceEmbedding:
-    models_root = os.environ["HF_MODELS_PATH"]
-    models_path = f"{models_root}/{model}"
-
-    if not os.path.exists(models_path):
-        raise ValueError(f"invalid model {model}")
-
-    embeddings = llama_index.embeddings.huggingface.HuggingFaceEmbedding(
-        model_name=models_path,
-        trust_remote_code=True,
-    )
-
-    return embeddings
-
-
-def embed_models() -> list[str]:
-    models_root = os.environ["HF_MODELS_PATH"]
-    return os.listdir(models_root)
-
-
 def file_uri_parse(source_uri: str) -> tuple[str, str, str]:
     """
     """
@@ -80,6 +56,30 @@ def files_fingerprint(files: list[str]) -> str:
     return hashlib.md5(files_str.encode("utf-8")).hexdigest()
 
 
+def model_dims(model: str) -> int:
+    return DIMENSIONS[model]
+
+
+def model_klass(model: str) -> llama_index.embeddings.huggingface.HuggingFaceEmbedding:
+    models_root = os.environ["HF_MODELS_PATH"]
+    models_path = f"{models_root}/{model}"
+
+    if not os.path.exists(models_path):
+        raise ValueError(f"invalid model {model}")
+
+    embeddings = llama_index.embeddings.huggingface.HuggingFaceEmbedding(
+        model_name=models_path,
+        trust_remote_code=True,
+    )
+
+    return embeddings
+
+
+def model_names() -> list[str]:
+    models_root = os.environ["HF_MODELS_PATH"]
+    return os.listdir(models_root)
+
+
 def name_encode(corpus: str, prefix: str, model: str, splitter: str) -> str:
     """
     Encode corpus name with the following constraints:
@@ -102,7 +102,7 @@ def name_encode(corpus: str, prefix: str, model: str, splitter: str) -> str:
     return name_encoded
 
 
-def name_generate(corpus: str, prefix: str) -> str:
+def name_generate(corpus: str, strip: str) -> str:
     """
     Encode corpus name with the following constraints:
       - lowercase, underscore only
@@ -111,11 +111,11 @@ def name_generate(corpus: str, prefix: str) -> str:
     """
     corpus_normalized = re.sub(r'[-:\s]+', "_", corpus.lower())
 
-    if prefix:
-        if not (match := re.match(rf"(.*)({prefix})(.*)", corpus_normalized)):
-            raise ValueError(f"invalid corpus name {corpus}")
-
-        corpus_normalized = f"{match[2]}{match[3]}"
+    if strip:
+        corpus_normalized = corpus_normalized.strip(strip)
+        # if not (match := re.match(rf"(.*)({prefix})(.*)", corpus_normalized)):
+        #     raise ValueError(f"invalid corpus name {corpus}")
+        # corpus_normalized = f"{match[2]}{match[3]}"
 
     return corpus_normalized
 

@@ -4,6 +4,7 @@ import time
 
 import llama_index.core
 import llama_index.core.ingestion
+import llama_index.core.multi_modal_llms.generic_utils
 import llama_index.core.node_parser
 import llama_index.embeddings
 import llama_index.readers.file
@@ -72,11 +73,11 @@ def ingest(db_session: sqlmodel.Session, corpus_id: int) -> Struct:
     else:
         docs = _load_dir(local_dir=local_dir)
 
-    embed_model = services.corpus.embed_model(model=corpus.embed_model)
+    model_klass = services.corpus.model_klass(model=corpus.model_name)
 
     if corpus.splitter == "semantic":
         text_splitter = llama_index.core.node_parser.SemanticSplitterNodeParser(
-            buffer_size=1, breakpoint_percentile_threshold=95, embed_model=embed_model
+            buffer_size=1, breakpoint_percentile_threshold=95, embed_model=model_klass
         )
     elif corpus.splitter.startswith("chunk"):
         chunk_size, chunk_overlap = _splitter_name_parse(name=corpus.splitter)
@@ -99,7 +100,7 @@ def ingest(db_session: sqlmodel.Session, corpus_id: int) -> Struct:
         logger.info(f"corpus {corpus.id} ingest '{corpus.name}' epoch {corpus.epoch} store 'postgres'")
 
         # vector index using faiss
-        vector_store = llama_index.vector_stores.faiss.FaissVectorStore(faiss_index=faiss.IndexFlatL2(corpus.embed_dims))
+        vector_store = llama_index.vector_stores.faiss.FaissVectorStore(faiss_index=faiss.IndexFlatL2(corpus.model_dims))
 
         vector_storage_context = llama_index.core.StorageContext.from_defaults(
             vector_store=vector_store,
@@ -107,7 +108,7 @@ def ingest(db_session: sqlmodel.Session, corpus_id: int) -> Struct:
 
         vector_index = llama_index.core.VectorStoreIndex(
             nodes,
-            embed_model=embed_model,
+            embed_model=model_klass,
             show_progress=True,
             storage_context=vector_storage_context,
             store_nodes_override=True,
@@ -138,7 +139,7 @@ def ingest(db_session: sqlmodel.Session, corpus_id: int) -> Struct:
         )
         _vector_index = llama_index.core.VectorStoreIndex(
             nodes,
-            embed_model=embed_model,
+            embed_model=model_klass,
             show_progress=True,
             storage_context=vector_storage_context,
             store_nodes_override=True,
@@ -167,7 +168,7 @@ def ingest(db_session: sqlmodel.Session, corpus_id: int) -> Struct:
 
         _vector_index = llama_index.core.VectorStoreIndex(
             nodes,
-            embed_model=embed_model,
+            embed_model=model_klass,
             show_progress=True,
             storage_context=vector_storage_context,
             store_nodes_override=True,
@@ -207,7 +208,7 @@ def ingest(db_session: sqlmodel.Session, corpus_id: int) -> Struct:
 
         keyword_index = llama_index.core.SimpleKeywordTableIndex(
             nodes,
-            embed_model=embed_model,
+            embed_model=model_klass,
             # keyword_extract_template="KEYWORDS: sanjay,pegmo\n",
             max_keywords_per_chunk=KEYWORD_CHUNK_DEFAULT,
             storage_context=keyword_storage_context,
@@ -277,8 +278,9 @@ def _load_urls(local_dir: str) -> list:
         raise ValueError("expected urls.txt")
 
     path = f"{local_dir}/{files[0]}"
-    urls = [url.strip() for url in open(path).read().split("\n") if url]
+    lines = [line.strip() for line in open(path).read().split("\n") if line]
 
+    
     docs = llama_index.readers.web.SimpleWebPageReader(html_to_text=True).load_data(urls)
     return docs
 

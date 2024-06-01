@@ -67,8 +67,8 @@ def _vector_index(db_session: sqlmodel.Session, name_encoded: str) -> llama_inde
     if not corpus:
         raise f"invalid corpus {name_encoded}"
     
-    embed_model = services.corpus.embed_model(model=corpus.embed_model)
-    embed_dims = services.corpus.embed_dims(model=corpus.embed_model)
+    model_klass = services.corpus.model_klass(model=corpus.model_name)
+    model_dims = services.corpus.model_dims(model=corpus.model_name)
 
     vector_store_name = os.environ.get("VECTOR_STORE")
 
@@ -94,7 +94,7 @@ def _vector_index(db_session: sqlmodel.Session, name_encoded: str) -> llama_inde
 
         vector_index = llama_index.core.VectorStoreIndex.from_vector_store(
             vector_store=vector_store,
-            embed_model=embed_model,
+            embed_model=model_klass,
             storage_context=storage_context,
         )
     elif vector_store_name == "postgres":
@@ -114,7 +114,7 @@ def _vector_index(db_session: sqlmodel.Session, name_encoded: str) -> llama_inde
 
         vector_index = llama_index.core.VectorStoreIndex.from_vector_store(
             vector_store=vector_store,
-            embed_model=embed_model,
+            embed_model=model_klass,
             storage_context=storage_context,
         )
 

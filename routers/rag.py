@@ -44,7 +44,7 @@ def rag_query(
     corpus_list = [object.name for object in list_result.objects]
 
     modes = ["augment", "keyword", "retrieve"]
-    models_list = services.corpus.embed_models()
+    models_list = services.corpus.model_names()
 
     query_nodes = []
     query_response = ""

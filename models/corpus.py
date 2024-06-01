@@ -1,6 +1,7 @@
 import datetime
 import typing
 
+import pydantic
 import sqlalchemy
 import sqlmodel
 
@@ -16,11 +17,14 @@ class Corpus(sqlmodel.SQLModel, table=True):
         sqlalchemy.UniqueConstraint("name", name="_name"),
     )
 
+    # remove warnings about fields named "model_"
+    model_config = pydantic.ConfigDict(protected_namespaces=())
+
     id: typing.Optional[int] = sqlmodel.Field(default=None, primary_key=True)
     created_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.utcnow, nullable=False)
     docs_count: int = sqlmodel.Field(index=True, nullable=False)
-    embed_dims: int = sqlmodel.Field(index=True, nullable=False)
-    embed_model: str = sqlmodel.Field(index=True, nullable=False)
+    model_dims: int = sqlmodel.Field(index=False, nullable=False)
+    model_name: str = sqlmodel.Field(index=False, nullable=False)
     epoch: int = sqlmodel.Field(index=True, nullable=False)
     files_count: int = sqlmodel.Field(index=True, nullable=False)
     fingerprint: str = sqlmodel.Field(index=False, nullable=False)
