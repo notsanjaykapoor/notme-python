@@ -16,7 +16,8 @@ DEFAULT_APP_CHECK_TIMEOUT = 20
 DEFAULT_SSH_CHECK_INTERVAL = 3
 DEFAULT_SSH_CHECK_TIMEOUT = 15
 
-GCP_REPO = "gcr.io/notme-330419/notme-python"
+GCP_REPO = "us-docker.pkg.dev/notme-330419/notme/notme-python" # public
+# GCP_REPO = "gcr.io/notme-330419/notme-python" # private repo
 
 @click.group()
 def cli():
@@ -24,16 +25,18 @@ def cli():
 
 
 @click.command()
+@click.option("--dockerfile", default="Dockerfile", required=False, help="")
 @click.option("--sha", default="", required=False, help="git repo sha or tag")
+@click.option("--no-push", is_flag=True, show_default=True, default=True, help="")
 @click.pass_context
-def build(ctx, sha: str):
+def build(ctx, dockerfile: str, sha: str, no_push: bool):
     time_start_unix = time.time()
 
     version = sha or ulid.new()
 
-    print("docker build {version}", end=" ... ", flush=True)
+    print("docker build '{dockerfile}' version {version}", end=" ... ", flush=True)
 
-    _docker_build(version=version)
+    _docker_build(dockerfile=dockerfile, version=version, push=no_push)
 
     _print_ok("ok")
 
@@ -166,9 +169,9 @@ def _docker_app_start(host: str, user: str) -> int:
     return response.returncode
 
 
-def _docker_build(version: str) -> int:
+def _docker_build(dockerfile: str, version: str, push: bool) -> int:
     response = subprocess.run(
-        f"docker build -t {GCP_REPO}:{version} -t {GCP_REPO}:latest --platform linux/amd64 --build-arg APP_VERSION={version} .",
+        f"docker build -t {GCP_REPO}:{version} -t {GCP_REPO}:latest --platform linux/amd64 --build-arg APP_VERSION={version} -f {dockerfile} .",
         shell=True,
         capture_output=False,
     )
@@ -176,23 +179,24 @@ def _docker_build(version: str) -> int:
     if response.returncode != 0:
         exit(response.returncode)
 
-    response = subprocess.run(
-        f"docker push {GCP_REPO}:{version}",
-        shell=True,
-        capture_output=False,
-    )
+    if push:
+        response = subprocess.run(
+            f"docker push {GCP_REPO}:{version}",
+            shell=True,
+            capture_output=False,
+        )
 
-    if response.returncode != 0:
-        exit(response.returncode)
+        if response.returncode != 0:
+            exit(response.returncode)
 
-    response = subprocess.run(
-        f"docker push {GCP_REPO}:latest",
-        shell=True,
-        capture_output=False,
-    )
+        response = subprocess.run(
+            f"docker push {GCP_REPO}:latest",
+            shell=True,
+            capture_output=False,
+        )
 
-    if response.returncode != 0:
-        exit(response.returncode)
+        if response.returncode != 0:
+            exit(response.returncode)
 
     return response.returncode
 

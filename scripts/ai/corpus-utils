@@ -2,6 +2,7 @@
 
 import os
 import sys
+import time
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
@@ -70,7 +71,7 @@ def ingest(ctx, source_uri: str, model: str, splitter: str) -> dict:
 
         _print_status(f"corpus {corpus.id} name '{corpus.name}' epoch {corpus.epoch} ingest starting")
 
-        _write_result = services.corpus.ingest(
+        _ingest_result = services.corpus.ingest(
             db_session=db_session,
             corpus_id=corpus.id,
         )
@@ -79,12 +80,65 @@ def ingest(ctx, source_uri: str, model: str, splitter: str) -> dict:
 
 
 @click.command()
+@click.option('--source-uri', default=None, required=True, help="corpus directory, e.g. file://localhost/./data/rag/yyy")
+@click.option('--device', default="auto", required=False, help="torch device to use")
+@click.option('--model', default="gte-large", required=False, help="embedding model name, e.g. gpt4all, openai, gte-base, gte-large, nomic-embed-text-v1")
+@click.option('--splitter', default="chunk:1024:40", required=False, help="text splitter, e.g. semantic, chunk:1024:40")
+@click.pass_context
+def ingest_bm(ctx, source_uri: str, device: str, model: str, splitter: str) -> dict:
+    """
+    benchmark ingest on local device
+    """
+    import llama_index.core.vector_stores.simple
+    import llama_index.readers
+    import llama_index.vector_stores
+
+    _local_dir, local_files = services.corpus.download(source_uri=source_uri)
+
+    if device == "auto":
+        device = services.corpus.torch_device()
+
+    _print_status(f"ingest '{source_uri}' device '{device}' files '{local_files}'")
+
+    file_docs = services.corpus.files_docs(files=local_files)
+
+    _, chunk_size, chunk_overlap = splitter.split(":")
+    text_splitter = llama_index.core.node_parser.SentenceSplitter(
+        chunk_size=int(chunk_size), chunk_overlap=int(chunk_overlap),
+    )
+
+    doc_nodes = text_splitter.get_nodes_from_documents(file_docs)
+
+    vector_store = llama_index.core.vector_stores.simple.SimpleVectorStore()
+
+    vector_storage_context = llama_index.core.StorageContext.from_defaults(
+        vector_store=vector_store,
+    )
+
+    t_start = time.time()
+
+    model_klass = services.corpus.model_klass(model=model, device=device)
+
+    _vector_index = llama_index.core.VectorStoreIndex(
+        doc_nodes,
+        embed_model=model_klass,
+        show_progress=True,
+        storage_context=vector_storage_context,
+        store_nodes_override=True,
+    )
+
+    time_seconds = (time.time() - t_start)
+
+    _print_status(f"ingest '{source_uri}' device '{device}' completed in {time_seconds} seconds")
+
+
+@click.command()
 @click.option('--limit', default=50, required=False, help="search limit")
 @click.option('--query', default="", required=False, help="search query")
 @click.pass_context
 def list(ctx, limit: int, query: str="") -> list[str]:
     """
-    List database stores
+    List postgres corpus stores
     """
     with services.database.session.get() as db_session:
         list_result = services.corpus.list(db_session=db_session, query=query, offset=0, limit=limit)
@@ -217,11 +271,12 @@ def _print_nodes(nodes):
     )
 
 cli.add_command(delete)
+cli.add_command(ingest)
+cli.add_command(ingest_bm)
 cli.add_command(list)
 cli.add_command(list_keyword)
 cli.add_command(list_vector)
 cli.add_command(query)
-cli.add_command(ingest)
 cli.add_command(scan)
 cli.add_command(sync)
 

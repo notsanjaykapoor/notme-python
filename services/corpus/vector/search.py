@@ -67,8 +67,9 @@ def _vector_index(db_session: sqlmodel.Session, name_encoded: str) -> llama_inde
     if not corpus:
         raise f"invalid corpus {name_encoded}"
     
-    model_klass = services.corpus.model_klass(model=corpus.model_name)
-    model_dims = services.corpus.model_dims(model=corpus.model_name)
+    torch_device = services.corpus.torch_device()
+    model_klass = services.corpus.model_klass(model=corpus.model_name, device=torch_device)
+    _model_dims = services.corpus.model_dims(model=corpus.model_name)
 
     vector_store_name = os.environ.get("VECTOR_STORE")
 

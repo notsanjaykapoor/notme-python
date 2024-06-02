@@ -3,12 +3,7 @@ import os
 import time
 
 import llama_index.core
-import llama_index.core.ingestion
-import llama_index.core.multi_modal_llms.generic_utils
 import llama_index.core.node_parser
-import llama_index.embeddings
-import llama_index.readers.file
-import llama_index.readers.web
 import llama_index.storage.docstore.postgres
 import llama_index.vector_stores.qdrant
 import sqlalchemy
@@ -66,31 +61,15 @@ def ingest(db_session: sqlmodel.Session, corpus_id: int) -> Struct:
 
     logger.info(f"corpus {corpus.id} ingest '{corpus.name}' epoch {corpus.epoch} state '{corpus.state}'")
 
-    if len(local_files) == 1 and local_files[0].endswith(".pdf"):
-        docs = _load_pdf(file=local_files[0])
-    elif len(local_files) == 1 and local_files[0] == "urls.txt":
-        docs = _load_urls(local_dir=local_dir)
-    else:
-        docs = _load_dir(local_dir=local_dir)
+    torch_device = services.corpus.torch_device()
+    model_klass = services.corpus.model_klass(model=corpus.model_name, device=torch_device)
+    text_splitter = services.corpus.text_splitter(name=corpus.splitter, model_klass=model_klass)
+ 
+    file_docs = services.corpus.files_docs(files=local_files)
+    doc_nodes = text_splitter.get_nodes_from_documents(file_docs)
 
-    model_klass = services.corpus.model_klass(model=corpus.model_name)
-
-    if corpus.splitter == "semantic":
-        text_splitter = llama_index.core.node_parser.SemanticSplitterNodeParser(
-            buffer_size=1, breakpoint_percentile_threshold=95, embed_model=model_klass
-        )
-    elif corpus.splitter.startswith("chunk"):
-        chunk_size, chunk_overlap = _splitter_name_parse(name=corpus.splitter)
-        text_splitter = llama_index.core.node_parser.SentenceSplitter(
-            chunk_size=chunk_size, chunk_overlap=chunk_overlap,
-        )
-    else:
-        raise "invalid splitter"
-
-    nodes = text_splitter.get_nodes_from_documents(docs)
-
-    docs_count = len(docs)
-    nodes_count = len(nodes)
+    docs_count = len(file_docs)
+    nodes_count = len(doc_nodes)
 
     logger.info(f"corpus {corpus.id} ingest '{corpus.name}' epoch {corpus.epoch} state '{corpus.state}' docs {docs_count} nodes {nodes_count}")
 
@@ -107,7 +86,7 @@ def ingest(db_session: sqlmodel.Session, corpus_id: int) -> Struct:
         )
 
         vector_index = llama_index.core.VectorStoreIndex(
-            nodes,
+            doc_nodes,
             embed_model=model_klass,
             show_progress=True,
             storage_context=vector_storage_context,
@@ -138,7 +117,7 @@ def ingest(db_session: sqlmodel.Session, corpus_id: int) -> Struct:
             vector_store=vector_store,
         )
         _vector_index = llama_index.core.VectorStoreIndex(
-            nodes,
+            doc_nodes,
             embed_model=model_klass,
             show_progress=True,
             storage_context=vector_storage_context,
@@ -167,7 +146,7 @@ def ingest(db_session: sqlmodel.Session, corpus_id: int) -> Struct:
         )
 
         _vector_index = llama_index.core.VectorStoreIndex(
-            nodes,
+            doc_nodes,
             embed_model=model_klass,
             show_progress=True,
             storage_context=vector_storage_context,
@@ -207,7 +186,7 @@ def ingest(db_session: sqlmodel.Session, corpus_id: int) -> Struct:
         )
 
         keyword_index = llama_index.core.SimpleKeywordTableIndex(
-            nodes,
+            doc_nodes,
             embed_model=model_klass,
             # keyword_extract_template="KEYWORDS: sanjay,pegmo\n",
             max_keywords_per_chunk=KEYWORD_CHUNK_DEFAULT,
@@ -246,43 +225,6 @@ def _db_keyword_indices_drop(db_session: sqlmodel.Session, corpus: models.Corpus
     for table_name in corpus.storage_keyword_tables:
         db_session.execute(sqlalchemy.text(f"drop table if exists {table_name}"))
     db_session.commit()
-
-
-def _load_dir(local_dir: str) -> list:
-    """
-    Load docs within specified directory
-    """
-    reader = llama_index.core.SimpleDirectoryReader(local_dir)
-    docs = reader.load_data()
-
-    return docs
-
-
-def _load_pdf(file: str) -> list:
-    """
-    Load pdf doc
-    """
-    reader = llama_index.readers.file.PDFReader()
-    docs = reader.load_data(file)
-
-    return docs
-
-
-def _load_urls(local_dir: str) -> list:
-    """
-    Load urls
-    """
-    files = os.listdir(local_dir)
-
-    if files[0] != "urls.txt":
-        raise ValueError("expected urls.txt")
-
-    path = f"{local_dir}/{files[0]}"
-    lines = [line.strip() for line in open(path).read().split("\n") if line]
-
-    
-    docs = llama_index.readers.web.SimpleWebPageReader(html_to_text=True).load_data(urls)
-    return docs
 
 
 def _splitter_name_parse(name: str) -> tuple:
