@@ -4,6 +4,7 @@ import sqlmodel
 
 import models
 import services.corpus
+import services.corpus.fs
 
 @dataclasses.dataclass
 class Struct:
@@ -39,7 +40,7 @@ def scan(db_session: sqlmodel.Session, mode: str) -> Struct:
         _, source_host, _ = services.corpus.source_uri_parse(source_uri=corpus.source_uri)
 
         if source_host == "localhost":
-            _local_dir, local_files = services.corpus.download(source_uri=corpus.source_uri)
+            local_files = services.corpus.fs.files_path_list(source_uri=corpus.source_uri)
 
             fingerprint = services.corpus.files_fingerprint(files=local_files)
 

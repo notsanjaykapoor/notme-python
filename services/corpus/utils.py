@@ -34,7 +34,7 @@ SPLITTER_NAME_DEFAULT = "chunk:1024:40"
 
 def files_docs(files: list[str]) -> list:
     """
-    Read files into docs ready for splitting
+    Load files into docs.  The returned docs are ready for splitting into nodes.
     """
     docs = []
 
@@ -110,11 +110,11 @@ def model_dims(model: str) -> int:
     """
     return model dimensions from config.json
     """
-    models_root = os.environ["HF_MODELS_PATH"]
+    models_root = os.environ["APP_MODELS_PATH"]
     models_path = f"{models_root}/{model}"
 
     if not os.path.exists(models_path):
-        raise ValueError(f"invalid model {model}")
+        raise ValueError(f"model not found {models_path}")
 
     config_json = json.load(open(f"{models_path}/config.json"))
 
@@ -128,11 +128,11 @@ def model_klass(model: str, device: str) -> llama_index.embeddings.huggingface.H
     """
     return huggingface embedding model object
     """
-    models_root = os.environ["HF_MODELS_PATH"]
+    models_root = os.environ["APP_MODELS_PATH"]
     models_path = f"{models_root}/{model}"
 
     if not os.path.exists(models_path):
-        raise ValueError(f"invalid model {model}")
+        raise ValueError(f"model not found {models_path}")
 
     embeddings = llama_index.embeddings.huggingface.HuggingFaceEmbedding(
         device=device,
@@ -144,7 +144,7 @@ def model_klass(model: str, device: str) -> llama_index.embeddings.huggingface.H
 
 
 def model_names() -> list[str]:
-    models_root = os.environ["HF_MODELS_PATH"]
+    models_root = os.environ["APP_MODELS_PATH"]
     return os.listdir(models_root)
 
 
@@ -152,6 +152,7 @@ def name_encode(corpus: str, prefix: str, model: str, splitter: str) -> str:
     """
     Encode corpus name with the following constraints:
       - lowercase, underscore only
+      - uses corpus, model, and splitter as part of the name
       - somewhat human readable
       - ensure name starts with prefix, if specified
     """
@@ -174,6 +175,7 @@ def name_generate(corpus: str, strip: str) -> str:
     """
     Encode corpus name with the following constraints:
       - lowercase, underscore only
+      - name based on corpus
       - somewhat human readable
       - ensure name is stripped with 'strip', if specified
     """

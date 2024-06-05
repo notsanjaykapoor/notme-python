@@ -226,8 +226,3 @@ def _db_keyword_indices_drop(db_session: sqlmodel.Session, corpus: models.Corpus
         db_session.execute(sqlalchemy.text(f"drop table if exists {table_name}"))
     db_session.commit()
 
-
-def _splitter_name_parse(name: str) -> tuple:
-    _, chunk_size, chunk_overlap = name.split(":")
-
-    return int(chunk_size), int(chunk_overlap)

@@ -16,7 +16,7 @@ class Struct:
 
 def files(source_uri: str) -> Struct:
     """
-    List files in local directory
+    List files in source directory, returns a struct with a list of file names and a mapping of metadata
     """
     struct = Struct(
         code=0,
@@ -47,4 +47,15 @@ def files(source_uri: str) -> Struct:
     struct.files_list = sorted(struct.files_map.keys())
 
     return struct
+
+
+def files_path_list(source_uri: str) -> Struct:
+    """
+    List files in source directory, returns a list of file paths
+    """
+
+    struct = files(source_uri)
+
+    return sorted([file_object.get("local_path") for file_object in struct.files_map.values()])
+
 
