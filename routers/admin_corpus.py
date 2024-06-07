@@ -190,6 +190,7 @@ def admin_corpus_files(
 
         files_result = services.corpus.fs.files(
             source_uri=source_uri,
+            filter="",
         )
         files_list = files_result.files_list
         files_map = files_result.files_map

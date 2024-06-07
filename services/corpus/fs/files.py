@@ -1,7 +1,6 @@
 import dataclasses
 import os
-
-import sqlmodel
+import re
 
 import services.corpus
 
@@ -14,7 +13,7 @@ class Struct:
     errors: list[str]
 
 
-def files(source_uri: str) -> Struct:
+def files(source_uri: str, filter: str) -> Struct:
     """
     List files in source directory, returns a struct with a list of file names and a mapping of metadata
     """
@@ -31,6 +30,9 @@ def files(source_uri: str) -> Struct:
         local_dir = source_uri
 
     for file in os.listdir(local_dir):
+        if file and not re.search(filter, file):
+            continue # file excluded by filter
+
         local_path = f"{local_dir}/{file}"
         stats = os.stat(local_path)
 
@@ -49,13 +51,13 @@ def files(source_uri: str) -> Struct:
     return struct
 
 
-def files_path_list(source_uri: str) -> Struct:
+def files_path_list(source_uri: str, filter: str) -> Struct:
     """
     List files in source directory, returns a list of file paths
     """
 
-    struct = files(source_uri)
+    files_struct = files(source_uri=source_uri, filter=filter)
 
-    return sorted([file_object.get("local_path") for file_object in struct.files_map.values()])
+    return sorted([file_object.get("local_path") for file_object in files_struct.files_map.values()])
 
 

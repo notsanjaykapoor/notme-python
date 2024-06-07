@@ -12,6 +12,7 @@ import dot_init
 
 import models
 import services.corpus
+import services.corpus.fs
 import services.corpus.keyword
 import services.corpus.vector
 import services.database
@@ -69,6 +70,8 @@ def ingest(ctx, source_uri: str, model: str, splitter: str) -> dict:
         db_session.add(corpus)
         db_session.commit()
 
+        t_start = time.time()
+
         _print_status(f"corpus {corpus.id} name '{corpus.name}' epoch {corpus.epoch} ingest starting")
 
         _ingest_result = services.corpus.ingest(
@@ -76,7 +79,9 @@ def ingest(ctx, source_uri: str, model: str, splitter: str) -> dict:
             corpus_id=corpus.id,
         )
 
-    _print_status(f"corpus {corpus.id} name '{corpus.name}' epoch {corpus.epoch} ingest completed")
+        t_end = time.time()
+
+        _print_status(f"corpus {corpus.id} name '{corpus.name}' epoch {corpus.epoch} ingest completed in {t_end-t_start} seconds")
 
 
 @click.command()
@@ -93,7 +98,7 @@ def ingest_bm(ctx, source_uri: str, device: str, model: str, splitter: str) -> d
     import llama_index.readers
     import llama_index.vector_stores
 
-    _local_dir, local_files = services.corpus.download(source_uri=source_uri)
+    local_files = services.corpus.fs.files_path_list(source_uri=source_uri, filter="")
 
     if device == "auto":
         device = services.corpus.torch_device()

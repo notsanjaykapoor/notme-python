@@ -40,7 +40,7 @@ def scan(db_session: sqlmodel.Session, mode: str) -> Struct:
         _, source_host, _ = services.corpus.source_uri_parse(source_uri=corpus.source_uri)
 
         if source_host == "localhost":
-            local_files = services.corpus.fs.files_path_list(source_uri=corpus.source_uri)
+            local_files = services.corpus.fs.files_path_list(source_uri=corpus.source_uri, filter="")
 
             fingerprint = services.corpus.files_fingerprint(files=local_files)
 
