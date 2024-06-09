@@ -15,7 +15,7 @@ logger = log.init("app")
 templates = fastapi.templating.Jinja2Templates(directory="routers")
 
 app = fastapi.APIRouter(
-    tags=["app.rag"],
+    tags=["app"],
     dependencies=[fastapi.Depends(main_shared.get_db)],
     responses={404: {"description": "Not found"}},
 )

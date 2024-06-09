@@ -5,6 +5,7 @@ import sqlmodel
 
 import models
 import services.corpus
+import services.corpus.fs
 
 def create(
     db_session: sqlmodel.Session,
@@ -16,9 +17,9 @@ def create(
     params: dict,
 ) -> models.Corpus:
     """
-    Create database corpus object.
+    Create database corpus object
     """
-    source_name, _, _ = services.corpus.source_uri_parse(source_uri=source_uri)
+    source_name, _, _ = services.corpus.fs.source_uri_parse(source_uri=source_uri)
 
     corpus_name = services.corpus.name_generate(
         corpus=source_name,
@@ -31,14 +32,18 @@ def create(
         files_count=params.get("files_count") or 0,
         fingerprint=params.get("fingerprint") or "",
         meta=params.get("meta") or {},
-        model_dims=services.corpus.model_dims(model=model),
+        model_dims=params.get("model_dims") or 0,
         model_name=model,
         name=corpus_name,
         nodes_count=params.get("nodes_count") or 0,
         org_id=org_id,
+        source_type=params.get("source_type") or "",
         source_uri=source_uri,
+        splitter=params.get("splitter") or "",
         state=state,
-        updated_at=datetime.datetime.now(datetime.timezone.utc)
+        updated_at=datetime.datetime.now(datetime.timezone.utc),
+        vector_img_uri=params.get("vector_img_uri") or "",
+        vector_txt_uri=params.get("vector_txt_uri") or "",
     )
 
     db_session.add(corpus)

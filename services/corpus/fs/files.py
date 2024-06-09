@@ -3,6 +3,7 @@ import os
 import re
 
 import services.corpus
+import services.corpus.fs
 
 
 @dataclasses.dataclass
@@ -25,7 +26,7 @@ def files(source_uri: str, filter: str) -> Struct:
     )
 
     if source_uri.startswith("file://"):
-        _, _, local_dir = services.corpus.source_uri_parse(source_uri=source_uri)
+        _, _, local_dir = services.corpus.fs.source_uri_parse(source_uri=source_uri)
     else:
         local_dir = source_uri
 

@@ -3,6 +3,7 @@ import os
 import time
 
 import llama_index.core
+import llama_index.core.indices
 import llama_index.core.node_parser
 import llama_index.storage.docstore.postgres
 import llama_index.vector_stores.qdrant
@@ -12,6 +13,8 @@ import sqlmodel
 import log
 import models
 import services.corpus
+import services.corpus.fs
+import services.corpus.models
 import services.qdrant
 
 @dataclasses.dataclass
@@ -27,6 +30,7 @@ KEYWORD_CHUNK_DEFAULT = 1024
 VECTOR_CHUNK_SIZE_DEFAULT = 1024
 VECTOR_CHUNK_OVERLAP_DEFAULT = 20
 
+logger = log.init("app")
 
 def ingest(db_session: sqlmodel.Session, corpus_id: int) -> Struct:
     """
@@ -41,8 +45,6 @@ def ingest(db_session: sqlmodel.Session, corpus_id: int) -> Struct:
         errors=[],
     )
 
-    logger = log.init("app")
-
     t_start = time.time()
 
     # initialize corpus state
@@ -53,31 +55,41 @@ def ingest(db_session: sqlmodel.Session, corpus_id: int) -> Struct:
 
     storage = {}
 
-    # download corpus source_uri to the local fs
-
-    local_dir, local_files = services.corpus.download(source_uri=corpus.source_uri)
+    local_dir, local_files = corpus.source_files
     files_count = len(local_files)
-    files_md5 = services.corpus.files_fingerprint(files=local_files)
+    files_md5 = services.corpus.fs.files_fingerprint(files=local_files)
+    docs_txt, docs_img = services.corpus.load_docs(files=local_files)
+    model_name = corpus.model_name
+    splitter = models.corpus.SPLITTER_NAME_DEFAULT
 
-    logger.info(f"corpus {corpus.id} ingest '{corpus.name}' epoch {corpus.epoch} state '{corpus.state}'")
+    if model_name.startswith("auto"):
+        # auto detect model
+        model_name = services.corpus.models.detect(files=local_files)
 
-    torch_device = services.corpus.torch_device()
-    model_klass = services.corpus.model_klass(model=corpus.model_name, device=torch_device)
-    text_splitter = services.corpus.text_splitter(name=corpus.splitter, model_klass=model_klass)
- 
-    file_docs = services.corpus.files_docs(files=local_files)
-    doc_nodes = text_splitter.get_nodes_from_documents(file_docs)
+    logger.info(f"corpus {corpus.id} ingest '{corpus.name}' model '{model_name}' epoch {corpus.epoch} state '{corpus.state}'")
 
-    docs_count = len(file_docs)
-    nodes_count = len(doc_nodes)
+    if model_name.startswith("clip:"):
+        # split text docs only
+        nodes_txt = services.corpus.split_docs(docs=docs_txt, splitter=splitter)
+        source_type = "image"
+    else:
+        # split text docs
+        nodes_txt = services.corpus.split_docs(docs=docs_txt, splitter=splitter)
+        source_type = "text"
 
-    logger.info(f"corpus {corpus.id} ingest '{corpus.name}' epoch {corpus.epoch} state '{corpus.state}' docs {docs_count} nodes {nodes_count}")
+    docs_count = len(docs_txt) + len(docs_img)
+    nodes_count = len(nodes_txt)
 
     vector_store_name = os.environ.get("VECTOR_STORE")
 
-    if vector_store_name == "faiss":
-        logger.info(f"corpus {corpus.id} ingest '{corpus.name}' epoch {corpus.epoch} store 'postgres'")
+    torch_device = services.corpus.torch_device()
+    model_klass = services.corpus.models.resolve(model=model_name, device=torch_device)
 
+    logger.info(
+        f"corpus {corpus.id} ingest '{corpus.name}' model '{model_name}' epoch {corpus.epoch} store '{vector_store_name}' docs {docs_count} nodes {nodes_count}"
+    )
+
+    if vector_store_name == "faiss":
         # vector index using faiss
         vector_store = llama_index.vector_stores.faiss.FaissVectorStore(faiss_index=faiss.IndexFlatL2(corpus.model_dims))
 
@@ -86,7 +98,7 @@ def ingest(db_session: sqlmodel.Session, corpus_id: int) -> Struct:
         )
 
         vector_index = llama_index.core.VectorStoreIndex(
-            doc_nodes,
+            nodes_txt,
             embed_model=model_klass,
             show_progress=True,
             storage_context=vector_storage_context,
@@ -100,13 +112,11 @@ def ingest(db_session: sqlmodel.Session, corpus_id: int) -> Struct:
             persist_dir=vector_storage_path,
         )
 
-        storage["vector"] = {
-            "store": "faiss",
-            "uri": vector_storage_uri,
-        }
+        # storage["vector"] = {
+        #     "store": "faiss",
+        #     "uri": vector_storage_uri,
+        # }
     elif vector_store_name == "postgres":
-        logger.info(f"corpus {corpus.id} ingest '{corpus.name}' epoch {corpus.epoch} store 'postgres'")
-
         vector_store = llama_index.vector_stores.postgres.PGVectorStore(
             async_connection_string=os.environ.get("DATABASE_VECTOR_URL"),
             connection_string=os.environ.get("DATABASE_VECTOR_URL"),
@@ -117,46 +127,77 @@ def ingest(db_session: sqlmodel.Session, corpus_id: int) -> Struct:
             vector_store=vector_store,
         )
         _vector_index = llama_index.core.VectorStoreIndex(
-            doc_nodes,
+            nodes_txt,
             embed_model=model_klass,
             show_progress=True,
             storage_context=vector_storage_context,
             store_nodes_override=True,
         )
 
-        storage["vector"] = {
-            "store": "postgres",
-            "uri": "",
-        }
+        # storage["vector"] = {
+        #     "store": "postgres",
+        #     "uri": "",
+        # }
     elif vector_store_name == "qdrant":
-        logger.info(f"corpus {corpus.id} ingest '{corpus.name}' epoch {corpus.epoch} store 'qdrant'")
-
         client = services.qdrant.client()
 
-        # delete collection if it exists
-        client.delete_collection(corpus.name)
+        # for now, we always create text vector store for qdrant
+        vector_txt_name = f"{corpus.name}_txt"
 
-        vector_store = llama_index.vector_stores.qdrant.QdrantVectorStore(
+        if source_type == "image":
+            vector_img_name = f"{corpus.name}_img"
+        else:
+            vector_img_name = ""
+
+        # create text store
+        client.delete_collection(vector_txt_name)
+
+        vector_txt_store = llama_index.vector_stores.qdrant.QdrantVectorStore(
             client=client,
-            collection_name=corpus.name,
+            collection_name=vector_txt_name,
         )
+
+        if vector_img_name:
+            # create image store
+            client.delete_collection(vector_img_name)
+
+            vector_img_store = llama_index.vector_stores.qdrant.QdrantVectorStore(
+                client=client,
+                collection_name=vector_img_name,
+            )
+        else:
+            vector_img_store = None
 
         vector_storage_context = llama_index.core.StorageContext.from_defaults(
-            vector_store=vector_store,
+            vector_store=vector_txt_store,
+            image_store=vector_img_store,
         )
 
-        _vector_index = llama_index.core.VectorStoreIndex(
-            doc_nodes,
-            embed_model=model_klass,
-            show_progress=True,
-            storage_context=vector_storage_context,
-            store_nodes_override=True,
+        logger.info(
+            f"corpus {corpus.id} ingest '{corpus.name}' model '{model_name}' epoch {corpus.epoch} store '{vector_store_name}' text '{vector_txt_name}' image '{vector_img_name}'"
         )
 
-        storage["vector"] = {
-            "store": "qdrant",
-            "collection": corpus.name,
-        }
+        if vector_img_store:
+            # use multi-modal index to store image store
+            _vector_index = llama_index.core.indices.MultiModalVectorStoreIndex(
+                nodes_txt + docs_img,
+                embed_model=model_klass,
+                show_progress=True,
+                image_store=vector_img_store,
+                storage_context=vector_storage_context,
+                vector_store=vector_txt_store,
+            )
+        else:
+            # use base vector store to store vector store
+            _vector_index = llama_index.core.VectorStoreIndex(
+                nodes_txt,
+                embed_model=model_klass,
+                image_store=vector_img_store,
+                show_progress=True,
+                storage_context=vector_storage_context,
+                store_nodes_override=True,
+                vector_store=vector_txt_store,
+            )
 
     if False:
         # keyword index using postgres
@@ -197,7 +238,7 @@ def ingest(db_session: sqlmodel.Session, corpus_id: int) -> Struct:
     struct.seconds = (time.time() - t_start)
 
     corpus_meta = {
-        "storage": storage,
+        "device": torch_device,
     }
 
     # update corpus
@@ -205,16 +246,25 @@ def ingest(db_session: sqlmodel.Session, corpus_id: int) -> Struct:
     corpus.docs_count = docs_count
     corpus.files_count = files_count
     corpus.meta = corpus.meta | corpus_meta
+    corpus.model_name = model_name
     corpus.nodes_count = nodes_count
     corpus.fingerprint = files_md5
+    corpus.source_type = source_type
+    corpus.splitter = splitter
     corpus.state = models.corpus.STATE_INGESTED
+
+    if vector_img_name:
+        corpus.vector_img_uri = f"qdrant:{vector_img_name}"
+
+    if vector_txt_name:
+        corpus.vector_txt_uri = f"qdrant:{vector_txt_name}"
 
     db_session.add(corpus)
     db_session.commit()
 
     struct.corpus = corpus
 
-    logger.info(f"corpus {corpus.id} ingest '{corpus.name}' epoch {corpus.epoch} state '{corpus.state}'")
+    logger.info(f"corpus {corpus.id} ingest '{corpus.name}' model '{corpus.model_name}' epoch {corpus.epoch} state '{corpus.state}'")
 
     return struct
 

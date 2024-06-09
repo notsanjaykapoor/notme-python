@@ -8,6 +8,7 @@ import context
 import log
 import models
 import main_shared
+import services.corpus.models
 import services.work_queue
 
 logger = log.init("app")
@@ -16,7 +17,7 @@ logger = log.init("app")
 templates = fastapi.templating.Jinja2Templates(directory="routers")
 
 app = fastapi.APIRouter(
-    tags=["app.rag"],
+    tags=["app"],
     dependencies=[fastapi.Depends(main_shared.get_db)],
     responses={404: {"description": "Not found"}},
 )
@@ -40,15 +41,16 @@ async def admin_corpus_ingest(
             corpus = services.corpus.get_by_source_uri(db_session=db_session, source_uri=source_uri)
 
         if not corpus:
+            model_name = models.corpus.MODEL_NAME_DEFAULT
+
             corpus = services.corpus.create(
                 db_session=db_session,
                 epoch=0,
-                model=services.corpus.utils.MODEL_NAME_DEFAULT,
+                model=model_name,
                 org_id=0,
                 params={
-                    "meta": {
-                        "splitter": services.corpus.utils.SPLITTER_NAME_DEFAULT,
-                    }
+                    "meta": {},
+                    "model_dims": 0,
                 },
                 source_uri=source_uri,
                 state=models.corpus.STATE_DRAFT,

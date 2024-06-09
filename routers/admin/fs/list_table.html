@@ -21,19 +21,19 @@
       <tr class="group hover:bg-zinc-50 odd:bg-white even:bg-slate-50 text-xs">
         <td class="p-4 pr-6 font-normal">
           {% if corpus %}
-            <a href="/admin/corpus/{{corpus.id}}/files?source_uri={{source_uri}}" class="font-semibold text-blue-700">
+            <a href="/admin/corpus/{{corpus.id}}/files?source_uri={{source_uri}}" class="font-semibold text-blue-700" title="list files">
               {{source_uri}}
             </a>
           {% else %}
-            <a href="/admin/corpus/0/files?source_uri={{source_uri}}" class="font-semibold text-blue-700">
+            <a href="/admin/corpus/0/files?source_uri={{source_uri}}" class="font-semibold text-blue-700" title="list files">
               {{source_uri}}
             </a>
           {% endif %}
         </td>
         <td class="p-4 pr-6 font-normal">
           {% if corpus %}
-            <a href="/admin/corpus?query=name:{{corpus.name}}" class="font-bold text-blue-700">
-              {{ corpus.state }}
+            <a href="/admin/corpus?query=name:{{corpus.name}}" class="font-bold text-blue-700" title="list corpus">
+              {{ corpus.name }}
             </a>
           {% else %}
             

@@ -37,12 +37,12 @@ def scan(db_session: sqlmodel.Session, mode: str) -> Struct:
     # scan each corpus for changes
 
     for corpus in list_result.objects:
-        _, source_host, _ = services.corpus.source_uri_parse(source_uri=corpus.source_uri)
+        _, source_host, _ = services.corpus.fs.source_uri_parse(source_uri=corpus.source_uri)
 
         if source_host == "localhost":
             local_files = services.corpus.fs.files_path_list(source_uri=corpus.source_uri, filter="")
 
-            fingerprint = services.corpus.files_fingerprint(files=local_files)
+            fingerprint = services.corpus.fs.files_fingerprint(files=local_files)
 
             struct.scan_count += 1
 

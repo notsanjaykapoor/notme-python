@@ -31,6 +31,18 @@ class WorkQueue(sqlmodel.SQLModel, table=True):
     updated_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.utcnow, nullable=False)
 
     @property
+    def meta_str(self) -> str:
+        """
+        return semi-structed metadata from work_queue object
+        """
+        corpus_id = self.data.get("corpus_id", '"')
+
+        if corpus_id:
+            return f"corpus : {corpus_id}"
+
+        return ""
+
+    @property
     def work_time(self) -> str:
         if not self.completed_at or not self.processing_at:
             return ""
