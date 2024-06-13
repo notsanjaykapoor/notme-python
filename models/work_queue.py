@@ -1,5 +1,6 @@
 import datetime
 import math
+import pytz
 
 import sqlalchemy
 import sqlmodel
@@ -43,6 +44,10 @@ class WorkQueue(sqlmodel.SQLModel, table=True):
         return ""
 
     @property
+    def time_format(self) -> str:
+        return "%Y-%m-%d at %H:%M:%S%z"
+
+    @property
     def work_time(self) -> str:
         if not self.completed_at or not self.processing_at:
             return ""
@@ -60,3 +65,17 @@ class WorkQueue(sqlmodel.SQLModel, table=True):
             return f"{minutes}m {seconds}s"
         else:
             return f"{seconds}s"
+
+    def work_timestamp(self, tz="") -> str:
+        if self.completed_at:
+            time_at_tz = self.completed_at.replace(tzinfo=pytz.utc)
+        elif self.processing_at:
+            time_at_tz = self.processing_at.replace(tzinfo=pytz.utc)
+        else:
+            time_at_tz = self.created_at.replace(tzinfo=pytz.utc)
+
+        if tz:
+            time_at_tz = time_at_tz.astimezone(pytz.timezone(tz))
+
+        return time_at_tz.strftime(self.time_format)
+

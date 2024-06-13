@@ -1,0 +1,28 @@
+#!/usr/bin/env python
+
+# docs:
+# https://huggingface.co/google/gemma-2b-it
+
+import os
+import sys
+
+sys.path.insert(1, os.path.join(sys.path[0], "../.."))
+
+import transformers
+
+import dot_init
+
+model_name = "google/gemma-2b-it"
+tokenizer = transformers.AutoTokenizer.from_pretrained(model_name)
+model = transformers.AutoModelForCausalLM.from_pretrained(model_name)
+
+# input_text = "Write me a poem about Machine Learning."
+input_text = "What are the tenants of machine learning."
+input_ids = tokenizer(input_text, return_tensors="pt")
+
+print(f"input: {input_text}")
+
+outputs = model.generate(**input_ids, max_new_tokens=400)
+
+print("output:")
+print(tokenizer.decode(outputs[0]))

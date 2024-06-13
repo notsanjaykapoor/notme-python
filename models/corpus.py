@@ -37,7 +37,6 @@ class Corpus(sqlmodel.SQLModel, table=True):
     name: str = sqlmodel.Field(index=True, nullable=False) # fully encoded name
     nodes_count: int = sqlmodel.Field(index=True, nullable=False)
     org_id: int = sqlmodel.Field(index=True, nullable=False)
-    source_type: str = sqlmodel.Field(index=False, nullable=True, default="")
     source_uri: str = sqlmodel.Field(index=True, nullable=False)
     splitter: str = sqlmodel.Field(index=False, nullable=True, default="")
     state: str = sqlmodel.Field(index=True, nullable=False)
@@ -50,18 +49,6 @@ class Corpus(sqlmodel.SQLModel, table=True):
         if self.state in ["dirty", "ingested"]:
             return 0
         return 1
-
-    @property
-    def qdrant_collection(self) -> str:
-        if "vector" not in (storage := self.meta.get("storage", {})):
-            return ""
-
-        vector = storage.get("vector")
-
-        if vector.get("store", "") != "qdrant":
-            return ""
-
-        return vector.get("collection", "")
 
     @property
     def queryable(self) -> int:
@@ -88,6 +75,22 @@ class Corpus(sqlmodel.SQLModel, table=True):
         return source_path, source_files
 
     @property
+    def source_types(self) -> list[str]:
+        types = []
+
+        if self.vector_img_uri:
+            types.append("img")
+
+        if self.vector_txt_uri:
+            types.append("txt")
+
+        return types
+
+    @property
+    def source_types_str(self) -> str:
+        return ", ".join(self.source_types)
+
+    @property
     def storage_keyword(self) -> dict:
         """keyword storage metadata"""
         return self.meta.get("storage", {}).get("keyword", {})
@@ -100,8 +103,3 @@ class Corpus(sqlmodel.SQLModel, table=True):
             f"data_{ks.get('doc_store')}",
             f"data_{ks.get('idx_store')}",
         ]
-
-    @property
-    def storage_meta(self) -> dict:
-        """get storage metadata"""
-        return self.meta.get("storage", {})

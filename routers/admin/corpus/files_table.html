@@ -5,7 +5,13 @@
       <th class="p-4 pr-6">name</th>
       <th class="p-4 pr-6">size</th>
       <th class="p-4 pr-6">state</th>
-      <th class="p-4 pr-6">ingest</th>
+      <th class="p-4 pr-6">
+        {% if corpus %}
+          re-ingest
+        {% else %}
+          ingest
+        {% endif %}
+      </th>
       <th class="p-4 pr-6">list</th>
     </tr>
   </thead>

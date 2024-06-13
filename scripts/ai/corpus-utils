@@ -14,6 +14,7 @@ import models
 import services.corpus
 import services.corpus.fs
 import services.corpus.keyword
+import services.corpus.models
 import services.corpus.vector
 import services.database
 import services.qdrant
@@ -40,10 +41,9 @@ def delete(ctx, name: str) -> list[str]:
 
 @click.command()
 @click.option('--source-uri', default=None, required=True, help="corpus directory, e.g. file://localhost/./data/rag/yyy")
-@click.option('--model', default="gte-large", required=False, help="embedding model name, e.g. gpt4all, openai, gte-base, gte-large, nomic-embed-text-v1")
-@click.option('--splitter', default="chunk:1024:40", required=False, help="text splitter, e.g. semantic, chunk:1024:40")
+@click.option('--model', default="auto", required=False, help="embedding model name, e.g. local:gte-large, clip:default, gpt4all, openai")
 @click.pass_context
-def ingest(ctx, source_uri: str, model: str, splitter: str) -> dict:
+def ingest(ctx, source_uri: str, model: str) -> dict:
     """
     
     """
@@ -57,9 +57,8 @@ def ingest(ctx, source_uri: str, model: str, splitter: str) -> dict:
                 model=model,
                 org_id=0,
                 params={
-                    "meta": {
-                        "splitter": splitter,
-                    }
+                    "meta": {},
+                    "model_dims": 0,
                 },
                 source_uri=source_uri,
                 state=models.corpus.STATE_DRAFT,
@@ -72,7 +71,7 @@ def ingest(ctx, source_uri: str, model: str, splitter: str) -> dict:
 
         t_start = time.time()
 
-        _print_status(f"corpus {corpus.id} name '{corpus.name}' epoch {corpus.epoch} ingest starting")
+        _print_status(f"corpus {corpus.id} name '{corpus.name}' model '{corpus.model_name}' epoch {corpus.epoch} ingest starting")
 
         _ingest_result = services.corpus.ingest(
             db_session=db_session,
@@ -81,13 +80,13 @@ def ingest(ctx, source_uri: str, model: str, splitter: str) -> dict:
 
         t_end = time.time()
 
-        _print_status(f"corpus {corpus.id} name '{corpus.name}' epoch {corpus.epoch} ingest completed in {t_end-t_start} seconds")
+        _print_status(f"corpus {corpus.id} name '{corpus.name}' model '{corpus.model_name}' epoch {corpus.epoch} ingest completed in {t_end-t_start} seconds")
 
 
 @click.command()
 @click.option('--source-uri', default=None, required=True, help="corpus directory, e.g. file://localhost/./data/rag/yyy")
 @click.option('--device', default="auto", required=False, help="torch device to use")
-@click.option('--model', default="gte-large", required=False, help="embedding model name, e.g. gpt4all, openai, gte-base, gte-large, nomic-embed-text-v1")
+@click.option('--model', default="local:gte-large", required=False, help="embedding model name, e.g. gpt4all, openai, gte-base, gte-large, nomic-embed-text-v1")
 @click.option('--splitter', default="chunk:1024:40", required=False, help="text splitter, e.g. semantic, chunk:1024:40")
 @click.pass_context
 def ingest_bm(ctx, source_uri: str, device: str, model: str, splitter: str) -> dict:
@@ -103,9 +102,9 @@ def ingest_bm(ctx, source_uri: str, device: str, model: str, splitter: str) -> d
     if device == "auto":
         device = services.corpus.torch_device()
 
-    _print_status(f"ingest '{source_uri}' device '{device}' files '{local_files}'")
+    _print_status(f"ingest '{source_uri}' device '{device}' model '{model}' files '{local_files}'")
 
-    file_docs = services.corpus.files_docs(files=local_files)
+    file_docs = services.corpus.load_docs(files=local_files)
 
     _, chunk_size, chunk_overlap = splitter.split(":")
     text_splitter = llama_index.core.node_parser.SentenceSplitter(
@@ -122,7 +121,7 @@ def ingest_bm(ctx, source_uri: str, device: str, model: str, splitter: str) -> d
 
     t_start = time.time()
 
-    model_klass = services.corpus.model_klass(model=model, device=device)
+    model_klass = services.corpus.models.resolve(model=model, device=device)
 
     _vector_index = llama_index.core.VectorStoreIndex(
         doc_nodes,
@@ -243,17 +242,26 @@ def sync(ctx) -> dict:
         client = services.qdrant.client()
 
         qdrant_collections = client.get_collections().collections
-        qdrant_names = [collection.name for collection in qdrant_collections]
+        qdrant_collection_names = [collection.name for collection in qdrant_collections]
 
         for corpus in corpus_objects:
-            collection_name = corpus.storage_meta.get("vector", {}).get("collection", "")
-            print(f"corpus sync '{corpus.name}' with collection '{collection_name}'", end=" ... ", flush=True)
+            # get corpus vector store
+            collection_names = []
 
-            if collection_name not in qdrant_names:
-                delete_code = services.corpus.delete_by_name(db_session=db_session, name=corpus.name)
-                _print_status(f"qdrant missing, corpus deleted - result {delete_code}")
-            else:
-                _print_ok("ok")
+            if corpus.vector_img_uri:
+                collection_names.append(corpus.vector_img_uri.split(":")[-1])
+
+            if corpus.vector_txt_uri:
+                collection_names.append(corpus.vector_txt_uri.split(":")[-1])
+
+            print(f"corpus sync '{corpus.name}' with collections '{collection_names}'", end=" ... ", flush=True)
+
+            for name in collection_names:
+                if name not in qdrant_collection_names:
+                    delete_code = services.corpus.delete_by_name(db_session=db_session, name=corpus.name)
+                    _print_status(f"qdrant missing '{name}', corpus deleted - result {delete_code}")
+                else:
+                    _print_ok("ok")
 
 
 def _print_error(s: str):

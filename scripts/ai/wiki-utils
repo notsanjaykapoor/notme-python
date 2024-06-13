@@ -1,0 +1,117 @@
+#!/usr/bin/env python
+
+import os
+import pathlib
+import sys
+
+sys.path.insert(1, os.path.join(sys.path[0], "../.."))
+
+import click
+import requests
+import ulid
+import urllib.request
+import wikipedia
+
+data_path = pathlib.Path("./data/wiki")
+
+if not data_path.exists():
+    pathlib.Path.mkdir(data_path)
+
+MAX_IMAGES_PER_WIKI = 5
+
+@click.group()
+def cli():
+    pass
+
+@click.command()
+@click.option('--query', default=None, required=True, help="wikipedia query")
+@click.pass_context
+def download_images(ctx, query: str) -> list[str]:
+    """
+    
+    """
+    image_metadata_dict = {}
+    
+    for title in [query]:
+        _print_status(f"wiki image query '{title}'")
+
+        name = title.lower().replace(r'\s', "_")
+
+        images_per_wiki = 0
+
+        try:
+            page_py = wikipedia.page(title)
+            list_img_urls = page_py.images
+
+            breakpoint()#
+
+            for url in list_img_urls:
+                if url.endswith(".jpg") or url.endswith(".png"):
+                    image_ulid = ulid.new().str
+                    image_file_name = title + "_" + url.split("/")[-1]
+
+                    # img_path could be s3 path pointing to the raw image file in the future
+                    image_metadata_dict[image_ulid] = {
+                        "filename": image_file_name,
+                        "img_path": "./" + str(data_path / f"{image_ulid}.jpg"),
+                    }
+                    urllib.request.urlretrieve(
+                        url, data_path / f"{name}_{image_ulid}.jpg"
+                    )
+                    images_per_wiki += 1
+                    # Limit the number of images downloaded per wiki page to 15
+                    if images_per_wiki > MAX_IMAGES_PER_WIKI:
+                        break
+        except Exception as e:
+            print(f"exception {e}")
+            # print(str(Exception("no images found for wikipedia page: ")) + title)
+            continue
+
+
+@click.command()
+@click.option('--query', default=None, required=True, help="wikipedia query")
+@click.pass_context
+def download_text(ctx, query: str) -> list[str]:
+    """
+    
+    """
+    for title in [query]:
+        _print_status(f"wiki text query '{title}'")
+
+        name = title.lower().replace(r'\s', "_")
+
+        response = requests.get(
+            "https://en.wikipedia.org/w/api.php",
+            params={
+                "action": "query",
+                "format": "json",
+                "titles": title,
+                "prop": "extracts",
+                "explaintext": True,
+            },
+        ).json()
+        page = next(iter(response["query"]["pages"].values()))
+        wiki_text = page["extract"]
+
+        data_file = f"{data_path}/{name}.txt"
+        with open(data_file, "w") as file:
+            file.write(wiki_text)
+
+
+def _print_error(s: str):
+    print("\x1b[1;31m" + s + "\x1b[0m")
+
+
+def _print_ok(s: str):
+    print("\x1b[1;32m" + s + "\x1b[0m")
+
+
+def _print_status(s: str):
+    print("\x1b[1;33m" + s + "\x1b[0m")
+
+
+cli.add_command(download_images)
+cli.add_command(download_text)
+
+if __name__ == "__main__":
+    cli()

@@ -37,7 +37,6 @@ def create(
         name=corpus_name,
         nodes_count=params.get("nodes_count") or 0,
         org_id=org_id,
-        source_type=params.get("source_type") or "",
         source_uri=source_uri,
         splitter=params.get("splitter") or "",
         state=state,

@@ -21,14 +21,24 @@ def delete_by_name(db_session: sqlmodel.Session, name: str) -> tuple[int, int]:
         return 404, 404
 
     try:
-        # delete qdrant store
-        collection = corpus.storage_meta.get("vector").get("collection")
-        client = services.qdrant.client()
+        # delete qdrant store(s)
+        if corpus.vector_img_uri:
+            collection = corpus.vector_img_uri.split(":")[-1]
+            client = services.qdrant.client()
 
-        if not client.delete_collection(collection):
-            qdrant_code = 404
-        else:
-            qdrant_code = 0
+            if not client.delete_collection(collection):
+                qdrant_code = 404
+            else:
+                qdrant_code = 0
+
+        if corpus.vector_txt_uri:
+            collection = corpus.vector_txt_uri.split(":")[-1]
+            client = services.qdrant.client()
+
+            if not client.delete_collection(collection):
+                qdrant_code = 404
+            else:
+                qdrant_code = 0
     except Exception:
         qdrant_code = 500
 

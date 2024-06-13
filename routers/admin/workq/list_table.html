@@ -14,6 +14,7 @@
       <th class="p-4 pr-6">msg</th>
       <th class="p-4 pr-6">state</th>
       <th class="p-4 pr-6">time</th>
+      <th class="p-4 pr-6">timestamp</th>
       <th class="p-4 pr-6">meta</th>
       <th class="p-4 pr-6">id</th>
     </tr>
@@ -26,7 +27,7 @@
         <td class="p-4 pr-6 font-normal">{{work_object.msg}}</td>
         <td class="p-4 pr-6 font-normal">
           {% if work_object.state == "error" %}
-            <span class="cursor-pointer font-bold text-red-800" title="error message todo">
+            <span class="cursor-help font-bold text-red-800" title="error message todo">
               {{work_object.state}}
             </span>
           {% elif work_object.state == "completed" %}
@@ -37,9 +38,10 @@
             {{work_object.state}}
           {% endif %}
         </td>
-        <td class="p-4 pr-6 font-normal">{{work_object.work_time}}</td>
-        <td class="p-4 pr-6 font-normal">{{work_object.meta_str}}</td>
-        <td class="p-4 pr-6 font-normal">{{work_object.id}}</td>
+        <td class="p-4 pr-6 font-normal">{{ work_object.work_time }}</td>
+        <td class="p-4 pr-6 font-normal">{{ work_object.work_timestamp(tz="US/Central") }}</td>
+        <td class="p-4 pr-6 font-normal">{{ work_object.meta_str }}</td>
+        <td class="p-4 pr-6 font-normal">{{ work_object.id }}</td>
       </tr>
       {% endfor %}
   </tbody>

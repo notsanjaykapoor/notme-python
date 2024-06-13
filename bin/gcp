@@ -40,6 +40,12 @@ def build(ctx, dockerfile: str, sha: str, no_push: bool):
 
     _print_ok("ok")
 
+    print(f"kustomize edit version {version}", end=" ... ", flush=True)
+
+    _kustomize_edit(dir="./k8s/stg", file="kustomization.template.yml", version=version)
+
+    _print_ok("ok")
+
     time_end_unix = time.time()
     time_mins = round((time_end_unix - time_start_unix) / 60, 1)
 
@@ -263,6 +269,19 @@ def _host_scp_files(host: str, user: str, dir: str, files: list[str]) -> int:
             exit(scp_code)
 
     return 0
+
+
+def _kustomize_edit(dir: str, file: str, version: str) -> int:
+    path_src = f"{dir}/{file}"
+    path_dst = f"{dir}/kustomization.yml"
+
+    response = subprocess.run(
+        f"sed 's/newTag:.*/newTag: \"{version}\"/' {path_src} > {path_dst}",
+        shell=True,
+        capture_output=False,
+    )
+
+    return response.returncode
 
 
 def _print_error(s: str):

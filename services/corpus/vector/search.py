@@ -118,12 +118,12 @@ def _vector_index(db_session: sqlmodel.Session, corpus: models.Corpus) -> llama_
         if corpus.vector_txt_uri:
             vector_txt_name = corpus.vector_txt_uri.split(":")[-1]
 
-            vector_store = llama_index.vector_stores.qdrant.QdrantVectorStore(
+            text_store = llama_index.vector_stores.qdrant.QdrantVectorStore(
                 client=client,
                 collection_name=vector_txt_name,
             )
         else:
-            vector_store = None # invalid case?
+            text_store = None # invalid case?
 
         if corpus.vector_img_uri:
             vector_img_name = corpus.vector_img_uri.split(":")[-1]
@@ -135,29 +135,31 @@ def _vector_index(db_session: sqlmodel.Session, corpus: models.Corpus) -> llama_
             image_store = None
 
         storage_context = llama_index.core.StorageContext.from_defaults(
-            vector_store=vector_store,
+            vector_store=text_store,
             image_store=image_store,
         )
 
-        if image_store:
-            # multi modal index always requires a valid vector store
-            # vector_index = llama_index.core.indices.MultiModalVectorStoreIndex.from_vector_store(
-            #     embed_model=model_klass,
-            #     image_store=image_store,
-            #     vector_store=vector_store,
-            #     # storage_context=storage_context, # using this generates 'got multiple values for keyword argument 'storage_context''
-            # )
+        if image_store and text_store:
+            # multi modal index always requires a valid text store
+            vector_index = llama_index.core.indices.MultiModalVectorStoreIndex.from_vector_store(
+                embed_model=model_klass,
+                image_store=image_store,
+                vector_store=text_store,
+                # storage_context=storage_context, # using this generates 'got multiple values for keyword argument 'storage_context''
+            )
+        elif image_store:
+            # use vector store here for now 
             vector_index = llama_index.core.VectorStoreIndex.from_vector_store(
                 embed_model=model_klass,
                 image_store=image_store,
                 storage_context=storage_context,
-                vector_store=vector_store,
+                vector_store=image_store,
             )
         else:
             vector_index = llama_index.core.VectorStoreIndex.from_vector_store(
                 embed_model=model_klass,
                 storage_context=storage_context,
-                vector_store=vector_store,
+                vector_store=text_store,
             )
 
     return vector_index
