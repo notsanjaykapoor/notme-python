@@ -63,7 +63,7 @@
 </div>
 
 <div class="container grid grid-cols-12" id="rag-query-augment">
-  {% if mode == "augment" %}
+  {% if mode in ["infer"] %}
   <div class="col-start-2 col-span-10 mt-0">
     <p class="text-xs italic font-bold text-blue-700 py-5">
       {{query_response}}
@@ -73,7 +73,7 @@
 </div>
 
 <div class="container grid grid-cols-12" id="rag-query-retrieve">
-  {% if mode in ["keyword", "retrieve"] %}
+  {% if mode in ["retrieve"] %}
   <div class="col-start-2 col-span-10 mt-0">
     {% for node in query_nodes %}
       <p class="text-xs italic font-bold text-blue-700 py-5">

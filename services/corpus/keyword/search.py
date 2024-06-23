@@ -17,7 +17,7 @@ class StructNodes:
     errors: list[str]
 
 
-def search_retrieve(db_session: sqlmodel.Session, name_encoded: str, query: str, limit: int) -> StructNodes:
+def search(db_session: sqlmodel.Session, name_encoded: str, query: str, limit: int) -> StructNodes:
     """
     """
     struct = StructNodes(0, 0, [], [])

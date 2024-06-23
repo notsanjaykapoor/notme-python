@@ -7,7 +7,7 @@ import llama_index.embeddings.huggingface
 
 def resolve(model: str, device: str) -> llama_index.embeddings:
     """
-    resolve model name to llama embedding class
+    resolve model name to llama embed model
     """
     if model.startswith("local:"):
         # local model
@@ -19,10 +19,10 @@ def resolve(model: str, device: str) -> llama_index.embeddings:
             raise ValueError(f"model path not found '{model_path}'")
 
         # use huggingface model from models directory
-        embedding = llama_index.embeddings.huggingface.HuggingFaceEmbedding(
+        embed_model = llama_index.embeddings.huggingface.HuggingFaceEmbedding(
             device=device,
             model_name=model_path,
-            # trust_remote_code=True,
+            trust_remote_code=True,
         )
     elif model.startswith("clip:"):
         # clip model, download and cache, default cache is ~/.cache
@@ -31,12 +31,12 @@ def resolve(model: str, device: str) -> llama_index.embeddings:
         if model_name == "default":
             model_name = "ViT-B/32"
 
-        embedding = llama_index.embeddings.clip.ClipEmbedding(
+        embed_model = llama_index.embeddings.clip.ClipEmbedding(
             device=device,
             model_name=model_name,
-            # trust_remote_code=True,
+            trust_remote_code=True,
         )
     else:
         raise ValueError(f"invalid model '{model}'")
 
-    return embedding
+    return embed_model

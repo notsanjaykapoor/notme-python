@@ -3,11 +3,12 @@ import os
 import time
 
 import llama_index.core
-import  llama_index.core.indices
-import llama_index.core.storage.docstore
-import llama_index.vector_stores.qdrant
+import llama_index.core.schema
+import llama_index.core.settings
+import llama_index.core.vector_stores.utils
 import qdrant_client
-import sqlmodel
+import qdrant_client.http.models.models
+import qdrant_client.models
 
 import context
 import log
@@ -25,142 +26,88 @@ class StructNodes:
     errors: list[str]
 
 
-@dataclasses.dataclass
-class StructResponse:
-    code: int
-    msec: int
-    response: str
-    errors: list[str]
-
 
 logger = log.init("api")
 
 
-def search_augment(db_session: sqlmodel.Session, corpus: models.Corpus, query: str) -> StructResponse:
+
+def search(corpus: models.Corpus, query: str, limit: int) -> StructNodes:
     """
     """
-    struct = StructResponse(0, 0, "", [])
+    struct = StructNodes(
+        code=0,
+        msec=0, 
+        nodes=[],
+        errors=[],
+    )
 
     t_start = time.time()
 
-    vector_index = _vector_index(db_session=db_session, corpus=corpus)
-    query_engine = vector_index.as_query_engine()
-    struct.response = query_engine.query(query)
+    qdrant_points = _qdrant_query(corpus=corpus, query=query, similarity_top_k=limit)
+    struct.nodes = _qdrant_points_to_nodes(points=qdrant_points)
 
     struct.msec = (time.time() - t_start) * 1000
 
     return struct
 
 
-def search_retrieve(db_session: sqlmodel.Session, corpus: models.Corpus, query: str, limit: int) -> StructNodes:
+def _qdrant_points_to_nodes(points: list[qdrant_client.http.models.ScoredPoint]) -> list[llama_index.core.schema.NodeWithScore]:
     """
+    Map qdrant points to node objects
     """
-    struct = StructNodes(0, 0, [], [])
+    node_with_scores = []
 
-    t_start = time.time()
+    for point in points:
+        node = llama_index.core.vector_stores.utils.metadata_dict_to_node(point.payload)
+        node_with_scores.append(llama_index.core.schema.NodeWithScore(node=node, score=point.score))
 
-    vector_index = _vector_index(db_session=db_session, corpus=corpus)
-    retriever = vector_index.as_retriever(similarity_top_k=limit, image_similarity_top_k=limit)
-    struct.nodes = retriever.retrieve(query)
-
-    for node in struct.nodes:
-        print(node) # xxx
-
-    struct.msec = (time.time() - t_start) * 1000
-
-    return struct
+    return node_with_scores
 
 
-def _vector_index(db_session: sqlmodel.Session, corpus: models.Corpus) -> llama_index.core.VectorStoreIndex:
+def _qdrant_query(corpus: models.Corpus, query: str, similarity_top_k: int) -> list[qdrant_client.http.models.ScoredPoint]:
     """
-    Load vector index
+    run vector search and return points results
     """
+    # map query to vector
     torch_device = services.corpus.torch_device()
-    model_klass = services.corpus.models.resolve(model=corpus.model_name, device=torch_device)
+    embed_model = services.corpus.models.resolve(model=corpus.model_name, device=torch_device)
+    query_vector = embed_model.get_agg_embedding_from_queries([query])
 
     vector_store_name = os.environ.get("VECTOR_STORE")
 
-    if vector_store_name == "faiss":
-        import faiss #
+    if vector_store_name != "qdrant":
+        raise ValueError("vector store invalid")
 
-        vector_storage_uri = corpus.storage_meta.get("vector").get("uri")
-        _, _, vector_storage_path = services.corpus.fs.source_uri_parse(source_uri=vector_storage_uri)
+    client = qdrant_client.QdrantClient(url=os.environ.get("QDRANT_URL"))
 
-        vector_store = llama_index.vector_stores.faiss.FaissVectorStore.from_persist_dir(
-            persist_dir=vector_storage_path
+    logger.info(
+        f"{context.rid_get()} corpus '{corpus.name}' model '{corpus.model_name}' load - text '{corpus.vector_txt_uri}' image '{corpus.vector_img_uri}'"
+    )
+
+    if not corpus.vector_txt_uri and not corpus.vector_img_uri:
+        raise ValueError("corpus'{corpus.name}' missing image or text store")
+
+    if corpus.vector_txt_uri:
+        vector_txt_name = corpus.vector_txt_uri.split(":")[-1]
+
+        qdrant_response = client.search(
+            collection_name=vector_txt_name,
+            query_vector=query_vector,
+            limit=similarity_top_k,
+            query_filter=qdrant_client.models.Filter(),
         )
 
-        doc_store = llama_index.core.storage.docstore.SimpleDocumentStore.from_persist_dir(
-            persist_dir=vector_storage_path
+        return qdrant_response
+
+    if corpus.vector_img_uri:
+        vector_img_name = corpus.vector_img_uri.split(":")[-1]
+
+        qdrant_response = client.search(
+            collection_name=vector_img_name,
+            query_vector=query_vector,
+            limit=similarity_top_k,
+            query_filter=qdrant_client.models.Filter(),
         )
 
-        storage_context = llama_index.core.StorageContext.from_defaults(
-            docstore=doc_store,
-            vector_store=vector_store,
-            persist_dir=vector_storage_path,
-        )
-
-        vector_index = llama_index.core.VectorStoreIndex.from_vector_store(
-            vector_store=vector_store,
-            embed_model=model_klass,
-            storage_context=storage_context,
-        )
-    elif vector_store_name == "postgres":
-        vector_store = llama_index.vector_stores.postgres.PGVectorStore(
-        )
-    elif vector_store_name == "qdrant":
-        client = qdrant_client.QdrantClient(url=os.environ.get("QDRANT_URL"))
-
-        logger.info(
-            f"{context.rid_get()} corpus '{corpus.name}' model '{corpus.model_name}' load - text '{corpus.vector_txt_uri}' image '{corpus.vector_img_uri}'"
-        )
-
-        if corpus.vector_txt_uri:
-            vector_txt_name = corpus.vector_txt_uri.split(":")[-1]
-
-            text_store = llama_index.vector_stores.qdrant.QdrantVectorStore(
-                client=client,
-                collection_name=vector_txt_name,
-            )
-        else:
-            text_store = None # invalid case?
-
-        if corpus.vector_img_uri:
-            vector_img_name = corpus.vector_img_uri.split(":")[-1]
-            image_store = llama_index.vector_stores.qdrant.QdrantVectorStore(
-                client=client,
-                collection_name=vector_img_name,
-            )
-        else:
-            image_store = None
-
-        storage_context = llama_index.core.StorageContext.from_defaults(
-            vector_store=text_store,
-            image_store=image_store,
-        )
-
-        if image_store and text_store:
-            # multi modal index always requires a valid text store
-            vector_index = llama_index.core.indices.MultiModalVectorStoreIndex.from_vector_store(
-                embed_model=model_klass,
-                image_store=image_store,
-                vector_store=text_store,
-                # storage_context=storage_context, # using this generates 'got multiple values for keyword argument 'storage_context''
-            )
-        elif image_store:
-            # use vector store here for now 
-            vector_index = llama_index.core.VectorStoreIndex.from_vector_store(
-                embed_model=model_klass,
-                image_store=image_store,
-                storage_context=storage_context,
-                vector_store=image_store,
-            )
-        else:
-            vector_index = llama_index.core.VectorStoreIndex.from_vector_store(
-                embed_model=model_klass,
-                storage_context=storage_context,
-                vector_store=text_store,
-            )
-
-    return vector_index
-
+        return qdrant_response
+    
