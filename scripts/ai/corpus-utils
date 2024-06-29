@@ -8,6 +8,7 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import click
 import llama_cpp
+import polars
 
 import dot_init
 
@@ -18,6 +19,7 @@ import services.corpus.llm
 import services.corpus.models
 import services.corpus.vector
 import services.database
+import services.images
 import services.qdrant
 
 @click.group()
@@ -38,6 +40,44 @@ def delete(ctx, name: str) -> list[str]:
         delete_code = services.corpus.delete_by_name(db_session=db_session, name=name)
 
     _print_status(f"corpus delete '{name}' - result {delete_code}")
+
+
+@click.command()
+@click.option('--source-uri', default=None, required=True, help="image caption directory")
+@click.pass_context
+def image_caption(ctx, source_uri: str) -> dict:
+    """
+    caption images in source directory
+    """
+    local_files = services.corpus.fs.files_path_list(source_uri=source_uri, filter="")
+    local_files = [file for file in local_files if file.endswith("index.csv")]
+
+    if not local_files:
+        raise ValueError("source directory does not have an index file")
+
+    _print_status(f"caption images '{local_files}'")
+
+    for file_path in local_files:
+        index_df = polars.read_csv(file_path)
+        changes = 0
+
+        for index, row in enumerate(index_df.iter_rows(named=True)):
+            if row.get("caption"):
+                continue
+
+            image_uri = row.get("uri")
+
+            _print_status(f"caption image '{image_uri}")
+
+            caption_result = services.images.caption(uri=image_uri)
+            index_df[index, "caption"] = caption_result.text
+
+            changes += 1
+
+        if changes:
+            index_df.write_csv(file_path)
+
+        _print_ok(f"caption images '{file_path} changes {changes} ok")
 
 
 @click.command()
@@ -318,6 +358,7 @@ def _print_nodes(nodes):
     )
 
 cli.add_command(delete)
+cli.add_command(image_caption)
 cli.add_command(ingest)
 cli.add_command(ingest_bm)
 cli.add_command(list)

@@ -29,22 +29,20 @@ app = fastapi.APIRouter(
 
 app_version = os.environ["APP_VERSION"]
 
-@app.get("/rag")
-def rag_home():
-    return fastapi.responses.RedirectResponse("/rag/query")
 
-
-@app.get("/rag/query", response_class=fastapi.responses.HTMLResponse)
-def rag_query(
+@app.get("/corpus/{corpus_id}/query", response_class=fastapi.responses.HTMLResponse)
+def corpus_query(
     request: fastapi.Request,
-    corpus_name: str = "",  # full corpus name
+    corpus_id: int,
     mode: str = "retrieve",
     query: str = "",
     limit: int = 10,
     db_session: sqlmodel.Session = fastapi.Depends(main_shared.get_db),
 ):
-    list_result = services.corpus.list(db_session=db_session, query="", offset=0, limit=10)
-    corpus_list = [object.name for object in list_result.objects]
+    corpus = services.corpus.get_by_id(db_session=db_session, id=corpus_id)
+
+    list_result = services.corpus.list(db_session=db_session, query=f"id:{corpus.id}", offset=0, limit=10)
+    corpus_list = list_result.objects
 
     modes = [
         "infer",
@@ -56,12 +54,10 @@ def rag_query(
     query_ok = ""
     query_error = ""
 
-    if corpus_name and query:
-        corpus = services.corpus.get_by_name(db_session=db_session, name=corpus_name)
+    try:
+        if query:
+            logger.info(f"{context.rid_get()} corpus '{corpus.name}' model '{corpus.model_name}' {mode} query '{query}'")
 
-        logger.info(f"{context.rid_get()} corpus '{corpus.name}' model '{corpus.model_name}' {mode} query '{query}'")
-
-        try:
             if mode in ["infer"]:
                 search_result = services.corpus.vector.search(
                     corpus=corpus,
@@ -107,9 +103,9 @@ def rag_query(
 
                     # todo
                     # services.corpus.text_ratios(texts=[node.text for node in nodes])
-        except Exception as e:
-            query_error = f"exception: {e}"
-            logger.error(f"{context.rid_get()} corpus '{corpus}' retrieve exception '{e}' - '{traceback.format_exc()}'")
+    except Exception as e:
+        query_error = f"exception: {e}"
+        logger.error(f"{context.rid_get()} corpus '{corpus}' query exception '{e}' - '{traceback.format_exc()}'")
 
     else:
         logger.info(f"{context.rid_get()} corpus retrieve index")
@@ -119,9 +115,9 @@ def rag_query(
             request,
             "rag/query.html",
             {
-                "app_name": "Rag",
+                "app_name": "Corpus Query",
                 "app_version": app_version,
-                "corpus_name": corpus_name,
+                "corpus": corpus,
                 "corpus_list": corpus_list,
                 "mode": mode,
                 "modes": modes,
@@ -133,7 +129,8 @@ def rag_query(
                 "query_response": query_response,
             }
         )
-
-        return response
     except Exception as e:
         logger.error(f"{context.rid_get()} rag retrieve render exception '{e}' - '{traceback.format_exc()}'")
+
+
+    return response

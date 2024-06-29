@@ -85,7 +85,7 @@ async def admin_corpus_ingest(
         logger.error(f"{context.rid_get()} admin corpus ingest exception '{e}'")
         return fastapi.responses.RedirectResponse(request.headers.get("referer"))
 
-    return fastapi.responses.RedirectResponse(f"/admin/corpus?query={corpus.name}")
+    return fastapi.responses.RedirectResponse(f"/admin/corpus?id={corpus.id}")
 
 
 @app.get("/admin/corpus", response_class=fastapi.responses.HTMLResponse)
@@ -100,12 +100,15 @@ def admin_corpus_list(
     """
     if "HX-Request" in request.headers:
         htmx_request = 1
+        html_template = "admin/corpus/list_table.html"
     else:
         htmx_request = 0
+        html_template = "admin/corpus/list.html"
 
     logger.info(f"{context.rid_get()} admin corpus query '{query}'")
 
     try:
+        # get corpus list
         list_result = services.corpus.list(
             db_session=db_session,
             query=query,
@@ -113,23 +116,42 @@ def admin_corpus_list(
             limit=limit,
         )
         corpus_list = list_result.objects
+
+        # get directories not mapped to a corpus
+        dirs_result = services.corpus.fs.dirs(
+            db_session=db_session,
+            local_dir=os.environ.get("APP_FS_ROOT"),
+            dir_type="leaf",
+            query=query,
+            offset=offset,
+            limit=limit,
+        )
+        dirs_map = dirs_result.dirs_map
+
+        if not query:
+            # add unmapped dirs iff no query specified
+            for local_uri in sorted(dirs_map.keys()):
+                corpus = models.Corpus(
+                    epoch=0,
+                    id=0,
+                    name=local_uri,
+                    state=models.corpus.STATE_NEW,
+                    source_uri=local_uri,
+                )
+                corpus_list.append(corpus)
+
         query_code = 0
-        query_result = f"query '{query}' returned {list_result.total} results"
+        query_result = f"query '{query}' returned {len(corpus_list)} results"
     except Exception as e:
         corpus_list = []
         query_code = 400
         query_result = f"exception {e}"
         logger.error(f"{context.rid_get()} admin corpus query exception '{e}'")
 
-    if htmx_request == 1:
-        template = "admin/corpus/list_table.html"
-    else:
-        template = "admin/corpus/list.html"
-
     try:
         response = templates.TemplateResponse(
             request,
-            template,
+            html_template,
             {
                 "app_name": "Corpus",
                 "app_version": app_version,
@@ -144,32 +166,10 @@ def admin_corpus_list(
         logger.error(f"{context.rid_get()} admin corpus list render exception '{e}'")
         return templates.TemplateResponse(request, "500.html", {})
 
+    logger.info(f"{context.rid_get()} admin corpus query '{query}' ok")
+
     if htmx_request == 1:
         response.headers["HX-Push-Url"] = f"{request.get('path')}?query={query}"
-
-    return response
-
-
-@app.get("/admin/corpus/{corpus_id}", response_class=fastapi.responses.HTMLResponse)
-def admin_corpus_show(request: fastapi.Request, corpus_id: int, db_session: sqlmodel.Session = fastapi.Depends(main_shared.get_db)):
-    """
-    """
-    logger.info(f"{context.rid_get()} admin corpus show {corpus_id}")
-
-    try:
-        corpus = services.corpus.get_by_id(db_session=db_session, id=corpus_id)
-    except Exception as e:
-        logger.error(f"{context.rid_get()} admin corpus show exception '{e}'")
-
-    response = templates.TemplateResponse(
-        request,
-        "admin/corpus/show.html",
-        {
-            "app_name": "Corpus",
-            "app_version": app_version,
-            "corpus": corpus,
-        }
-    )
 
     return response
 
@@ -204,7 +204,7 @@ def admin_corpus_files(
             request,
             "admin/corpus/files.html",
             {
-                "app_name": "Corpus",
+                "app_name": "Corpus Files",
                 "app_version": app_version,
                 "corpus": corpus,
                 "files_list": files_list,

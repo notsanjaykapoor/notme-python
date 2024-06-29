@@ -39,7 +39,11 @@ def list(db_session: sqlmodel.Session, query: str = "", offset: int = 0, limit: 
     for token in struct_tokens.tokens:
         value = token["value"]
 
-        if token["field"].startswith("name"):
+        if token["field"] in ["id", "ids"]:
+            # match query
+            ids = [int(id.strip()) for id in value.split(",")]
+            dataset = dataset.where(model.id.in_(ids))
+        elif token["field"].startswith("name"):
             # like query
             value_normal = re.sub(r"~", "", value)
             dataset = dataset.where(model.name.like("%" + value_normal + "%"))

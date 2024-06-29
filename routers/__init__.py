@@ -1,6 +1,5 @@
 from .admin import app
 from .admin_corpus import app
-from .admin_fs import app
 from .admin_workq import app
 from .health import app
 from .me import app

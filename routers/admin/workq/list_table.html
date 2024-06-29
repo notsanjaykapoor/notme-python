@@ -1,4 +1,4 @@
-<div class="col-start-2 col-span-10 mt-0 mx-3">
+<div class="col-start-2 col-span-10 mt-0 mx-0">
   {% if query_code == 0 %}
     <p class="text-xs italic font-bold text-black-700 py-2">{{query_result}}</p>
   {% else %}
@@ -9,20 +9,20 @@
 <table class="col-start-2 col-span-10">
   <thead class="font-normal text-left text-xs leading-6 text-zinc-800">
     <tr>
-      <th class="p-4 pr-6">name</th>
+      <th class="p-4 pr-6 pl-0">name</th>
       <th class="p-4 pr-6">partition</th>
       <th class="p-4 pr-6">msg</th>
       <th class="p-4 pr-6">state</th>
       <th class="p-4 pr-6">time</th>
       <th class="p-4 pr-6">timestamp</th>
       <th class="p-4 pr-6">meta</th>
-      <th class="p-4 pr-6">id</th>
+      <th class="p-4 pr-0">id</th>
     </tr>
   </thead>
   <tbody>
     {% for work_object in work_objects %}
       <tr class="group hover:bg-zinc-50 odd:bg-white even:bg-slate-50 text-xs">
-        <td class="p-4 pr-6 font-normal">{{work_object.name}}</td>
+        <td class="p-4 pr-6 pl-0 font-normal">{{work_object.name}}</td>
         <td class="p-4 pr-6 font-normal">{{work_object.partition}}</td>
         <td class="p-4 pr-6 font-normal">{{work_object.msg}}</td>
         <td class="p-4 pr-6 font-normal">
@@ -41,7 +41,7 @@
         <td class="p-4 pr-6 font-normal">{{ work_object.work_time }}</td>
         <td class="p-4 pr-6 font-normal">{{ work_object.work_timestamp(tz="US/Central") }}</td>
         <td class="p-4 pr-6 font-normal">{{ work_object.meta_str }}</td>
-        <td class="p-4 pr-6 font-normal">{{ work_object.id }}</td>
+        <td class="p-4 pr-0 font-normal">{{ work_object.id }}</td>
       </tr>
       {% endfor %}
   </tbody>

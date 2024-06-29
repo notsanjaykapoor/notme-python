@@ -13,6 +13,7 @@ SPLITTER_NAME_DEFAULT: str = "chunk:1024:40"
 STATE_DIRTY: str = "dirty"
 STATE_DRAFT: str = "draft"
 STATE_INGESTED: str = "ingested"
+STATE_NEW: str = "new"
 STATE_PROCESSING: str = "processing"
 STATE_QUEUED: str = "queued"
 
@@ -75,20 +76,15 @@ class Corpus(sqlmodel.SQLModel, table=True):
         return source_path, source_files
 
     @property
-    def source_types(self) -> list[str]:
-        types = []
+    def source_type(self) -> str:
 
         if self.vector_img_uri:
-            types.append("img")
+            return "multi"
 
         if self.vector_txt_uri:
-            types.append("txt")
+            return "text"
 
-        return types
-
-    @property
-    def source_types_str(self) -> str:
-        return ", ".join(self.source_types)
+        return ""
 
     @property
     def storage_keyword(self) -> dict:

@@ -7,6 +7,7 @@ import re
 class Struct:
     files_total: int
     reader_dir: list[str]
+    reader_idx: list[str]
     reader_img: list[str]
     reader_pdf: list[str]
 
@@ -48,6 +49,7 @@ def files_partition(files: list[str]) -> Struct:
     struct = Struct(
         files_total=0,
         reader_dir=[],
+        reader_idx=[],
         reader_img=[],
         reader_pdf=[],
     )
@@ -63,10 +65,14 @@ def files_partition(files: list[str]) -> Struct:
         if file_type in ["pdf"]:
             struct.reader_pdf.append(file)
         elif file_type in ["csv", "docx", "epub", "hwp", "ipynb", "jpeg", "jpg", "mbox", "md", "mp3", "mp4", "png", "ppt", "pptm", "pptx", "txt"]:
-            if file_type in ["jpeg", "jpg", "png"]:
-                struct.reader_img.append(file)
+            # check if file is an index file - a file that contains an index pointing to other txt or img files
+            if file_type in ["csv"] and "index.csv" in file:
+                struct.reader_idx.append(file)
             else:
-                struct.reader_dir.append(file)
+                if file_type in ["jpeg", "jpg", "png"]:
+                    struct.reader_img.append(file)
+                else:
+                    struct.reader_dir.append(file)
         else:
             raise ValueError(f"unsupported file {file}")
 
