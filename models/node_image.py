@@ -9,9 +9,13 @@ class NodeImage:
     uri: str
     score: float = 0.0
 
+
     @property
-    def id_(self) -> str:
-        return self.id
+    def image_thumb_uri(self, transform="tr:w-225,h-150") -> str:
+        img_tokens = self.uri.split("/")
+        img_prefix = "/".join(img_tokens[0:-1])
+        return f"{img_prefix}/{transform}/{img_tokens[-1]}"
+
 
     @property
     def meta(self) -> dict:
@@ -21,7 +25,8 @@ class NodeImage:
             "node_type": "img",
             "uri": self.uri,
         }
-    
+
+
     def text_index(self) -> str:
         """
         node's text that should be indexed

@@ -74,16 +74,37 @@
 
 <div class="container grid grid-cols-12" id="rag-query-retrieve">
   {% if mode in ["retrieve"] %}
-  <div class="col-start-2 col-span-10 mt-0">
-    {% for node in query_nodes %}
-      <p class="text-xs italic font-bold text-blue-700 pt-5 pb-1">
-        {{node.text}}
-      </p>
-      <p class="font-semibold text-amber-500 mt-0 pt-0 pb-3 text-xs">
-        result {{ loop.index }} : score {{ node.score or 'n/a' }} : name '{{node.name or node.file_name}}' : caption '{{ node.caption }}' : uri '{{ node.uri }}'
-      </span>
-  {% endfor %}
-  </div>
+    {% if corpus.source_type == "multi" %}
+      {% for node in query_nodes %}
+        <div class="col-start-2 col-span-2 mt-0">
+          <p class="text-xs italic font-bold text-blue-700 pt-5 pb-1">
+            <a href="{{ node.uri }}" target="_blank">
+              <img src="{{ node.image_thumb_uri }}" alt="{{ node.name }}">
+            </a>
+          </p>
+        </div>
+        <div class="col-start-4 col-span-8 ml-10 mt-0">
+          <p class="font-semibold text-amber-500 mt-5 text-xs">
+            result {{ loop.index }} : score {{ node.score or 'n/a' }} : name '{{node.name}}' : caption '{{ node.caption }}' : uri '{{ node.uri }}'
+          </p>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="col-start-2 col-span-10 mt-0">
+        {% for node in query_nodes %}
+          <p class="text-xs italic font-bold text-blue-700 pt-5 pb-1">
+            {% if node.text %}
+              {{node.text}}
+            {% else %}
+              <img src="{{ node.image_thumb_uri }}" alt="{{ node.name }}">
+            {% endif %}
+          </p>
+          <p class="font-semibold text-amber-500 mt-0 pt-0 pb-3 text-xs">
+            result {{ loop.index }} : score {{ node.score or 'n/a' }} : name '{{node.file_name}}'
+          </p>
+      {% endfor %}
+      </div>
+    {% endif %}
   {% endif %}
 </div>
 
