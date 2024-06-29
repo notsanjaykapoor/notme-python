@@ -29,8 +29,6 @@ def ingest_qdrant_multi(corpus: models.Corpus, nodes: list[models.NodeImage], em
 
     logger.info(f"corpus {corpus.id} ingest '{corpus.name}' epoch {corpus.epoch} clip model embed")
 
-    # clip_model = embetter.multi.ClipEncoder()
-
     for chunked_nodes in more_itertools.chunked(nodes, DOC_BATCH_SIZE_DEFAULT):
         # truncate text to 77 characters for clip
         img_list = [services.images.download(uri=node.uri, dir=os.environ.get("APP_DOWNLOAD_PATH")) for node in chunked_nodes]

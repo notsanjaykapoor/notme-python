@@ -6,8 +6,6 @@ import qdrant_client
 import qdrant_client.http.models
 import qdrant_client.models
 
-import embetter.multi
-
 import context
 import log
 import models
@@ -88,7 +86,6 @@ def _qdrant_query_text(corpus: models.Corpus, query: str, similarity_top_k: int)
     embed_model = services.corpus.models.resolve(model=corpus.model_name, device=torch_device)
     # query_vector = embed_model.get_agg_embedding_from_queries([query])
     query_vector = embed_model.get_text_embedding(query)
-    # query_vector = embetter.multi.ClipEncoder().transform(query)
 
     vector_store_name = os.environ.get("VECTOR_STORE")
 
