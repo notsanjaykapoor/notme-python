@@ -76,23 +76,35 @@
   {% if mode in ["retrieve"] %}
     {% if corpus.source_type == "multi" %}
       {% for node in query_nodes %}
-        <div class="col-start-2 col-span-2 mt-0">
-          <p class="text-xs italic font-bold text-blue-700 pt-5 pb-1">
+        <div class="col-start-2 col-span-2 pt-1">
+          <p class="pb-5">
             <a href="{{ node.uri }}" target="_blank">
               <img src="{{ node.image_thumb_uri }}" alt="{{ node.name }}">
             </a>
           </p>
         </div>
-        <div class="col-start-4 col-span-8 ml-10 mt-0">
-          <p class="font-semibold text-amber-500 mt-5 text-xs">
-            result {{ loop.index }} : score {{ node.score or 'n/a' }} : name '{{node.name}}' : caption '{{ node.caption }}' : uri '{{ node.uri }}'
+        <div class="col-start-4 col-span-8 ml-10 pt-3">
+          <p class="font-semibold text-blue-700 text-xs">
+            result : {{ loop.index }}
+          </p>
+          <p class="font-semibold text-blue-700 text-xs pt-1">
+            score : {{ node.score or 'n/a' }}
+          </p>
+          <p class="font-semibold text-blue-700 text-xs pt-1">
+            name : {{node.name}}
+          </p>
+          <p class="font-semibold text-blue-700 text-xs pt-1">
+            caption : {{ node.caption }}
+          </p>
+          <p class="font-semibold text-blue-700 text-xs pt-1">
+            uri : {{ node.uri }}
           </p>
         </div>
       {% endfor %}
     {% else %}
       <div class="col-start-2 col-span-10 mt-0">
         {% for node in query_nodes %}
-          <p class="text-xs italic font-bold text-blue-700 pt-5 pb-1">
+          <p class="text-xs italic font-bold text-blue-700 pt-1 pb-1">
             {% if node.text %}
               {{node.text}}
             {% else %}
