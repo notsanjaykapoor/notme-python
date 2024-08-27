@@ -1,0 +1,85 @@
+#!/usr/bin/env python
+
+import os
+import subprocess
+import sys
+
+sys.path.append(".")
+
+import click
+import sqlmodel
+
+import dot_init
+
+import models # noqa: F401, required for migrations
+
+
+@click.group()
+def cli():
+    pass
+
+
+@click.command()
+@click.option("--name", required=True, help="migration name")
+@click.pass_context
+def create(ctx, name: str) -> dict:
+    """
+    Create migration using alemic autogenerate
+    """
+    cmd = f"alembic revision --autogenerate -m \"{name}\""
+
+    _print_status(cmd)
+
+    result = subprocess.run(cmd, shell=True)
+
+    if result.returncode != 0:
+        _print_error(f"{cmd} error {result.returncode}")
+        exit(result.returncode)
+        
+    _print_ok(f"{cmd} ok")
+
+
+@click.command()
+@click.option("--revision", required=False, default="head", help="migration revision")
+@click.pass_context
+def up(ctx, revision: str) -> dict:
+    """
+    Run migration(s), use 'revision' if specified, othwerwise run all pending
+    """
+    db_uri = os.environ.get("DATABASE_URL")
+    psql_cmd = f"psql -d {db_uri} -c 'select version_num from public.alembic_version'"
+
+    alembic_cmd = f"alembic upgrade {revision}"
+
+    _print_status(alembic_cmd)
+
+    subprocess.run(psql_cmd, shell=True)
+
+    alembic_result = subprocess.run(alembic_cmd, shell=True)
+
+    if alembic_result.returncode != 0:
+        _print_error(f"{alembic_cmd} error {alembic_result.returncode}")
+        exit(alembic_result.returncode)
+    
+    subprocess.run(psql_cmd, shell=True)
+
+    _print_ok(f"{alembic_cmd} ok")
+
+
+def _print_error(s: str):
+    print("\x1b[1;31m" + s + "\x1b[0m")
+
+
+def _print_ok(s: str):
+    print("\x1b[1;32m" + s + "\x1b[0m")
+
+
+def _print_status(s: str):
+    print("\x1b[1;33m" + s + "\x1b[0m")
+
+
+cli.add_command(create)
+cli.add_command(up)
+
+if __name__ == "__main__":
+    cli()

@@ -45,8 +45,8 @@ def corpus_query(
     corpus_list = list_result.objects
 
     modes = [
-        "infer",
         "retrieve",
+        "answer",
     ]
 
     query_nodes = []
@@ -58,7 +58,7 @@ def corpus_query(
         if query:
             logger.info(f"{context.rid_get()} corpus '{corpus.name}' model '{corpus.model_name}' {mode} query '{query}'")
 
-            if mode in ["infer"]:
+            if mode in ["answer"]:
                 search_result = services.corpus.vector.search(
                     corpus=corpus,
                     query=query,
@@ -110,27 +110,34 @@ def corpus_query(
     else:
         logger.info(f"{context.rid_get()} corpus retrieve index")
 
+    if "HX-Request" in request.headers:
+        html_template = "rag/query_fragment.html"
+    else:
+        html_template = "rag/query.html"
+
     try:
         response = templates.TemplateResponse(
             request,
-            "rag/query.html",
+            html_template,
             {
-                "app_name": "Corpus Query",
+                "app_name": "Corpus Rag",
                 "app_version": app_version,
                 "corpus": corpus,
                 "corpus_list": corpus_list,
                 "mode": mode,
                 "modes": modes,
-                "prompt_text": "ask a question",
                 "query": query,
                 "query_error": query_error,
                 "query_ok": query_ok,
                 "query_nodes": query_nodes,
+                "query_prompt": "ask a question",
                 "query_response": query_response,
             }
         )
     except Exception as e:
         logger.error(f"{context.rid_get()} rag retrieve render exception '{e}' - '{traceback.format_exc()}'")
 
+    if "HX-Request" in request.headers:
+        response.headers["HX-Push-Url"] = f"{request.get('path')}?mode={mode}&query={query}"
 
     return response

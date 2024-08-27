@@ -3,6 +3,7 @@ import os
 import llama_index.embeddings
 import more_itertools
 import qdrant_client
+import qdrant_client.models
 
 import log
 import models

@@ -42,7 +42,7 @@ def index():
             else:
                 client.collections[collection_name].documents.create(user.typesense_document)
 
-            user.exported_at = datetime.datetime.utcnow()
+            user.exported_at = datetime.datetime.now(datetime.UTC)
             db.add(user)
             db.commit()
 

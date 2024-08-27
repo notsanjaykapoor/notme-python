@@ -1,48 +1,48 @@
 <div class="col-start-2 col-span-10 mt-0 mx-0">
-  {% if query_code == 0 %}
-    <p class="text-xs italic font-bold text-black-700 py-2">{{query_result}}</p>
-  {% else %}
-    <p class="text-xs italic font-bold text-red-700 py-2">{{query_result}}</p>
-  {% endif %}
+    {% if query_code == 0 %}
+        <p class="text-xs italic font-bold text-black-700 py-2">{{query_result}}</p>
+    {% else %}
+        <p class="text-xs italic font-bold text-red-700 py-2">{{query_result}}</p>
+    {% endif %}
 </div>
 
 <table class="col-start-2 col-span-10">
-  <thead class="font-normal text-left text-xs leading-6 text-zinc-800">
-    <tr>
-      <th class="p-4 pr-6 pl-0">name</th>
-      <th class="p-4 pr-6">partition</th>
-      <th class="p-4 pr-6">msg</th>
-      <th class="p-4 pr-6">state</th>
-      <th class="p-4 pr-6">time</th>
-      <th class="p-4 pr-6">timestamp</th>
-      <th class="p-4 pr-6">meta</th>
-      <th class="p-4 pr-0">id</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for work_object in work_objects %}
-      <tr class="group hover:bg-zinc-50 odd:bg-white even:bg-slate-50 text-xs">
-        <td class="p-4 pr-6 pl-0 font-normal">{{work_object.name}}</td>
-        <td class="p-4 pr-6 font-normal">{{work_object.partition}}</td>
-        <td class="p-4 pr-6 font-normal">{{work_object.msg}}</td>
-        <td class="p-4 pr-6 font-normal">
-          {% if work_object.state == "error" %}
-            <span class="cursor-help font-bold text-red-800" title="error message todo">
-              {{work_object.state}}
-            </span>
-          {% elif work_object.state == "completed" %}
-            <span class="font-bold text-blue-700">
-              {{work_object.state}}
-            </span>
-          {% else %}
-            {{work_object.state}}
-          {% endif %}
-        </td>
-        <td class="p-4 pr-6 font-normal">{{ work_object.work_time }}</td>
-        <td class="p-4 pr-6 font-normal">{{ work_object.work_timestamp(tz="US/Central") }}</td>
-        <td class="p-4 pr-6 font-normal">{{ work_object.meta_str }}</td>
-        <td class="p-4 pr-0 font-normal">{{ work_object.id }}</td>
-      </tr>
-      {% endfor %}
-  </tbody>
+    <thead class="font-normal text-left text-xs leading-6 text-zinc-800">
+        <tr>
+        <th class="p-4 pr-6 pl-0">name</th>
+        <th class="p-4 pr-6">partition</th>
+        <th class="p-4 pr-6">msg</th>
+        <th class="p-4 pr-6">state</th>
+        <th class="p-4 pr-6">time</th>
+        <th class="p-4 pr-6">timestamp</th>
+        <th class="p-4 pr-6">meta</th>
+        <th class="p-4 pr-0">id</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for work_object in work_objects %}
+        <tr class="group hover:bg-zinc-50 odd:bg-white even:bg-slate-50 text-xs">
+            <td class="p-4 pr-6 pl-0 font-normal">{{work_object.name}}</td>
+            <td class="p-4 pr-6 font-normal">{{work_object.partition}}</td>
+            <td class="p-4 pr-6 font-normal">{{work_object.msg}}</td>
+            <td class="p-4 pr-6 font-normal">
+            {% if work_object.state == "error" %}
+                <span class="cursor-help font-bold text-red-800" title="error message todo">
+                {{work_object.state}}
+                </span>
+            {% elif work_object.state == "completed" %}
+                <span class="font-bold text-blue-700">
+                {{work_object.state}}
+                </span>
+            {% else %}
+                {{work_object.state}}
+            {% endif %}
+            </td>
+            <td class="p-4 pr-6 font-normal">{{ work_object.work_time }}</td>
+            <td class="p-4 pr-6 font-normal">{{ work_object.work_timestamp(tz="US/Central") }}</td>
+            <td class="p-4 pr-6 font-normal">{{ work_object.meta_str }}</td>
+            <td class="p-4 pr-0 font-normal">{{ work_object.id }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
 </table>

@@ -22,9 +22,7 @@ class StructNodes:
     errors: list[str]
 
 
-
 logger = log.init("api")
-
 
 
 def search(corpus: models.Corpus, query: str, limit: int) -> StructNodes:

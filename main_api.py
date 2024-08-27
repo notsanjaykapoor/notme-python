@@ -5,8 +5,6 @@ import contextlib
 import fastapi
 import fastapi.middleware.cors
 import fastapi.templating
-import phoenix
-import phoenix.trace.langchain
 import sqlmodel
 import starlette.middleware.sessions
 import strawberry
@@ -36,11 +34,6 @@ async def lifespan(app: fastapi.FastAPI):
 
     # migrate database
     services.database.session.migrate()
-
-    if os.environ.get("OPENTELEMETRY_AI"):
-        # launch phoenix
-        session = phoenix.launch_app()
-        phoenix.trace.langchain.LangChainInstrumentor().instrument()
 
     logger.info("api.startup completed")
 

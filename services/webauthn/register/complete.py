@@ -91,7 +91,7 @@ class Complete:
             "name": f"{self._user_id}-{secrets.token_hex(2)}",
             "public_key": base64.b64encode(verification.credential_public_key),
             "sign_count": verification.sign_count,
-            "timestamp": datetime.datetime.utcnow(),
+            "timestamp": datetime.datetime.now(datetime.UTC),
             "user_id": self._user_id,
             "webauthn_id": base64.b64encode(verification.credential_id),
         }

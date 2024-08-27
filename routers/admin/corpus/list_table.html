@@ -1,70 +1,70 @@
 <div class="col-start-2 col-span-10 mt-0 mx-0">
-  {% if query_code == 0 %}
-    <p class="text-xs italic font-bold text-black-700 py-2">{{query_result}}</p>
-  {% else %}
-    <p class="text-xs italic font-bold text-red-700 py-2">{{query_result}}</p>
-  {% endif %}
+    {% if query_code == 0 %}
+        <p class="text-xs italic font-bold text-black-700 py-2">{{query_result}}</p>
+    {% else %}
+        <p class="text-xs italic font-bold text-red-700 py-2">{{query_result}}</p>
+    {% endif %}
 </div>
 
 <table class="col-start-2 col-span-10" id="corpus-table">
-  <thead class="font-normal text-left text-xs leading-6 text-zinc-800">
-    <tr>
-      <th class="p-4 pr-6 pl-0">name</th>
-      <th class="p-4 pr-6">files</th>
-      <th class="p-4 pr-6">docs</th>
-      <th class="p-4 pr-6">nodes</th>
-      <th class="p-4 pr-6">model</th>
-      <th class="p-4 pr-6">type</th>
-      <th class="p-4 pr-6">epoch</th>
-      <th class="p-4 pr-6">state</th>
-      <th class="p-4 pr-6">files</th>
-      <th class="p-4 pr-6">query</th>
-      <th class="p-4 pr-0">id</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for corpus in corpus_list %}
-      <tr class="group hover:bg-zinc-50 odd:bg-white even:bg-slate-50 text-xs">
-        <td class="p-4 pr-6 pl-0 font-normal">{{corpus.name}}</td>
-        <td class="p-4 pr-6 font-normal">{{corpus.files_count or 0}}</td>
-        <td class="p-4 pr-6 font-normal">{{corpus.docs_count or 0}}</td>
-        <td class="p-4 pr-6 font-norma">{{corpus.nodes_count or 0}}</td>
-        <td class="p-4 pr-6 font-norma">{{corpus.model_name or 'n/a'}}</td>
-        <td class="p-4 pr-6 font-norma">{{corpus.source_type or 'n/a'}}</td>
-        <td class="p-4 pr-6 font-normal">{{corpus.epoch}}</td>
-        <td class="p-4 pr-6 font-normal">
-          {% if corpus.ingestable != 0 %}
-            <span class="text-amber-600 font-bold">
-              {{ corpus.state }}
-            </span>
-          {% else %}
-            {{ corpus.state }}
-          {% endif %}
-        </td>
-        <td class="p-4 pr-6 font-normal">
-          {% if corpus.id == 0 %}
-            {% set corpus_files_href = ["/admin/corpus/", corpus.id, "/files?source_uri=", corpus.source_uri] | join("") %}
-          {% else %}
-            {% set corpus_files_href = ["/admin/corpus/", corpus.id, "/files"] | join("") %}
-          {% endif %}
+    <thead class="font-normal text-left text-xs leading-6 text-zinc-800">
+        <tr>
+        <th class="p-4 pr-6 pl-0">name</th>
+        <th class="p-4 pr-6">files</th>
+        <th class="p-4 pr-6">docs</th>
+        <th class="p-4 pr-6">nodes</th>
+        <th class="p-4 pr-6">model</th>
+        <th class="p-4 pr-6">type</th>
+        <th class="p-4 pr-6">epoch</th>
+        <th class="p-4 pr-6">state</th>
+        <th class="p-4 pr-6">files</th>
+        <th class="p-4 pr-6">query</th>
+        <th class="p-4 pr-0">id</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for corpus in corpus_list %}
+        <tr class="group hover:bg-zinc-50 odd:bg-white even:bg-slate-50 text-xs">
+            <td class="p-4 pr-6 pl-0 font-normal">{{corpus.name}}</td>
+            <td class="p-4 pr-6 font-normal">{{corpus.files_count or 0}}</td>
+            <td class="p-4 pr-6 font-normal">{{corpus.docs_count or 0}}</td>
+            <td class="p-4 pr-6 font-norma">{{corpus.nodes_count or 0}}</td>
+            <td class="p-4 pr-6 font-norma">{{corpus.model_name or 'n/a'}}</td>
+            <td class="p-4 pr-6 font-norma">{{corpus.source_type or 'n/a'}}</td>
+            <td class="p-4 pr-6 font-normal">{{corpus.epoch}}</td>
+            <td class="p-4 pr-6 font-normal">
+            {% if corpus.ingestable != 0 %}
+                <span class="text-amber-600 font-bold">
+                {{ corpus.state }}
+                </span>
+            {% else %}
+                {{ corpus.state }}
+            {% endif %}
+            </td>
+            <td class="p-4 pr-6 font-normal">
+            {% if corpus.id == 0 %}
+                {% set corpus_files_href = ["/admin/corpus/", corpus.id, "/files?source_uri=", corpus.source_uri] | join("") %}
+            {% else %}
+                {% set corpus_files_href = ["/admin/corpus/", corpus.id, "/files"] | join("") %}
+            {% endif %}
 
-          <a href="{{corpus_files_href}}" class="text-blue-700" title="show files">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-4">
-              <path d="M19.5 21a3 3 0 0 0 3-3v-4.5a3 3 0 0 0-3-3h-15a3 3 0 0 0-3 3V18a3 3 0 0 0 3 3h15ZM1.5 10.146V6a3 3 0 0 1 3-3h5.379a2.25 2.25 0 0 1 1.59.659l2.122 2.121c.14.141.331.22.53.22H19.5a3 3 0 0 1 3 3v1.146A4.483 4.483 0 0 0 19.5 9h-15a4.483 4.483 0 0 0-3 1.146Z" />
-            </svg>
-          </a>       
-        </td>
-        <td class="p-4 pr-6 font-normal">
-          {% if corpus.ingestable == 0 %}
-            <a href="/corpus/{{corpus.id}}/query" class="font-bold text-orange-600" title="query corpus">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-4">
-                <path fill-rule="evenodd" d="M5.337 21.718a6.707 6.707 0 0 1-.533-.074.75.75 0 0 1-.44-1.223 3.73 3.73 0 0 0 .814-1.686c.023-.115-.022-.317-.254-.543C3.274 16.587 2.25 14.41 2.25 12c0-5.03 4.428-9 9.75-9s9.75 3.97 9.75 9c0 5.03-4.428 9-9.75 9-.833 0-1.643-.097-2.417-.279a6.721 6.721 0 0 1-4.246.997Z" clip-rule="evenodd" />
-              </svg>
-            </a>
-          {% endif %}
-        </td>
-        <td class="p-4 pr-0 font-normal">{{corpus.id}}</td>
-      </tr>
-      {% endfor %}
-  </tbody>
+            <a href="{{corpus_files_href}}" class="text-blue-700" title="show files">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-4">
+                <path d="M19.5 21a3 3 0 0 0 3-3v-4.5a3 3 0 0 0-3-3h-15a3 3 0 0 0-3 3V18a3 3 0 0 0 3 3h15ZM1.5 10.146V6a3 3 0 0 1 3-3h5.379a2.25 2.25 0 0 1 1.59.659l2.122 2.121c.14.141.331.22.53.22H19.5a3 3 0 0 1 3 3v1.146A4.483 4.483 0 0 0 19.5 9h-15a4.483 4.483 0 0 0-3 1.146Z" />
+                </svg>
+            </a>       
+            </td>
+            <td class="p-4 pr-6 font-normal">
+            {% if corpus.ingestable == 0 %}
+                <a href="/corpus/{{corpus.id}}/query" class="font-bold text-orange-600" title="query corpus">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-4">
+                    <path fill-rule="evenodd" d="M5.337 21.718a6.707 6.707 0 0 1-.533-.074.75.75 0 0 1-.44-1.223 3.73 3.73 0 0 0 .814-1.686c.023-.115-.022-.317-.254-.543C3.274 16.587 2.25 14.41 2.25 12c0-5.03 4.428-9 9.75-9s9.75 3.97 9.75 9c0 5.03-4.428 9-9.75 9-.833 0-1.643-.097-2.417-.279a6.721 6.721 0 0 1-4.246.997Z" clip-rule="evenodd" />
+                </svg>
+                </a>
+            {% endif %}
+            </td>
+            <td class="p-4 pr-0 font-normal">{{corpus.id}}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
 </table>

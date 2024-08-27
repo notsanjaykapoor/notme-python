@@ -28,7 +28,7 @@ class Create:
 
         db_object = models.Event(
             name=self._object.get("name"),
-            timestamp=datetime.datetime.utcnow(),
+            timestamp=datetime.datetime.now(datetime.UTC),
             value=self._object.get("value"),
         )
 

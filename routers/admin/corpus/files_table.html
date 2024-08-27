@@ -1,43 +1,32 @@
 <table class="col-start-2 col-span-10">
-  <thead class="font-normal text-left text-xs leading-6 text-zinc-800">
-    <tr>
-      <th class="p-4 pr-6 pl-0">dir</th>
-      <th class="p-4 pr-6">name</th>
-      <th class="p-4 pr-6">size</th>
-      <th class="p-4 pr-6">state</th>
-      <th class="p-4 pr-0 float-right text-bold uppercase">
-        {% if not corpus or (corpus and corpus.ingestable == 0) %}
-          <a href="/admin/corpus/ingest?source_uri={{source_uri}}" class="font-bold text-amber-600" title="ingest all files">
+    <thead class="font-normal text-left text-xs leading-6 text-zinc-800">
+        <tr>
+        <th class="p-4 pr-6 pl-0">dir</th>
+        <th class="p-4 pr-6">name</th>
+        <th class="p-4 pr-6">size</th>
+        <th class="p-4 pr-0">state</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for file in files_list %}
+        <tr class="group hover:bg-zinc-50 odd:bg-white even:bg-slate-50 text-xs font-normal">
+            <td class="p-4 pr-6 pl-0">
+            {{files_map.get(file).get("local_dir")}}
+            </td>
+            <td class="p-4 pr-6">
+            {{file}}
+            </td>
+            <td class="p-4 pr-6">
+            {{files_map.get(file).get("file_size")}}
+            </td>
+            <td class="p-4 pr-0">
             {% if corpus %}
-              re-ingest
+                {{ corpus.state }}
             {% else %}
-              ingest
+                new
             {% endif %}
-          </a>
-        {% endif %}
-      </th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for file in files_list %}
-      <tr class="group hover:bg-zinc-50 odd:bg-white even:bg-slate-50 text-xs">
-        <td class="p-4 pr-6 pl-0 font-normal">
-          {{files_map.get(file).get("local_dir")}}
-        </td>
-        <td class="p-4 pr-6 font-normal">
-          {{file}}
-        </td>
-        <td class="p-4 pr-6 font-normal">
-          {{files_map.get(file).get("file_size")}}
-        </td>
-        <td class="p-4 pr-6 font-normal" colspan="2">
-          {% if corpus %}
-            {{ corpus.state }}
-          {% else %}
-            new
-          {% endif %}
-        </td>
-    </tr>
-      {% endfor %}
-  </tbody>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
 </table>

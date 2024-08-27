@@ -1,0 +1,65 @@
+<div class="col-start-2 col-span-10 mt-0">
+    <p class="text-xs italic font-bold text-black-700 py-2" id="rag-query-processing" style="display: none">
+        processing ...
+    </p>
+</div>
+
+<div class="col-start-2 col-span-10 mt-0" id="rag-query-status">
+    {% if query_ok %}
+        <p class="text-xs italic font-bold text-black-700 py-2">{{query_ok}}</p>
+    {% endif %}
+    {% if query_error %}
+        <p class="text-xs italic font-bold text-red-700 py-2">{{query_error}}</p>
+    {% endif %}
+</div>
+
+{% if mode in ["infer"] %}
+    <div class="col-start-2 col-span-10 mt-0 rag-infer">
+        <p class="text-xs italic font-bold text-blue-700 py-5">
+        {{query_response}}
+        </p>
+    </div>
+{% endif %}
+
+{% if mode in ["retrieve"] %}
+    {% if corpus.source_type == "multi" %}
+        {% for node in query_nodes %}
+        <div class="col-start-2 col-span-2 pt-1 rag-node-image">
+            <p class="pb-5">
+            <a href="{{ node.uri }}" target="_blank">
+                <img src="{{ node.image_thumb_uri }}" alt="{{ node.name }}">
+            </a>
+            </p>
+        </div>
+        <div class="col-start-4 col-span-8 ml-10 pt-3 rag-node-description">
+            <p class="font-semibold text-blue-700 text-xs pt-1">
+            {{ loop.index }} : {{ node.score or 'n/a' }}
+            </p>
+            <p class="font-semibold text-blue-700 text-xs pt-1">
+            name : {{node.name}}
+            </p>
+            <p class="font-semibold text-blue-700 text-xs pt-1">
+            caption : {{ node.caption }}
+            </p>
+            <p class="font-semibold text-blue-700 text-xs pt-1">
+            uri : {{ node.uri }}
+            </p>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="col-start-2 col-span-10 mt-0 rag-node-text">
+        {% for node in query_nodes %}
+            <p class="text-xs italic font-bold text-blue-700 pt-1 pb-1">
+            {% if node.text %}
+                {{node.text}}
+            {% else %}
+                <img src="{{ node.image_thumb_uri }}" alt="{{ node.name }}">
+            {% endif %}
+            </p>
+            <p class="font-semibold text-amber-500 mt-0 pt-0 pb-3 text-xs">
+            {{ loop.index }} : score {{ node.score or 'n/a' }} : name '{{node.file_name}}'
+            </p>
+        {% endfor %}
+        </div>
+    {% endif %}
+{% endif %}
