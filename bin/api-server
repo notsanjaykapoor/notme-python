@@ -1,5 +1,0 @@
-#!/bin/sh
-
-echo "starting server on port $2"
-
-uvicorn main_api:app --port $2 --reload

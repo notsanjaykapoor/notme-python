@@ -1,3 +1,45 @@
+[project]
+name = "notme-python"
+version = "0.1.0"
+description = "genai"
+readme = "readme.md"
+requires-python = ">=3.12"
+dependencies = [
+    "asyncio>=3.4.3",
+    "coloredlogs>=15.0.1",
+    "confluent-kafka>=2.5.3",
+    "factory-boy>=3.3.1",
+    "fastapi>=0.115.0",
+    "geoalchemy2>=0.15.2",
+    "itsdangerous>=2.2.0",
+    "llama-cpp-python>=0.3.0",
+    "llama-index-embeddings-clip>=0.1.1",
+    "llama-index-embeddings-huggingface>=0.2.3",
+    "llama-index==0.10.27",
+    "more-itertools>=10.5.0",
+    "neo4j>=5.25.0",
+    "psycopg2-binary>=2.9.9",
+    "pydantic>=2.9.2",
+    "pytest-asyncio>=0.24.0",
+    "pytest-mock>=3.14.0",
+    "pytest>=8.3.3",
+    "python-dateutil>=2.9.0.post0",
+    "python-dotenv>=1.0.1",
+    "qdrant-client>=1.11.3",
+    "requests-oauthlib>=2.0.0",
+    "requests>=2.32.3",
+    "shapely>=2.0.6",
+    "sqlmodel>=0.0.22",
+    "strawberry-graphql>=0.243.1",
+    "toml>=0.10.2",
+    "torch>=2.4.1",
+    "typesense>=0.21.0",
+    "ulid-py>=1.1.0",
+    "uvicorn>=0.30.6",
+    "webauthn>=2.2.0",
+    "wget>=3.2",
+]
+
 [tool.ruff]
 # Enable Pyflakes `E` and `F` codes by default.
 select = ["E", "F"]

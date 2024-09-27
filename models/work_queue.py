@@ -22,14 +22,14 @@ class WorkQueue(sqlmodel.SQLModel, table=True):
     id: int | None = sqlmodel.Field(default=None, primary_key=True)
 
     completed_at: datetime.datetime = sqlmodel.Field(nullable=True)
-    created_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.utcnow, nullable=False)
+    created_at: datetime.datetime = sqlmodel.Field(default_factory=lambda: datetime.datetime.now(datetime.UTC), nullable=False)
     data: dict = sqlmodel.Field(default_factory=dict, sa_column=sqlmodel.Column(sqlmodel.JSON))
     msg: str = sqlmodel.Field(index=False, nullable=False, max_length=50)
     name: str = sqlmodel.Field(index=False, nullable=False, max_length=50)
     partition: int = sqlmodel.Field(index=False, nullable=False)
     processing_at: datetime.datetime = sqlmodel.Field(nullable=True)
     state: str = sqlmodel.Field(index=True, nullable=False, max_length=50)
-    updated_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.utcnow, nullable=False)
+    updated_at: datetime.datetime = sqlmodel.Field(default_factory=lambda: datetime.datetime.now(datetime.UTC), nullable=False)
 
     @property
     def meta_str(self) -> str:

@@ -27,7 +27,7 @@ class Corpus(sqlmodel.SQLModel, table=True):
     model_config = pydantic.ConfigDict(protected_namespaces=())
 
     id: typing.Optional[int] = sqlmodel.Field(default=None, primary_key=True)
-    created_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.utcnow, nullable=False)
+    created_at: datetime.datetime = sqlmodel.Field(default_factory=lambda: datetime.datetime.now(datetime.UTC), nullable=False)
     docs_count: int = sqlmodel.Field(index=True, nullable=False)
     model_dims: int = sqlmodel.Field(index=False, nullable=False)
     model_name: str = sqlmodel.Field(index=False, nullable=False)
@@ -41,7 +41,7 @@ class Corpus(sqlmodel.SQLModel, table=True):
     source_uri: str = sqlmodel.Field(index=True, nullable=False)
     splitter: str = sqlmodel.Field(index=False, nullable=True, default="")
     state: str = sqlmodel.Field(index=True, nullable=False)
-    updated_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.utcnow, nullable=False)
+    updated_at: datetime.datetime = sqlmodel.Field(default_factory=lambda: datetime.datetime.now(datetime.UTC), nullable=False)
     vector_img_uri: str = sqlmodel.Field(index=False, nullable=True, default="")
     vector_txt_uri: str = sqlmodel.Field(index=False, nullable=True, default="")
 

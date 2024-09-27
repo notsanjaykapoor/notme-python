@@ -29,7 +29,7 @@ class User(sqlmodel.SQLModel, table=True):
     mobile: str = sqlmodel.Field(index=True, nullable=True)
     state: str = sqlmodel.Field(index=True, nullable=False)
     updated_at: datetime.datetime = sqlmodel.Field(
-        default_factory=datetime.datetime.utcnow, nullable=False
+        default_factory=lambda: datetime.datetime.now(datetime.UTC), nullable=False
     )
     user_id: str = sqlmodel.Field(index=True, nullable=False)
 
