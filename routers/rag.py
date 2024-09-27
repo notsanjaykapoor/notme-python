@@ -84,7 +84,7 @@ def corpus_query(
 
                 t_end = time.time()
 
-                logger.info(f"{context.rid_get()} corpus '{corpus.name}' query response {llm_response}")
+                logger.info(f"{context.rid_get()} corpus '{corpus.name}' model '{corpus.model_name}' {mode} response {llm_response}")
 
                 query_ok = f"llm response in {round(t_end - t_start, 2)}s"
                 query_response = llm_response.get("choices")[0].get("text").strip()
@@ -101,14 +101,12 @@ def corpus_query(
                     query_nodes = search_result.nodes
                     query_ok = f"{len(query_nodes)} results in {round(search_result.msec, 0)}ms"
 
-                    # todo
-                    # services.corpus.text_ratios(texts=[node.text for node in nodes])
+                    logger.info(f"{context.rid_get()} corpus '{corpus.name}' model '{corpus.model_name}' {mode} response - {len(query_nodes)} results")
+        else:
+            logger.info(f"{context.rid_get()} corpus retrieve index")
     except Exception as e:
         query_error = f"exception: {e}"
         logger.error(f"{context.rid_get()} corpus '{corpus}' query exception '{e}' - '{traceback.format_exc()}'")
-
-    else:
-        logger.info(f"{context.rid_get()} corpus retrieve index")
 
     if "HX-Request" in request.headers:
         html_template = "rag/query_fragment.html"

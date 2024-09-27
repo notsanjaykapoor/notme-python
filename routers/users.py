@@ -7,7 +7,7 @@ import main_shared
 import models
 import services.users
 
-logger = log.init("api")
+logger = log.init("app")
 
 
 app = fastapi.APIRouter(

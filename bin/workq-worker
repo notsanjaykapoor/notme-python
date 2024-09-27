@@ -16,7 +16,7 @@ import services.database
 import services.work_queue
 
 
-logger = log.init("api")
+logger = log.init("app")
 
 shutdown: bool = False
 

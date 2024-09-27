@@ -21,12 +21,12 @@ pip install -r requirements.txt
 
 ### FastAPI Example
 
-[FastAPI](https://fastapi.tiangolo.com/) s a modern, fast (high-performance), web framework for building APIs with Python 3.8+ based on standard Python type hints.
+[FastAPI](https://fastapi.tiangolo.com/) is a modern, fast (high-performance), web framework for building APIs with Python 3.8+ based on standard Python type hints.
 
 Start server:
 
 ```
-./scripts/py-api -p 8001
+./bin/app-server -p 8001
 ```
 
 List users using curl (api server required):
@@ -54,7 +54,7 @@ The chat example implements a chat server using FastAPI and websockets. You need
 Start the server first:
 
 ```
-./scripts/ws-server
+./bin/ws-server
 ```
 
 Start 2 consoles in separate terminals with different user ids and send messages:
@@ -209,12 +209,12 @@ Then run the stream client:
 python proto/chess_client.py
 ```
 
-### Neo4j Example
+### Neo4j Example (disabled until bytewax code updated)
 
-Start container:
+Start cypher shell, used to run query commands and manage databases (enterprise version only):
 
 ```
-docker-compose -f docker-compose-neo4j.yml up -d
+cypher-shell --addres neo4j://localhost:7687 -u neo4j
 ```
 
 Show databases:
@@ -239,12 +239,6 @@ Use database:
 
 ```
 :use notme.dev;
-```
-
-Start cypher shell:
-
-```
-cypher-shell --addres neo4j://localhost:13687 -u neo4j
 ```
 
 Load graph data:

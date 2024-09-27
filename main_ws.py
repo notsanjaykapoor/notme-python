@@ -10,7 +10,7 @@ import models
 import services.ws  # noqa: E402
 import services.ws.chat  # noqa: E402
 
-logger = log.init("api")
+logger = log.init("app")
 
 socket_manager = models.SocketManager()
 

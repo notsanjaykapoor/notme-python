@@ -26,7 +26,7 @@ import services.users  # noqa: E402
 import services.webauthn.auth
 import services.webauthn.register
 
-logger = log.init("api")
+logger = log.init("app")
 
 @contextlib.asynccontextmanager
 async def lifespan(app: fastapi.FastAPI):
