@@ -120,6 +120,6 @@ def ingest(db_session: sqlmodel.Session, corpus_id: int) -> Struct:
 
     struct.corpus = corpus
 
-    logger.info(f"corpus {corpus.id} ingest '{corpus.name}' model '{corpus.model_name}' epoch {corpus.epoch} type '{corpus.source_type}' state '{corpus.state}'")
+    logger.info(f"corpus {corpus.id} ingest '{corpus.name}' model '{corpus.model_name}' epoch {corpus.epoch} state '{corpus.state}' type '{corpus.source_type}'")
 
     return struct

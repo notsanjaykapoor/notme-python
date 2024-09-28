@@ -108,21 +108,19 @@ def session_fixture():
 
 @pytest.fixture(name="neo_session")
 def neo_session_fixture():
-    driver = neo4j.GraphDatabase.driver(
+    with neo4j.GraphDatabase.driver(
         os.environ["NEO4J_HOST_URL"],
         auth=(os.environ["NEO4J_USER"], os.environ["NEO4J_PASSWORD"]),
-    )
+    ) as driver:
+        # todo: setup test database
+        with driver.session(database=os.environ["NEO4J_DB_TEST_NAME"]) as session:
+            yield session
 
-    # todo: setup test database
-    session = driver.session(database=os.environ["NEO4J_DB_TEST_NAME"])
+        if services.graph.status_up(neo=session) != 0:
+            return
 
-    yield session
-
-    if services.graph.status_up(neo=session) != 0:
-        return
-
-    # reset iff neo4j is up and running
-    services.boot.reset_graph(session)
+        # reset iff neo4j is up and running
+        services.boot.reset_graph(session)
 
 
 @pytest.fixture(name="typesense_session")

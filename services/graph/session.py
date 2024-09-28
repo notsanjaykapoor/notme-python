@@ -39,6 +39,4 @@ def _get_driver(uri: typing.Optional[str] = None) -> neo4j.Driver:
         uri_ = uri
         # raise ValueError("invalid uri")
 
-    driver = neo4j.GraphDatabase.driver(uri_, auth=(usr, pwd))
-
-    return driver
+    return neo4j.GraphDatabase.driver(uri_, auth=(usr, pwd))
