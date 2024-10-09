@@ -227,7 +227,7 @@ def list_vector(ctx, limit: int, query: str="") -> list:
 @click.command()
 @click.option('--name', default=None, required=True, help="corpus encoded name")
 @click.option('--query', default=None, required=True, help="question")
-@click.option('--mode', default=None, required=True, help="query mode - infer, retrieve")
+@click.option('--mode', default=None, required=True, help="query mode - query, rag")
 @click.pass_context
 def query(ctx, name: str, query: str, mode: str, limit: int=10) -> dict:
     """
@@ -235,7 +235,7 @@ def query(ctx, name: str, query: str, mode: str, limit: int=10) -> dict:
     """
     _print_status(f"corpus query '{name}' mode '{mode}' query '{query}'")
 
-    if mode not in ["infer", "retrieve"]:
+    if mode not in ["query", "rag"]:
         raise ValueError("mode invalid")
 
     with services.database.session.get() as db_session:
@@ -244,14 +244,14 @@ def query(ctx, name: str, query: str, mode: str, limit: int=10) -> dict:
         if not corpus:
             raise ValueError("corpus invalid")
 
-        if mode == "infer":
+        if mode == "rag":
             search_result = services.corpus.vector.search(corpus=corpus, query=query, limit=2)
 
             for node in search_result.nodes:
                 print(node) # xxx
 
             llm = llama_cpp.Llama(
-                model_path=os.environ.get("APP_LLM_PATH"),
+                model_path=os.environ.get("APP_LLM_TEXT_PATH"),
                 n_ctx=2048,
                 verbose=False,
             )
@@ -270,7 +270,7 @@ def query(ctx, name: str, query: str, mode: str, limit: int=10) -> dict:
             #     echo=True, # Echo the prompt back in the output
             # )
             response = llm(
-                services.corpus.llm.prompt(scope=scope, query=query),
+                services.corpus.llm.prompt_text(scope=scope, query=query),
                 max_tokens=None, # set to None to generate up to the end of the context window
                 stop=["Q:", "\n"], # stop generating just before the model would generate a new question
                 temperature=0.1,
@@ -281,7 +281,7 @@ def query(ctx, name: str, query: str, mode: str, limit: int=10) -> dict:
             _print_status(f"corpus query '{name}' inference in {t_end-t_start} seconds:")
             _print_status(f"{response}")
 
-        elif mode == "retrieve":
+        elif mode == "query":
             nodes_result = services.corpus.vector.search(corpus=corpus, query=query, limit=limit)
 
             print(f"nodes result, len {len(nodes_result.nodes)}:")

@@ -52,7 +52,6 @@ def ingest_qdrant_multi(corpus: models.Corpus, nodes: list[models.NodeImage], em
 
             point = qdrant_client.models.PointStruct(
                 id=node.id,
-                # payload=llama_index.core.vector_stores.utils.node_to_metadata_dict(doc, remove_text=False, flat_metadata=False),
                 payload=node.meta,
                 vector={
                     "img": img_vector,

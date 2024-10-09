@@ -17,6 +17,7 @@ class StructNodes:
     errors: list[str]
 
 
+# note: not used in current implementation
 def search(db_session: sqlmodel.Session, name_encoded: str, query: str, limit: int) -> StructNodes:
     """
     """

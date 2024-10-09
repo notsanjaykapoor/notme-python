@@ -7,7 +7,7 @@ import llama_index.embeddings.huggingface
 
 def resolve(model: str, device: str) -> llama_index.embeddings:
     """
-    resolve model name to llama embed model
+    resolve model name to llama_index embed model
     """
     if model.startswith("local:"):
         # local model
@@ -18,7 +18,7 @@ def resolve(model: str, device: str) -> llama_index.embeddings:
         if not os.path.exists(model_path):
             raise ValueError(f"model path not found '{model_path}'")
 
-        # use huggingface model from models directory
+        # use huggingface model from local models directory
         embed_model = llama_index.embeddings.huggingface.HuggingFaceEmbedding(
             device=device,
             model_name=model_path,

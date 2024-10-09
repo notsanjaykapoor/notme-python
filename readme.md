@@ -4,20 +4,37 @@ This repo is a collection of interesting python networking and database tools an
 
 ### Setup
 
-Install python 3.11.6.
-
-Create python virtual env:
+This repo uses [uv](https://docs.astral.sh/uv/) as its package manager:
 
 ```
-pyenv virtualenv 3.11.6 notme
-pyenv activate notme
+curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-Install python packages:
+Create a virtual environment using a specific python version:
 
 ```
-pip install -r requirements.txt
+uv venv --python <path/to/python>
 ```
+
+Install project dependencies:
+
+```
+uv sync
+```
+
+### RAG Example
+
+Ingest documents, tokenize them and store them in a Qdrant database.  Run a query, find matches in Qdrant database, and then use these matches as context in a RAG query to an LLM.  The embed models are LLM are all run locally to address security concerns.
+
+![RAG Example](https://ik.imagekit.io/notme001/rag_text_example.png "rag example")
+
+
+### Image Caption Example
+
+Run an image through a multi modal LLM asking it to describe the image.  The LLM is run locally to address security concerns.
+
+![Image Caption Example](https://ik.imagekit.io/notme001/rag_image_caption_example.png "image caption example")
+
 
 ### FastAPI Example
 

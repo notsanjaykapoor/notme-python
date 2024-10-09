@@ -34,19 +34,17 @@ app_version = os.environ["APP_VERSION"]
 def corpus_query(
     request: fastapi.Request,
     corpus_id: int,
-    mode: str = "retrieve",
+    mode: str = "query",
     query: str = "",
     limit: int = 10,
     db_session: sqlmodel.Session = fastapi.Depends(main_shared.get_db),
 ):
     corpus = services.corpus.get_by_id(db_session=db_session, id=corpus_id)
 
-    list_result = services.corpus.list(db_session=db_session, query=f"id:{corpus.id}", offset=0, limit=10)
-    corpus_list = list_result.objects
-
     modes = [
-        "retrieve",
-        "answer",
+        "query",
+        "rag",
+        "rag-text",
     ]
 
     query_nodes = []
@@ -58,7 +56,9 @@ def corpus_query(
         if query:
             logger.info(f"{context.rid_get()} corpus '{corpus.name}' model '{corpus.model_name}' {mode} query '{query}'")
 
-            if mode in ["answer"]:
+            if mode in ["rag", "rag-text"]:
+                t1 = time.time()
+
                 search_result = services.corpus.vector.search(
                     corpus=corpus,
                     query=query,
@@ -67,28 +67,33 @@ def corpus_query(
 
                 llm_scope = "\n".join(node.text for node in search_result.nodes)
 
-                t_start = time.time()
+                t2 = time.time()
+
+                llm_path = os.environ.get("APP_LLM_TEXT_PATH")
+                llm_name = llm_path.split("/")[-1]
+
+                logger.info(f"{context.rid_get()} corpus '{corpus.name}' rag llm '{llm_name}'")
 
                 llm = llama_cpp.Llama(
-                    model_path=os.environ.get("APP_LLM_PATH"),
+                    model_path=llm_path,
                     n_ctx=2048,
                     verbose=False,
                 )
 
                 llm_response = llm(
-                    services.corpus.llm.prompt(scope=llm_scope, query=query),
+                    services.corpus.llm.prompt_text(scope=llm_scope, query=query),
                     max_tokens=None, # set to None to generate up to the end of the context window
                     stop=["Q:", "\n"], # stop generating just before the model would generate a new question
                     temperature=0.1,
                 )
 
-                t_end = time.time()
+                t3 = time.time()
 
                 logger.info(f"{context.rid_get()} corpus '{corpus.name}' model '{corpus.model_name}' {mode} response {llm_response}")
 
-                query_ok = f"llm response in {round(t_end - t_start, 2)}s"
+                query_ok = f"search response in {round(t2 - t1, 2)}s, llm response in {round(t3 - t2, 2)}s"
                 query_response = llm_response.get("choices")[0].get("text").strip()
-            elif mode in ["retrieve"]:
+            elif mode in ["query"]:
                 search_result = services.corpus.vector.search(
                     corpus=corpus,
                     query=query,
@@ -121,14 +126,13 @@ def corpus_query(
                 "app_name": "Corpus Rag",
                 "app_version": app_version,
                 "corpus": corpus,
-                "corpus_list": corpus_list,
                 "mode": mode,
                 "modes": modes,
                 "query": query,
                 "query_error": query_error,
                 "query_ok": query_ok,
                 "query_nodes": query_nodes,
-                "query_prompt": "ask a question",
+                "query_prompt": "question",
                 "query_response": query_response,
             }
         )

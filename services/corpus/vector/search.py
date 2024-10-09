@@ -18,7 +18,7 @@ import services.corpus.models
 class StructNodes:
     code: int
     msec: int
-    nodes: list
+    nodes: list[models.NodeImage | models.NodeText]
     errors: list[str]
 
 
@@ -27,6 +27,7 @@ logger = log.init("app")
 
 def search(corpus: models.Corpus, query: str, limit: int) -> StructNodes:
     """
+    Execute qdrant search and then convert the returned qdrant points to structured nodes.
     """
     struct = StructNodes(
         code=0,
@@ -68,7 +69,6 @@ def _qdrant_points_to_nodes(points: list[qdrant_client.http.models.ScoredPoint])
                 score=point.score,
                 uri=point.payload.get("uri"),
             )
-            # node = llama_index.core.vector_stores.utils.metadata_dict_to_node(point.payload)
 
         nodes.append(node)
 
@@ -77,13 +77,18 @@ def _qdrant_points_to_nodes(points: list[qdrant_client.http.models.ScoredPoint])
 
 def _qdrant_query_text(corpus: models.Corpus, query: str, similarity_top_k: int) -> list[qdrant_client.http.models.ScoredPoint]:
     """
-    run vector search and return points results
+    Execute vector search and return set of points.
+
+    The query is first tokenized into a vector using the same embed model as the corpus.  Note that
+    this embed model must match the corpus embed model to get proper results.
+
+    The vector is then run through a qdrant query to find similar results, each results is a chunk of text referred
+    to as a point.  These points are returned to the caller.
     """
     # map query to vector
     torch_device = services.corpus.torch_device()
     embed_model = services.corpus.models.resolve(model=corpus.model_name, device=torch_device)
-    # query_vector = embed_model.get_agg_embedding_from_queries([query])
-    query_vector = embed_model.get_text_embedding(query)
+    vector_list = embed_model.get_text_embedding(query)
 
     vector_store_name = os.environ.get("VECTOR_STORE")
 
@@ -108,7 +113,7 @@ def _qdrant_query_text(corpus: models.Corpus, query: str, similarity_top_k: int)
         collection_name=collection_name,
         query_vector=qdrant_client.http.models.NamedVector(
             name="txt",
-            vector=query_vector,
+            vector=vector_list,
         ),
         limit=similarity_top_k,
         query_filter=qdrant_client.models.Filter(),
