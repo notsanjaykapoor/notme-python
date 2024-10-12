@@ -13,7 +13,7 @@
     {% endif %}
 </div>
 
-{% if mode in ["rag", "rag-image-caption", "rag-text"] %}
+{% if mode in ["rag", "image-caption"] %}
     <div class="col-start-2 col-span-10 mt-0 rag-infer">
         <p class="text-xs italic font-bold text-blue-700 py-5">
             {{query_response}}

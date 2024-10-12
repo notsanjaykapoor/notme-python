@@ -11,12 +11,17 @@ import services.images
 import services.qdrant
 
 DOC_BATCH_SIZE_DEFAULT = 512
+DOC_CLIP_MAX_SIZE = 77
 
 logger = log.init("app")
 
 
 def ingest_qdrant_multi(corpus: models.Corpus, nodes: list[models.NodeImage], embed_model: llama_index.embeddings) -> str:
     """
+    Ingest multi modal images into qdrant.
+
+    Each image node contains an image and some text.  Each node is stored a single object (qdrant point) with 2 vectors, 
+    1 for the image and 1 for text.
     """
     client = services.qdrant.client()
     collection_name = f"{corpus.name}_multi"
@@ -33,7 +38,7 @@ def ingest_qdrant_multi(corpus: models.Corpus, nodes: list[models.NodeImage], em
     for chunked_nodes in more_itertools.chunked(nodes, DOC_BATCH_SIZE_DEFAULT):
         # truncate text to 77 characters for clip
         img_list = [services.images.download(uri=node.uri, dir=os.environ.get("APP_DOWNLOAD_PATH")) for node in chunked_nodes]
-        txt_list = [node.text_index()[0:77] for node in chunked_nodes]
+        txt_list = [node.text_indexable[0:DOC_CLIP_MAX_SIZE] for node in chunked_nodes]
 
         img_embeddings = embed_model.get_image_embedding_batch(
             img_list,
@@ -102,7 +107,7 @@ def ingest_qdrant_text(corpus: models.Corpus, nodes: list[models.NodeText], embe
 
     for chunked_nodes in more_itertools.chunked(nodes, DOC_BATCH_SIZE_DEFAULT):
         nodes_list = [node for node in chunked_nodes]
-        txt_list = [node.text_index() for node in chunked_nodes]
+        txt_list = [node.text_indexable for node in chunked_nodes]
         # txt_list = [node.get_content(metadata_mode=llama_index.core.schema.MetadataMode.EMBED) for node in chunked_nodes]
 
         txt_embeddings = embed_model.get_text_embedding_batch(

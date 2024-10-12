@@ -26,13 +26,20 @@ class NodeImage:
             "uri": self.uri,
         }
 
-
-    def text_index(self) -> str:
+    @property
+    def text(self) -> str:
         """
-        node's text that should be indexed
+        image node's text
         """
         texts = [s.strip() for s in [self.name, self.caption] if s]
 
         return ". ".join(texts)
+
+    @property
+    def text_indexable(self) -> str:
+        """
+        image node's indexable text
+        """
+        return self.text
 
         

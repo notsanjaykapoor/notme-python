@@ -33,12 +33,12 @@ app_version = os.environ["APP_VERSION"]
 @app.get("/images", response_class=fastapi.responses.HTMLResponse)
 def corpus_query(
     request: fastapi.Request,
-    mode: str = "rag-image-caption",
+    mode: str = "image-caption",
     query: str = "",
     db_session: sqlmodel.Session = fastapi.Depends(main_shared.get_db),
 ):
     modes = [
-        "rag-image-caption",
+        "image-caption",
     ]
 
     rag_image_url = ""
@@ -52,7 +52,7 @@ def corpus_query(
         if query:
             logger.info(f"{context.rid_get()} images '{mode}' query '{query}'")
 
-            if mode not in ["rag-image-caption"]:
+            if mode not in ["image-caption"]:
                 raise ValueError("mode invalid")
 
             if not query.startswith("http"):

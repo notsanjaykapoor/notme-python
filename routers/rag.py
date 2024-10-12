@@ -44,7 +44,6 @@ def corpus_query(
     modes = [
         "query",
         "rag",
-        "rag-text",
     ]
 
     query_nodes = []
@@ -56,7 +55,7 @@ def corpus_query(
         if query:
             logger.info(f"{context.rid_get()} corpus '{corpus.name}' model '{corpus.model_name}' {mode} query '{query}'")
 
-            if mode in ["rag", "rag-text"]:
+            if mode in ["rag"]:
                 t1 = time.time()
 
                 search_result = services.corpus.vector.search(

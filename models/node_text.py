@@ -18,7 +18,7 @@ class NodeText:
             "text": self.text,
         }
 
-    def text_index(self) -> str:
+    def text_indexable(self) -> str:
         """
         node's text that is indexable
         """
