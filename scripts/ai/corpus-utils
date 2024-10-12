@@ -43,9 +43,22 @@ def delete(ctx, name: str) -> list[str]:
 
 
 @click.command()
+@click.option('--uri', default=None, required=True, help="image uri to caption")
+@click.pass_context
+def image_caption(ctx, uri: str) -> dict:
+    """
+    caption specified image
+    """
+
+    caption_result = services.images.caption(uri=uri)
+
+    print(caption_result)
+
+
+@click.command()
 @click.option('--source-uri', default=None, required=True, help="image caption directory")
 @click.pass_context
-def image_caption(ctx, source_uri: str) -> dict:
+def image_caption_dir(ctx, source_uri: str) -> dict:
     """
     caption images in source directory
     """
@@ -200,17 +213,6 @@ def list(ctx, limit: int, query: str="") -> list[str]:
 @click.option('--limit', default=50, required=False, help="search limit")
 @click.option('--query', default="", required=False, help="search query")
 @click.pass_context
-def list_keyword(ctx, limit: int, query: str="") -> list:
-    """
-    List keyword stores
-    """
-    # todo
-
-
-@click.command()
-@click.option('--limit', default=50, required=False, help="search limit")
-@click.option('--query', default="", required=False, help="search query")
-@click.pass_context
 def list_vector(ctx, limit: int, query: str="") -> list:
     """
     List vector stores
@@ -359,10 +361,10 @@ def _print_nodes(nodes):
 
 cli.add_command(delete)
 cli.add_command(image_caption)
+cli.add_command(image_caption_dir)
 cli.add_command(ingest)
 cli.add_command(ingest_bm)
 cli.add_command(list)
-cli.add_command(list_keyword)
 cli.add_command(list_vector)
 cli.add_command(query)
 cli.add_command(scan)

@@ -26,7 +26,7 @@ def caption(uri: str) -> Struct:
     )
 
     llm = llama_cpp.Llama(
-        model_path=os.environ.get("APP_LLM_LAVA_PATH"),
+        model_path=os.environ.get("APP_LLM_MULTI_PATH"),
         chat_handler=chat_handler,
         n_ctx=4096, # large context for image embeddings
     )
