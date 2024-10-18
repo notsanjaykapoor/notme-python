@@ -26,22 +26,33 @@ def caption(uri: str) -> Struct:
     )
 
     llm = llama_cpp.Llama(
-        model_path=os.environ.get("APP_LLM_MULTI_PATH"),
         chat_handler=chat_handler,
+        model_path=os.environ.get("APP_LLM_MULTI_PATH"),
         n_ctx=4096, # large context for image embeddings
+        verbose=False,
     )
 
     llm_response = llm.create_chat_completion(
         messages = [
-            {"role": "system", "content": "You are an assistant who perfectly describes images."},
+            {
+                "role": "system",
+                "content": "You are an assistant who perfectly describes images."
+            },
             {
                 "role": "user",
                 "content": [
-                    {"type" : "text", "text": "What's in this image?"},
-                    {"type": "image_url", "image_url": {"url": uri } }
+                    {
+                        "type" :"text",
+                        "text": "Describe this image with a short caption.",
+                    },
+                    {
+                        "type": "image_url",
+                        "image_url": {"url": uri },
+                    },
                 ]
             }
-        ]
+        ],
+        temperature=0.1, # default is 0.2
     )
 
     struct.response = llm_response
