@@ -1,24 +1,17 @@
 [project]
 name = "notme-python"
 version = "0.1.0"
-description = "genai"
+description = "gernal python tooling"
 readme = "readme.md"
 requires-python = ">=3.12"
 dependencies = [
-    "accelerate>=0.34.2",
     "asyncio>=3.4.3",
-    "clip>=0.3.0",
     "coloredlogs>=15.0.1",
     "confluent-kafka>=2.5.3",
     "factory-boy>=3.3.1",
     "fastapi>=0.115.0",
     "geoalchemy2>=0.15.2",
     "itsdangerous>=2.2.0",
-    "llama-cpp-python>=0.3.0",
-    "llama-index>=0.11.17",
-    "llama-index-core==0.11.17",
-    "llama-index-embeddings-clip==0.2.0",
-    "llama-index-embeddings-huggingface>=0.2.3",
     "more-itertools>=10.5.0",
     "neo4j>=5.25.0",
     "polars>=1.8.2",
@@ -29,14 +22,12 @@ dependencies = [
     "pytest>=8.3.3",
     "python-dateutil>=2.9.0.post0",
     "python-dotenv>=1.0.1",
-    "qdrant-client>=1.11.3",
     "requests-oauthlib>=2.0.0",
     "requests>=2.32.3",
     "shapely>=2.0.6",
     "sqlmodel>=0.0.22",
     "strawberry-graphql>=0.243.1",
     "toml>=0.10.2",
-    "torch==2.2.2",
     "typesense>=0.21.0",
     "ulid-py>=1.1.0",
     "uvicorn>=0.30.6",
@@ -59,4 +50,3 @@ order-by-type = true
 "__init__.py" = ["E402", "F401"]
 
 [tool.uv.sources]
-clip = { git = "https://github.com/openai/CLIP.git" }

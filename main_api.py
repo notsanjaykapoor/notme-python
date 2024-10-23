@@ -66,13 +66,8 @@ graphql_router = strawberry.fastapi.GraphQLRouter(
 )
 
 app.include_router(graphql_router, prefix="/graphql")
-app.include_router(routers.admin.app)
-app.include_router(routers.admin_corpus.app)
-app.include_router(routers.admin_workq.app)
 app.include_router(routers.health.app)
-app.include_router(routers.images.app)
 app.include_router(routers.me.app)
-app.include_router(routers.rag.app)
 app.include_router(routers.users.app)
 
 app.add_middleware(
