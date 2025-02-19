@@ -95,7 +95,7 @@ async def add_request_id(request: fastapi.Request, call_next):
 
 @app.get("/")
 def home():
-    return fastapi.responses.RedirectResponse("/rag")
+    return fastapi.responses.RedirectResponse("/me")
 
 
 @app.get("/api/v1/entities", tags=["entities"], response_model=list[models.Entity])

@@ -29,7 +29,7 @@ uv sync
 Start server:
 
 ```
-./bin/app-server -p 8001
+make dev
 ```
 
 List users using curl (api server required):
